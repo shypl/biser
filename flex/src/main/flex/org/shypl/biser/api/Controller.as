@@ -42,12 +42,12 @@ package org.shypl.biser.api
 			_serviceResultHandlers = null;
 		}
 
-		internal function __send(buffer:OutputBuffer):void
+		internal function _send(buffer:OutputBuffer):void
 		{
 			_connection.sendMessage(buffer);
 		}
 
-		internal function __handleMessage(buffer:InputBuffer):void
+		internal function _handleMessage(buffer:InputBuffer):void
 		{
 			var result:uint = buffer.readInt();
 
@@ -69,12 +69,12 @@ package org.shypl.biser.api
 			}
 		}
 
-		internal function __registerServiceResultHandler(handler:ResultHandler):int
+		internal function _registerServiceResultHandler(handler:ResultHandler):int
 		{
 			return _serviceResultHandlers.push(handler);
 		}
 
-		internal function __debug(message:String, args:Array):void
+		internal function _debug0(message:String, args:Array):void
 		{
 			if (_logger.debugEnabled) {
 				args.unshift(message);
@@ -84,7 +84,7 @@ package org.shypl.biser.api
 
 		protected function _debug(message:String, ...args):void
 		{
-			__debug(message, args);
+			_debug0(message, args);
 		}
 
 		[Abstract]

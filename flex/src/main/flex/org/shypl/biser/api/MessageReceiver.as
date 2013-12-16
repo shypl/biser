@@ -13,7 +13,7 @@ package org.shypl.biser.api
 
 		public function receiveMessage(buffer:InputBuffer):void
 		{
-			_controller.__handleMessage(buffer);
+			_controller._handleMessage(buffer);
 		}
 
 		public function destroy():void

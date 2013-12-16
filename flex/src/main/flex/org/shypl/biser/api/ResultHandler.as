@@ -17,7 +17,7 @@ package org.shypl.biser.api
 
 		public function handle(buffer:InputBuffer):void
 		{
-			_service.__handleResult(_action, _handler, buffer);
+			_service._handleResult0(_action, _handler, buffer);
 			destroy();
 		}
 

@@ -17,7 +17,7 @@ package org.shypl.biser.api
 			_headerLength = _buffer.size;
 		}
 
-		internal function __handleResult(action:int, handler:Object, buffer:InputBuffer):void
+		internal function _handleResult0(action:int, handler:Object, buffer:InputBuffer):void
 		{
 			_handleResult(action, handler, buffer);
 		}
@@ -30,19 +30,19 @@ package org.shypl.biser.api
 
 		protected final function _send():void
 		{
-			_controller.__send(_buffer);
+			_controller._send(_buffer);
 			_buffer.clearTo(_headerLength);
 		}
 
 		protected final function _writeHandler(action:int, handler:Object):void
 		{
 			_buffer.writeInt(action);
-			_buffer.writeInt(_controller.__registerServiceResultHandler(new ResultHandler(this, action, handler)));
+			_buffer.writeInt(_controller._registerServiceResultHandler(new ResultHandler(this, action, handler)));
 		}
 
 		protected final function _debug(message:String, ...args):void
 		{
-			_controller.__debug(message, args);
+			_controller._debug0(message, args);
 		}
 	}
 }
