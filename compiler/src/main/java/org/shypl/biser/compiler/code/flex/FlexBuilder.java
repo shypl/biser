@@ -1,4 +1,4 @@
-package org.shypl.biser.compiler.code.as;
+package org.shypl.biser.compiler.code.flex;
 
 import org.shypl.biser.compiler.Utils;
 import org.shypl.biser.compiler.code.CodeBuilder;
@@ -19,9 +19,9 @@ import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.Set;
 
-public class AsBuilder extends CodeBuilder
+public class FlexBuilder extends CodeBuilder
 {
-	public AsBuilder(Path path)
+	public FlexBuilder(Path path)
 	{
 		super(path);
 	}
@@ -33,7 +33,7 @@ public class AsBuilder extends CodeBuilder
 			buildApi((ApiClass)cls);
 		}
 		else {
-			AsFile file = new AsFile(cls.pkg.fullName());
+			FlexFile file = new FlexFile(cls.pkg.fullName());
 			CodeClass codeClass;
 
 			if (cls instanceof ObjectDataClass) {
@@ -56,14 +56,14 @@ public class AsBuilder extends CodeBuilder
 	{
 		Class controller = new Class(pkg, "AbstractApiController") {};
 
-		AsFile file = new AsFile(pkg.fullName());
+		FlexFile file = new FlexFile(pkg.fullName());
 		file.addImport("org.shypl.biser.api.Controller");
 		file.addImport("org.shypl.biser.api.IConnection");
 		file.addImport("org.shypl.biser.InputBuffer");
 
-		AsClass codeClass = new AsClass(controller.name, "Controller", Mod.at(Mod.PUBLIC | Mod.ABSTRACT));
+		FlexClass codeClass = new FlexClass(controller.name, "Controller", Mod.at(Mod.PUBLIC | Mod.ABSTRACT));
 
-		AsMethod constructor = new AsMethod(controller.name, null, Mod.at(Mod.PUBLIC));
+		FlexMethod constructor = new FlexMethod(controller.name, null, Mod.at(Mod.PUBLIC));
 		codeClass.addMethod(constructor);
 		constructor.addArgument("connection", "IConnection");
 		constructor.body.line("super(connection);");
@@ -76,10 +76,10 @@ public class AsBuilder extends CodeBuilder
 
 				file.addImport(cls.pkg.fullName() + "." + typeName);
 
-				codeClass.addProperty(new AsProperty(propertyName, typeName, Mod.at(Mod.PRIVATE)));
+				codeClass.addProperty(new FlexProperty(propertyName, typeName, Mod.at(Mod.PRIVATE)));
 				constructor.body.line(propertyName, " = new ", typeName, "(", String.valueOf(i++), ", this);");
 
-				AsMethod getter = new AsMethod(cls.name, typeName, Mod.at(Mod.PUBLIC | Mod.GETTER));
+				FlexMethod getter = new FlexMethod(cls.name, typeName, Mod.at(Mod.PUBLIC | Mod.GETTER));
 				getter.body.line("return ", propertyName, ";");
 				codeClass.addMethod(getter);
 			}
@@ -87,7 +87,7 @@ public class AsBuilder extends CodeBuilder
 
 		//
 
-		AsMethod callNotifier = new AsMethod("_callNotifier", "void", Mod.at(Mod.PROTECTED | Mod.FINAL | Mod.OVERRIDE));
+		FlexMethod callNotifier = new FlexMethod("_callNotifier", "void", Mod.at(Mod.PROTECTED | Mod.FINAL | Mod.OVERRIDE));
 		callNotifier.addArgument("notifier", "int");
 		callNotifier.addArgument("method", "int");
 		callNotifier.addArgument("buffer", "InputBuffer");
@@ -104,7 +104,7 @@ public class AsBuilder extends CodeBuilder
 
 				file.addImport(cls.pkg.fullName() + "." + typeName);
 
-				codeClass.addProperty(new AsProperty(propertyName, typeName, Mod.at(Mod.PRIVATE)));
+				codeClass.addProperty(new FlexProperty(propertyName, typeName, Mod.at(Mod.PRIVATE)));
 				constructor.addArgument(argName, typeName);
 				constructor.body.line(propertyName, " = ", argName, ";");
 
@@ -121,7 +121,7 @@ public class AsBuilder extends CodeBuilder
 						callNotifier.body.line(4, propertyName, ".", notifier.name, "();");
 					}
 					else {
-						AsMethod method = new AsMethod(propertyName + "_" + notifier.name, "void", Mod.at(Mod.PRIVATE));
+						FlexMethod method = new FlexMethod(propertyName + "_" + notifier.name, "void", Mod.at(Mod.PRIVATE));
 						codeClass.addMethod(method);
 						method.addArgument("buffer", "InputBuffer");
 
@@ -178,13 +178,13 @@ public class AsBuilder extends CodeBuilder
 
 	private void buildApiNotifier(ApiClass cls) throws IOException
 	{
-		AsFile file = new AsFile(cls.pkg.fullName());
+		FlexFile file = new FlexFile(cls.pkg.fullName());
 
-		AsClass codeClass = new AsClass("INotifier" + cls.className(), null, Mod.at(Mod.PUBLIC | Mod.INTERFACE));
+		FlexClass codeClass = new FlexClass("INotifier" + cls.className(), null, Mod.at(Mod.PUBLIC | Mod.INTERFACE));
 
 		for (Method notifier : cls.notifierMethods) {
 
-			AsMethod method = new AsMethod(notifier.name, "void", Mod.at(Mod.INTERFACE));
+			FlexMethod method = new FlexMethod(notifier.name, "void", Mod.at(Mod.INTERFACE));
 			codeClass.addMethod(method);
 
 			for (Property property : notifier.properties) {
@@ -199,19 +199,19 @@ public class AsBuilder extends CodeBuilder
 
 	private void buildApiService(ApiClass cls) throws IOException
 	{
-		AsFile file = new AsFile(cls.pkg.fullName());
+		FlexFile file = new FlexFile(cls.pkg.fullName());
 		file.addImport("org.shypl.biser.api.Controller");
 		file.addImport("org.shypl.biser.api.Service");
 
-		AsClass codeClass = new AsClass("Service" + cls.className(), "Service", Mod.at(Mod.PUBLIC));
+		FlexClass codeClass = new FlexClass("Service" + cls.className(), "Service", Mod.at(Mod.PUBLIC));
 
-		AsMethod constructor = new AsMethod(codeClass.name, null, Mod.at(Mod.PUBLIC));
+		FlexMethod constructor = new FlexMethod(codeClass.name, null, Mod.at(Mod.PUBLIC));
 		codeClass.addMethod(constructor);
 		constructor.addArgument("id", "int");
 		constructor.addArgument("controller", "Controller");
 		constructor.body.line("super(id, controller);");
 
-		AsMethod handleResult = new AsMethod("_handleResult", "void", Mod.at(Mod.PROTECTED | Mod.OVERRIDE));
+		FlexMethod handleResult = new FlexMethod("_handleResult", "void", Mod.at(Mod.PROTECTED | Mod.OVERRIDE));
 		handleResult.addArgument("action", "int");
 		handleResult.addArgument("handler", "Object");
 		handleResult.addArgument("buffer", "InputBuffer");
@@ -221,7 +221,7 @@ public class AsBuilder extends CodeBuilder
 
 		int i = 0;
 		for (Method service : cls.serviceMethods) {
-			AsMethod method = new AsMethod(service.name, "void", Mod.at(Mod.PUBLIC));
+			FlexMethod method = new FlexMethod(service.name, "void", Mod.at(Mod.PUBLIC));
 			codeClass.addMethod(method);
 
 			LinkedList<String> debug1 = new LinkedList<>();
@@ -247,9 +247,9 @@ public class AsBuilder extends CodeBuilder
 				hasHandleResult = true;
 
 				String handlerName = cls.className() + Utils.toCamelCase(service.name, true);
-				AsClass handlerClass = new AsClass('I' + handlerName + "Handler", null, Mod.at(Mod.PUBLIC | Mod.INTERFACE));
-				AsMethod handlerMethod = new AsMethod("handle" + handlerName, "void", Mod.at(Mod.INTERFACE));
-				AsFile handlerFile = new AsFile(cls.pkg.fullName());
+				FlexClass handlerClass = new FlexClass('I' + handlerName + "Handler", null, Mod.at(Mod.PUBLIC | Mod.INTERFACE));
+				FlexMethod handlerMethod = new FlexMethod("handle" + handlerName, "void", Mod.at(Mod.INTERFACE));
+				FlexFile handlerFile = new FlexFile(cls.pkg.fullName());
 				handlerMethod.addArgument("result", defineDataTypeName(handlerFile, cls, service.result));
 				handlerClass.addMethod(handlerMethod);
 				handlerFile.setClass(handlerClass);
@@ -260,7 +260,7 @@ public class AsBuilder extends CodeBuilder
 				String result = defineDataTypeName(file, cls, service.result);
 				method.body.line("_writeHandler(", serviceId, ", _handler);");
 
-				AsMethod handler = new AsMethod(service.name + "_result", result, Mod.at(Mod.PRIVATE));
+				FlexMethod handler = new FlexMethod(service.name + "_result", result, Mod.at(Mod.PRIVATE));
 				codeClass.addMethod(handler);
 				handler.addArgument("buffer", "InputBuffer");
 				handler.body.line("var r:", result, " = ",
@@ -296,25 +296,25 @@ public class AsBuilder extends CodeBuilder
 		file.save(path);
 	}
 
-	private CodeClass buildEnum(AsFile file, EnumDataClass cls)
+	private CodeClass buildEnum(FlexFile file, EnumDataClass cls)
 	{
 		file.addImport("org.shypl.biser.Enum");
-		return new AsEnumClass(defineClassName(cls), cls.values);
+		return new FlexEnumClass(defineClassName(cls), cls.values);
 	}
 
-	private CodeClass buildObject(AsFile file, ObjectDataClass cls) throws IOException
+	private CodeClass buildObject(FlexFile file, ObjectDataClass cls) throws IOException
 	{
-		AsClass codeClass = new AsClass(defineClassName(cls), defineParentClassName(file, cls), Mod.at(Mod.PUBLIC));
+		FlexClass codeClass = new FlexClass(defineClassName(cls), defineParentClassName(file, cls), Mod.at(Mod.PUBLIC));
 
-		AsMethod encode = new AsMethod("encode", "void", Mod.at(Mod.PUBLIC | Mod.OVERRIDE));
-		AsMethod decode = new AsMethod("decode", "void", Mod.at(Mod.PUBLIC | Mod.OVERRIDE));
+		FlexMethod encode = new FlexMethod("encode", "void", Mod.at(Mod.PUBLIC | Mod.OVERRIDE));
+		FlexMethod decode = new FlexMethod("decode", "void", Mod.at(Mod.PUBLIC | Mod.OVERRIDE));
 
 		if (cls.hasParent()) {
 			encode.body.line("super.encode(b);");
 			decode.body.line("super.decode(b);");
 		}
 
-		AsMethod factory = new AsMethod("factory", codeClass.name, Mod.at(Mod.PUBLIC | Mod.STATIC), new Lines("//noinspection JSUnusedGlobalSymbols"));
+		FlexMethod factory = new FlexMethod("factory", codeClass.name, Mod.at(Mod.PUBLIC | Mod.STATIC), new Lines("//noinspection JSUnusedGlobalSymbols"));
 		codeClass.addMethod(factory);
 		factory.addArgument("f", "int");
 		factory.addArgument("b", "InputBuffer");
@@ -338,7 +338,7 @@ public class AsBuilder extends CodeBuilder
 		for (Property property : cls.properties) {
 			String type = defineDataTypeName(file, cls, property.dataType);
 
-			codeClass.addProperty(new AsProperty(property.name, type, Mod.at(Mod.PUBLIC)));
+			codeClass.addProperty(new FlexProperty(property.name, type, Mod.at(Mod.PUBLIC)));
 
 			encode.body.line(buildEncode(file, cls, codeClass, property, "b"), ";");
 			decode.body.line(buildDecode(file, cls, codeClass, property, "b"), ";");
@@ -351,12 +351,12 @@ public class AsBuilder extends CodeBuilder
 		return codeClass;
 	}
 
-	private String buildEncode(AsFile file, Class cls, AsClass codeClass, Property property, String buffer)
+	private String buildEncode(FlexFile file, Class cls, FlexClass codeClass, Property property, String buffer)
 	{
 		return buildEncodeData(file, cls, codeClass, property.dataType, "this." + property.name, buffer);
 	}
 
-	private String buildEncodeData(AsFile file, Class cls, AsClass codeClass, DataType type, String data, String buffer)
+	private String buildEncodeData(FlexFile file, Class cls, FlexClass codeClass, DataType type, String data, String buffer)
 	{
 		if (type instanceof DataType.Primitive) {
 			return buffer + "." + defineBufferMethod(type, false) + "(" + data + ")";
@@ -389,7 +389,7 @@ public class AsBuilder extends CodeBuilder
 			String name = codeClass.getEncoder(type);
 			if (name == null) {
 				name = codeClass.addEncoder(type);
-				AsMethod method = new AsMethod(name, "void", Mod.at(Mod.PRIVATE | Mod.STATIC));
+				FlexMethod method = new FlexMethod(name, "void", Mod.at(Mod.PRIVATE | Mod.STATIC));
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "OutputBuffer");
@@ -413,7 +413,7 @@ public class AsBuilder extends CodeBuilder
 				name = codeClass.addEncoder(type);
 
 				DataType subType = ((DataType.List)type).type;
-				AsMethod method = new AsMethod(name, "void", Mod.at(Mod.PRIVATE));
+				FlexMethod method = new FlexMethod(name, "void", Mod.at(Mod.PRIVATE));
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "OutputBuffer");
@@ -441,7 +441,7 @@ public class AsBuilder extends CodeBuilder
 				DataType keyType = ((DataType.Map)type).keyType;
 				DataType valueType = ((DataType.Map)type).valueType;
 
-				AsMethod method = new AsMethod(name, "void", Mod.at(Mod.PRIVATE));
+				FlexMethod method = new FlexMethod(name, "void", Mod.at(Mod.PRIVATE));
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "OutputBuffer");
@@ -463,12 +463,12 @@ public class AsBuilder extends CodeBuilder
 		throw new RuntimeException();
 	}
 
-	private String buildDecode(AsFile file, Class cls, AsClass codeClass, Property property, String buffer)
+	private String buildDecode(FlexFile file, Class cls, FlexClass codeClass, Property property, String buffer)
 	{
 		return "this." + property.name + " = " + buildDecodeData(file, cls, codeClass, property.dataType, buffer);
 	}
 
-	private String buildDecodeData(AsFile file, Class cls, AsClass codeClass, DataType type, String buffer)
+	private String buildDecodeData(FlexFile file, Class cls, FlexClass codeClass, DataType type, String buffer)
 	{
 		if (type.isPrimitive()) {
 			return buffer + "." + defineBufferMethod(type, true) + "()";
@@ -498,7 +498,7 @@ public class AsBuilder extends CodeBuilder
 			String name = codeClass.getDecoder(type);
 			if (name == null) {
 				name = codeClass.addDecoder(type);
-				AsMethod method = new AsMethod(name, typeName, Mod.at(Mod.PRIVATE | Mod.STATIC));
+				FlexMethod method = new FlexMethod(name, typeName, Mod.at(Mod.PRIVATE | Mod.STATIC));
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "InputBuffer");
@@ -527,7 +527,7 @@ public class AsBuilder extends CodeBuilder
 
 				DataType subType = ((DataType.List)type).type;
 
-				AsMethod method = new AsMethod(name, "IList", Mod.at(Mod.PRIVATE));
+				FlexMethod method = new FlexMethod(name, "IList", Mod.at(Mod.PRIVATE));
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "InputBuffer");
@@ -554,7 +554,7 @@ public class AsBuilder extends CodeBuilder
 				DataType keyType = ((DataType.Map)type).keyType;
 				DataType valueType = ((DataType.Map)type).valueType;
 
-				AsMethod method = new AsMethod(name, "IMap", Mod.at(Mod.PRIVATE));
+				FlexMethod method = new FlexMethod(name, "IMap", Mod.at(Mod.PRIVATE));
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "InputBuffer");
@@ -614,7 +614,7 @@ public class AsBuilder extends CodeBuilder
 		return cls.scopeName("");
 	}
 
-	private String defineClassName(AsFile file, Class cls, Class target)
+	private String defineClassName(FlexFile file, Class cls, Class target)
 	{
 		String name = defineClassName(target);
 
@@ -625,7 +625,7 @@ public class AsBuilder extends CodeBuilder
 		return name;
 	}
 
-	private String defineParentClassName(AsFile file, Class cls)
+	private String defineParentClassName(FlexFile file, Class cls)
 	{
 		if (cls instanceof ObjectDataClass) {
 			ObjectDataClass c = (ObjectDataClass)cls;
@@ -639,7 +639,7 @@ public class AsBuilder extends CodeBuilder
 		return null;
 	}
 
-	private String defineDataTypeName(AsFile file, Class cls, DataType type)
+	private String defineDataTypeName(FlexFile file, Class cls, DataType type)
 	{
 		if (type instanceof DataType.Primitive) {
 			if (type == DataType.Primitive.BOOL) {

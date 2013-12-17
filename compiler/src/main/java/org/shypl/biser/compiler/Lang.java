@@ -3,5 +3,5 @@ package org.shypl.biser.compiler;
 public enum Lang
 {
 	JAVA,
-	AS
+	FLEX
 }

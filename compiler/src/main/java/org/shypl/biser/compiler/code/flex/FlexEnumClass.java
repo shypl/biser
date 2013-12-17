@@ -1,4 +1,4 @@
-package org.shypl.biser.compiler.code.as;
+package org.shypl.biser.compiler.code.flex;
 
 import org.shypl.biser.compiler.code.CodeClass;
 import org.shypl.biser.compiler.code.FileBuilder;
@@ -6,11 +6,11 @@ import org.shypl.biser.compiler.code.Mod;
 
 import java.util.Set;
 
-public class AsEnumClass extends CodeClass
+public class FlexEnumClass extends CodeClass
 {
 	private final Set<String> values;
 
-	public AsEnumClass(String name, Set<String> values)
+	public FlexEnumClass(String name, Set<String> values)
 	{
 		super(name, "Enum", Mod.at(0));
 		this.values = values;

@@ -1,11 +1,11 @@
-package org.shypl.biser.compiler.code.as;
+package org.shypl.biser.compiler.code.flex;
 
 import org.shypl.biser.compiler.code.CodeFile;
 import org.shypl.biser.compiler.code.FileBuilder;
 
-public class AsFile extends CodeFile
+public class FlexFile extends CodeFile
 {
-	protected AsFile(String pkg)
+	protected FlexFile(String pkg)
 	{
 		super("as", pkg);
 	}

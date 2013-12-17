@@ -1,7 +1,7 @@
 package org.shypl.biser.compiler;
 
 import org.shypl.biser.compiler.code.CodeBuilder;
-import org.shypl.biser.compiler.code.as.AsBuilder;
+import org.shypl.biser.compiler.code.flex.FlexBuilder;
 import org.shypl.biser.compiler.code.java.JavaBuilder;
 import org.shypl.biser.compiler.prototype.ApiClass;
 import org.shypl.biser.compiler.prototype.Class;
@@ -58,8 +58,8 @@ public class Compiler
 			case JAVA:
 				builder = new JavaBuilder(path);
 				break;
-			case AS:
-				builder = new AsBuilder(path);
+			case FLEX:
+				builder = new FlexBuilder(path);
 				break;
 		}
 

@@ -1,12 +1,12 @@
-package org.shypl.biser.compiler.code.as;
+package org.shypl.biser.compiler.code.flex;
 
 import org.shypl.biser.compiler.code.CodeProperty;
 import org.shypl.biser.compiler.code.FileBuilder;
 import org.shypl.biser.compiler.code.Mod;
 
-public class AsProperty extends CodeProperty
+public class FlexProperty extends CodeProperty
 {
-	public AsProperty(String name, String type, Mod mod)
+	public FlexProperty(String name, String type, Mod mod)
 	{
 		super(name, type, mod);
 	}

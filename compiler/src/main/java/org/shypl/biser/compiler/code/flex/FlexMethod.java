@@ -1,4 +1,4 @@
-package org.shypl.biser.compiler.code.as;
+package org.shypl.biser.compiler.code.flex;
 
 import org.shypl.biser.compiler.code.CodeMethod;
 import org.shypl.biser.compiler.code.FileBuilder;
@@ -7,14 +7,14 @@ import org.shypl.biser.compiler.code.Mod;
 
 import java.util.Map;
 
-public class AsMethod extends CodeMethod
+public class FlexMethod extends CodeMethod
 {
-	protected AsMethod(String name, String result, Mod mod)
+	protected FlexMethod(String name, String result, Mod mod)
 	{
 		this(name, result, mod, null);
 	}
 
-	protected AsMethod(String name, String result, Mod mod, Lines meta)
+	protected FlexMethod(String name, String result, Mod mod, Lines meta)
 	{
 		super(name, result, mod, meta);
 	}

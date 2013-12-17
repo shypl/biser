@@ -1,4 +1,4 @@
-package org.shypl.biser.compiler.code.as;
+package org.shypl.biser.compiler.code.flex;
 
 import org.shypl.biser.compiler.code.CodeClass;
 import org.shypl.biser.compiler.code.CodeMethod;
@@ -6,9 +6,9 @@ import org.shypl.biser.compiler.code.CodeProperty;
 import org.shypl.biser.compiler.code.FileBuilder;
 import org.shypl.biser.compiler.code.Mod;
 
-public class AsClass extends CodeClass
+public class FlexClass extends CodeClass
 {
-	public AsClass(String name, String parent, Mod mod)
+	public FlexClass(String name, String parent, Mod mod)
 	{
 		super(name, parent, mod);
 	}
