@@ -397,56 +397,70 @@ public class AsBuilder extends CodeBuilder
 	
 				method.body.line("b.writeInt(v.length);");
 				method.body.line("for each (var e:", defineDataTypeName(file, cls, subType), " in v) {");
-				method.body.line("\t", buildEncodeData(file, cls, codeClass, subType, "e", "b"), ";");
+				method.body.line(1, buildEncodeData(file, cls, codeClass, subType, "e", "b"), ";");
 				method.body.line("}");
 			}
 
 			return name + "(" + buffer + ", " + data + ")";
 		}
 
-//		if (type instanceof DataType.List) {
-//			DataType subType = ((DataType.List)type).type;
-//
-//			String name = "encode" + (++codeClass.encodeMethods);
-//			AsMethod method = new AsMethod(name, "void", Mod.at(Mod.PRIVATE));
-//
-//			codeClass.addMethod(method);
-//			method.addArgument("b", "OutputBuffer");
-//			method.addArgument("v", defineDataTypeName(file, cls, type));
-//
-//			method.body.line("b.writeInt(v.size());");
-//			method.body.line("for each (var e:", defineDataTypeName(file, cls, subType), " in v) {");
-//			method.body.line("\t", buildEncodeData(file, cls, codeClass, subType, "e", "b"), ";");
-//			method.body.line("}");
-//
-//			return "this." + name + "(" + buffer + ", " + data + ")";
-//		}
-//
-//		if (type instanceof DataType.Map) {
-//			file.addImport("org.shypl.collection.IMapIterator");
-//
-//			DataType keyType = ((DataType.Map)type).keyType;
-//			DataType valueType = ((DataType.Map)type).valueType;
-//
-//			AsMethod method = new AsMethod(name, "void", Mod.at(Mod.PRIVATE));
-//
-//			codeClass.addMethod(method);
-//			method.addArgument("b", "OutputBuffer");
-//			method.addArgument("v", defineDataTypeName(file, cls, type));
-//
-//			method.body.line("b.writeInt(v.size());");
-//			method.body.line("var i:IMapIterator = v.iterator();");
-//			method.body.line("while (i.next()) {");
-//			method.body.line("\t", buildEncodeData(file, cls, codeClass, keyType, "i.key()", "b"), ";");
-//			method.body.line("\t", buildEncodeData(file, cls, codeClass, valueType, "i.value()", "b"), ";");
-//			method.body.line("}");
-//
-//			return "this." + name + "(" + buffer + ", " + data + ")";
-//		}
+		if (type instanceof DataType.List) {
+			file.addImport("org.shypl.common.collection.IList");
+			file.addImport("org.shypl.common.collection.IListIterator");
 
-		throw new RuntimeException("TODO");
+			String name = codeClass.getEncoder(type);
+			if (name == null) {
+				name = codeClass.addEncoder(type);
 
-//		throw new RuntimeException();
+				DataType subType = ((DataType.List)type).type;
+				AsMethod method = new AsMethod(name, "void", Mod.at(Mod.PRIVATE));
+
+				codeClass.addMethod(method);
+				method.addArgument("b", "OutputBuffer");
+				method.addArgument("v", "IList");
+
+				method.body.line("b.writeInt(v.size);");
+				method.body.line("const i:IListIterator = v.iterator();");
+				method.body.line("while (i.next()) {");
+				method.body.line(1, buildEncodeData(file, cls, codeClass, subType,
+					defineDataTypeName(file, cls, subType) + "(i.item)", "b"), ";");
+				method.body.line("}");
+			}
+
+			return "this." + name + "(" + buffer + ", " + data + ")";
+		}
+
+		if (type instanceof DataType.Map) {
+			file.addImport("org.shypl.common.collection.IMap");
+			file.addImport("org.shypl.common.collection.IMapIterator");
+
+			String name = codeClass.getEncoder(type);
+			if (name == null) {
+				name = codeClass.addEncoder(type);
+
+				DataType keyType = ((DataType.Map)type).keyType;
+				DataType valueType = ((DataType.Map)type).valueType;
+
+				AsMethod method = new AsMethod(name, "void", Mod.at(Mod.PRIVATE));
+
+				codeClass.addMethod(method);
+				method.addArgument("b", "OutputBuffer");
+				method.addArgument("v", "IMap");
+
+				method.body.line("b.writeInt(v.size);");
+				method.body.line("const i:IMapIterator = v.iterator();");
+				method.body.line("while (i.next()) {");
+				method.body.line(1, buildEncodeData(file, cls, codeClass, keyType,
+					defineDataTypeName(file, cls, keyType) + "(i.key)", "b"), ";");
+				method.body.line(1, buildEncodeData(file, cls, codeClass, keyType,
+					defineDataTypeName(file, cls, valueType) + "(i.value)", "b"), ";");
+				method.body.line("}");
+			}
+
+			return "this." + name + "(" + buffer + ", " + data + ")";
+		}
+
+		throw new RuntimeException();
 	}
 
 	private String buildDecode(AsFile file, Class cls, AsClass codeClass, Property property, String buffer)
@@ -503,63 +517,61 @@ public class AsBuilder extends CodeBuilder
 			return name + "(" + buffer + ")";
 		}
 
-//		if (type instanceof DataType.List) {
-//			file.addImport("java.util.LinkedList");
-//
-//			DataType subType = ((DataType.List)type).type;
-//
-//			String name = "decode" + (++codeClass.decodeMethods);
-//			JavaMethod method = new JavaMethod(name, typeName, Mod.at(Mod.PRIVATE));
-//
-//			codeClass.addMethod(method);
-//			method.addArgument("b", "InputBuffer");
-//
-//			method.body.line("final ", typeName, " v = new LinkedList<>();");
-//			method.body.line("for (int i = 0, l = b.readInt(); i < l; ++i) {");
-//			method.body.line("\tv.add(", buildDecodeData(file, cls, codeClass, subType, "b"), ");");
-//			method.body.line("}");
-//			method.body.line("return v;");
-//
-//			return "this." + name + "(" + buffer + ")";
-//		}
-
-		if (type instanceof DataType.Map) {
+		if (type instanceof DataType.List) {
+			file.addImport("org.shypl.common.collection.LinkedList");
+			file.addImport("org.shypl.common.collection.IList");
 
 			String name = codeClass.getDecoder(type);
 			if (name == null) {
 				name = codeClass.addDecoder(type);
-				AsMethod method = new AsMethod(name, typeName, Mod.at(Mod.PRIVATE | Mod.STATIC));
 
-				DataType keyType = ((DataType.Map)type).keyType;
-				DataType valueType = ((DataType.Map)type).valueType;
+				DataType subType = ((DataType.List)type).type;
+
+				AsMethod method = new AsMethod(name, "IList", Mod.at(Mod.PRIVATE));
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "InputBuffer");
 
+				method.body.line("const v:IList = new LinkedList();");
 				method.body.line("const l:int = b.readInt();");
-				method.body.line("if (l === -1) {");
-				method.body.line(1, "return null;");
-				method.body.line("}");
-				if (keyType.isPrimitive()) {
-					method.body.line("const m:Object = {};");
-				}
-				else {
-					file.addImport("flash.utils.Dictionary");
-					method.body.line("const m:Dictionary = {};");
-				}
 				method.body.line("for (var i:int = 0; i < l; ++i) {");
-				method.body.line("\tm[", buildDecodeData(file, cls, codeClass, keyType, "b"), "] = ", buildDecodeData(file, cls, codeClass, valueType, "b"), ";");
+				method.body.line("\tv.add(", buildDecodeData(file, cls, codeClass, subType, "b"), ");");
 				method.body.line("}");
-				method.body.line("return m;");
+				method.body.line("return v;");
+			}
+
+			return "this." + name + "(" + buffer + ")";
+		}
+
+		if (type instanceof DataType.Map) {
+			file.addImport("org.shypl.common.collection.LinkedMap");
+			file.addImport("org.shypl.common.collection.IMap");
+
+			String name = codeClass.getDecoder(type);
+			if (name == null) {
+				name = codeClass.addDecoder(type);
+
+				DataType keyType = ((DataType.Map)type).keyType;
+				DataType valueType = ((DataType.Map)type).valueType;
+
+				AsMethod method = new AsMethod(name, "IMap", Mod.at(Mod.PRIVATE));
+
+				codeClass.addMethod(method);
+				method.addArgument("b", "InputBuffer");
+
+				method.body.line("const v:IMap = new LinkedMap();");
+				method.body.line("const l:int = b.readInt();");
+				method.body.line("for (var i:int = 0; i < l; ++i) {");
+				method.body.line("\tv.put(", buildDecodeData(file, cls, codeClass, keyType, "b"), ", ",
+					buildDecodeData(file, cls, codeClass, valueType, "b"), ");");
+				method.body.line("}");
+				method.body.line("return v;");
 			}
 
 			return name + "(" + buffer + ")";
 		}
 
-		throw new RuntimeException("TODO");
-
-//
-//		throw new RuntimeException();
+		throw new RuntimeException();
 	}
 
 	private String defineBufferMethod(DataType type, boolean read)
@@ -663,28 +675,19 @@ public class AsBuilder extends CodeBuilder
 		}
 
 		if (type instanceof DataType.Array) {
-//			if (((DataType.Array)type).type == DataType.Primitive.BYTE) {
-//				file.addImport("flash.utils.ByteArray");
-//				return "ByteArray";
-//			}
 			return "Vector.<" + defineDataTypeName(file, cls, ((DataType.Array)type).type) + ">";
 		}
 
-//		if (type instanceof DataType.List) {
-//			file.addImport("java.util.List");
-//			return "List<" + defineDataTypeName(file, cls, ((DataType.List)type).type, true) + ">";
-//		}
-
-		if (type instanceof DataType.Map) {
-			if (((DataType.Map)type).keyType.isPrimitive()) {
-				return "Object";
-			}
-			file.addImport("flash.utils.Dictionary");
-			return "Dictionary";
+		if (type instanceof DataType.List) {
+			file.addImport("org.shypl.common.collection.IList");
+			return "IList";
 		}
 
-		throw new RuntimeException("TODO");
-//
-//		throw new RuntimeException();
+		if (type instanceof DataType.Map) {
+			file.addImport("org.shypl.common.collection.IMap");
+			return "IMap";
+		}
+
+		throw new RuntimeException();
 	}
 }

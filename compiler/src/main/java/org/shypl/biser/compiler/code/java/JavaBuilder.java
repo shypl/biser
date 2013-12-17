@@ -615,7 +615,7 @@ public class JavaBuilder extends CodeBuilder
 
 				method.body.line("b.writeInt(v.length);");
 				method.body.line("for (", defineDataTypeName(file, cls, subType), " e : v) {");
-				method.body.line("\t", buildEncodeData(file, cls, codeClass, subType, "e", "b"), ";");
+				method.body.line(1, buildEncodeData(file, cls, codeClass, subType, "e", "b"), ";");
 				method.body.line("}");
 			}
 
@@ -638,7 +638,7 @@ public class JavaBuilder extends CodeBuilder
 
 				method.body.line("b.writeInt(v.size());");
 				method.body.line("for (", defineDataTypeName(file, cls, subType), " e : v) {");
-				method.body.line("\t", buildEncodeData(file, cls, codeClass, subType, "e", "b"), ";");
+				method.body.line(1, buildEncodeData(file, cls, codeClass, subType, "e", "b"), ";");
 				method.body.line("}");
 			}
 
@@ -664,8 +664,8 @@ public class JavaBuilder extends CodeBuilder
 				method.body.line("b.writeInt(v.size());");
 				method.body.line("for (Map.Entry<", defineDataTypeName(file, cls, keyType, true), ", ",
 					defineDataTypeName(file, cls, valueType, true), "> e : v.entrySet()) {");
-				method.body.line("\t", buildEncodeData(file, cls, codeClass, keyType, "e.getKey()", "b"), ";");
-				method.body.line("\t", buildEncodeData(file, cls, codeClass, valueType, "e.getValue()", "b"), ";");
+				method.body.line(1, buildEncodeData(file, cls, codeClass, keyType, "e.getKey()", "b"), ";");
+				method.body.line(1, buildEncodeData(file, cls, codeClass, valueType, "e.getValue()", "b"), ";");
 				method.body.line("}");
 			}
 
