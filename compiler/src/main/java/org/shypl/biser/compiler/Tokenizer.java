@@ -17,6 +17,7 @@ public class Tokenizer
 		Entry worldEntry = null;
 		StringBuilder wordBuilder = null;
 		final LinkedList<Entry> list = new LinkedList<>();
+		boolean comment = false;
 
 		while (true) {
 			int i = reader.read();
@@ -31,6 +32,7 @@ public class Tokenizer
 			char chr = (char)i;
 
 			if (chr == '\n') {
+				comment = false;
 				++line;
 				pos = 0;
 				if (worldEntry != null) {
@@ -40,6 +42,10 @@ public class Tokenizer
 				continue;
 			}
 			++pos;
+
+			if (comment) {
+				continue;
+			}
 
 			if (isWhitespace(chr)) {
 				if (worldEntry != null) {
@@ -67,6 +73,11 @@ public class Tokenizer
 			if (worldEntry != null) {
 				worldEntry.word = wordBuilder.toString();
 				worldEntry = null;
+			}
+
+			if (token == Token.HASH) {
+				comment = true;
+				continue;
 			}
 
 			list.add(new Entry(token, line, pos));

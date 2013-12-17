@@ -17,43 +17,46 @@ public enum Token
 	DOLLAR,
 	HASH,
 	MINUS,
-	AT;
+	AT,
+	AMPERSAND;
 
 	public static Token defineToken(char chr)
 	{
 		switch (chr) {
 			case '{':
-				return Token.CURLY_BRACKET_OPEN;
+				return CURLY_BRACKET_OPEN;
 			case '}':
-				return Token.CURLY_BRACKET_CLOSE;
+				return CURLY_BRACKET_CLOSE;
 			case '(':
-				return Token.ROUND_BRACKET_OPEN;
+				return ROUND_BRACKET_OPEN;
 			case ')':
-				return Token.ROUND_BRACKET_CLOSE;
+				return ROUND_BRACKET_CLOSE;
 			case '<':
-				return Token.ANGLE_BRACKET_OPEN;
+				return ANGLE_BRACKET_OPEN;
 			case '>':
-				return Token.ANGLE_BRACKET_CLOSE;
+				return ANGLE_BRACKET_CLOSE;
 			case '[':
-				return Token.SQUARE_BRACKET_OPEN;
+				return SQUARE_BRACKET_OPEN;
 			case ']':
-				return Token.SQUARE_BRACKET_CLOSE;
+				return SQUARE_BRACKET_CLOSE;
 			case ':':
-				return Token.COLON;
+				return COLON;
 			case '*':
-				return Token.STAR;
+				return STAR;
 			case '^':
-				return Token.CARET;
+				return CARET;
 			case '$':
-				return Token.DOLLAR;
+				return DOLLAR;
 			case '#':
-				return Token.HASH;
+				return HASH;
 			case '-':
-				return Token.MINUS;
+				return MINUS;
 			case '@':
-				return Token.AT;
+				return AT;
+			case '&':
+				return AMPERSAND;
 			default:
-				return Token.WORD;
+				return WORD;
 		}
 	}
 }

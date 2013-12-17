@@ -290,7 +290,7 @@ public class Parser
 			case DOLLAR:
 				return new DataType.List(parseDataType(propertyName, scope));
 
-			case HASH: {
+			case AMPERSAND: {
 				final DataType key = parseDataType(propertyName + "Key", scope);
 				tokenizer.next(Token.MINUS);
 				return new DataType.Map(key, parseDataType(propertyName + "Value", scope));
