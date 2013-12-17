@@ -41,6 +41,8 @@ public class Main
 				Config.Target target = entry.getValue();
 				compiler.compile(Lang.valueOf(entry.getKey().toUpperCase()), root.resolve(target.path).toRealPath(), target.pkg);
 			}
+
+			System.out.println("Complete");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
