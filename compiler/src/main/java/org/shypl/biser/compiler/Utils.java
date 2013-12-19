@@ -4,8 +4,20 @@ import java.util.Collection;
 
 public class Utils
 {
+	private static final String[] singularExceptions = new String[]{
+		"lives"
+	};
+
 	static public String toSingular(String s)
 	{
+		final String sl = s.toLowerCase();
+
+		for (String exception : singularExceptions) {
+			if (exception.equals(sl)) {
+				return s;
+			}
+		}
+
 		if (s.endsWith("ies")) {
 			return s.substring(0, s.length() - 3).concat("y");
 		}

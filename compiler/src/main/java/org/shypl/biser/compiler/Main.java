@@ -45,7 +45,7 @@ public class Main
 			System.out.println("Complete");
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			e.printStackTrace(System.out);
 			System.exit(1);
 		}
 	}

@@ -40,9 +40,9 @@ package org.shypl.biser.api
 			_buffer.writeInt(_controller._registerServiceResultHandler(new ResultHandler(this, action, handler)));
 		}
 
-		protected final function _debug(message:String, ...args):void
+		protected final function _trace(message:String, ...args):void
 		{
-			_controller._debug0(message, args);
+			_controller._trace0(message, args);
 		}
 	}
 }

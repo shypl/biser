@@ -163,7 +163,7 @@ public class Parser
 		String name = tokenizer.word();
 		Token token = tokenizer.next();
 
-		if (token == Token.ANGLE_BRACKET_OPEN) {
+		if (token == Token.SQUARE_BRACKET_OPEN) {
 			EnumDataClass cls = new EnumDataClass(pkg, name, scope);
 			parseEnumDataClassBody(cls);
 			return cls;

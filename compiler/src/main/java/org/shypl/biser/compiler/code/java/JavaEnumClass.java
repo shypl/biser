@@ -19,7 +19,7 @@ public class JavaEnumClass extends CodeClass
 	@Override
 	public void build(int tab, FileBuilder builder)
 	{
-		if (tab > 0) {
+		if (tab == 0) {
 			builder.line(tab, "public enum ", name);
 		}
 		else {

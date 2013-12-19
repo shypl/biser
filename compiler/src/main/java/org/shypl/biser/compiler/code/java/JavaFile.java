@@ -27,11 +27,13 @@ public class JavaFile extends CodeFile
 		builder.line("package ", pkg, ";");
 		builder.line();
 
-		for (String i : imports) {
-			builder.line("import ", i, ";");
+		if (!imports.isEmpty()) {
+		    for (String i : imports) {
+				builder.line("import ", i, ";");
+			}
+			builder.line();
 		}
 
-		builder.line();
 		cls.build(0, builder);
 	}
 }

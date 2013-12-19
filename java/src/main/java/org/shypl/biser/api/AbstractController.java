@@ -1,16 +1,13 @@
 package org.shypl.biser.api;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.shypl.biser.InputBuffer;
 import org.shypl.biser.OutputBuffer;
 
 public abstract class AbstractController<C extends AbstractConnection>
 {
-	protected final Logger logger;
-
-	protected AbstractController(final Logger logger)
-	{
-		this.logger = logger;
-	}
+	protected static final Logger logger = LogManager.getLogger(AbstractController.class);
 
 	public final void receiveMessage(final C connection, final InputBuffer message) throws Exception
 	{

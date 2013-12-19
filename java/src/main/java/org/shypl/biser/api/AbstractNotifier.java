@@ -18,8 +18,8 @@ public abstract class AbstractNotifier
 		connection.channel.sendMessage(buffer);
 	}
 
-	protected final void _debug(final String msg, final Object... args)
+	protected final void _trace(final String msg, final Object... args)
 	{
-		connection.logger.debug(msg, args);
+		AbstractConnection.logger.trace(msg, args);
 	}
 }

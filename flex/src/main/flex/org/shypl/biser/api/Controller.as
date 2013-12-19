@@ -74,17 +74,17 @@ package org.shypl.biser.api
 			return _serviceResultHandlers.push(handler);
 		}
 
-		internal function _debug0(message:String, args:Array):void
+		internal function _trace0(message:String, args:Array):void
 		{
-			if (_logger.debugEnabled) {
+			if (_logger.traceEnabled) {
 				args.unshift(message);
-				_logger.debug.apply(null, args);
+				_logger.trace.apply(null, args);
 			}
 		}
 
-		protected function _debug(message:String, ...args):void
+		protected function _trace(message:String, ...args):void
 		{
-			_debug0(message, args);
+			_trace0(message, args);
 		}
 
 		[Abstract]

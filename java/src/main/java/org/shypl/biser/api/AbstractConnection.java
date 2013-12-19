@@ -1,16 +1,18 @@
 package org.shypl.biser.api;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public abstract class AbstractConnection<C extends ConnectionChannel>
 {
+	protected static final Logger logger = LogManager.getLogger(AbstractConnection.class);
 	protected final C channel;
-	protected final Logger            logger;
 	private final Object closeLock = new Object();
 	private volatile boolean closed;
 
-	protected AbstractConnection(final C channel, final Logger logger)
+	protected AbstractConnection(final C channel)
 	{
 		this.channel = channel;
-		this.logger = logger;
 	}
 
 	public final void close()

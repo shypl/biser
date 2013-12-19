@@ -117,7 +117,7 @@ public class FlexBuilder extends CodeBuilder
 					callNotifier.body.line(3, "case ", String.valueOf(m++), ":");
 
 					if (notifier.properties.isEmpty()) {
-						callNotifier.body.line(4, "_debug(\"< ", cls.name, ".", notifier.name, "()\")");
+						callNotifier.body.line(4, "_trace(\"< ", cls.name, ".", notifier.name, "()\")");
 						callNotifier.body.line(4, propertyName, ".", notifier.name, "();");
 					}
 					else {
@@ -137,7 +137,7 @@ public class FlexBuilder extends CodeBuilder
 								defineDataTypeName(file, controller, property.dataType), " = ",
 								buildDecodeData(file, controller, codeClass, property.dataType, "buffer"), ";");
 						}
-						method.body.line("_debug(\"< ", cls.name, ".", notifier.name, "(", Utils.join(debug, ", "),
+						method.body.line("_trace(\"< ", cls.name, ".", notifier.name, "(", Utils.join(debug, ", "),
 							")\", ", Utils.join(args, ", "), ");");
 						method.body.line(propertyName, ".", notifier.name, "(", Utils.join(args, ", "), ");");
 
@@ -231,10 +231,10 @@ public class FlexBuilder extends CodeBuilder
 				debug2.add(property.name);
 			}
 			if (debug1.isEmpty()) {
-				method.body.line("_debug(\"> ", cls.name, ".", service.name, "\");");
+				method.body.line("_trace(\"> ", cls.name, ".", service.name, "\");");
 			}
 			else {
-				method.body.line("_debug(\"> ", cls.name, ".", service.name, "(", Utils.join(debug1, ", ") , ")\", ", Utils.join(debug2, ", "),");");
+				method.body.line("_trace(\"> ", cls.name, ".", service.name, "(", Utils.join(debug1, ", ") , ")\", ", Utils.join(debug2, ", "),");");
 			}
 
 			for (Property property : service.properties) {
@@ -265,7 +265,7 @@ public class FlexBuilder extends CodeBuilder
 				handler.addArgument("buffer", "InputBuffer");
 				handler.body.line("var r:", result, " = ",
 					buildDecodeData(file, cls, codeClass, service.result, "buffer"), ";");
-				handler.body.line("_debug(\"<< ", cls.name, ".", service.name, ": {}\", r);");
+				handler.body.line("_trace(\"<< ", cls.name, ".", service.name, ": {}\", r);");
 				handler.body.line("return r;");
 
 				handleResult.body.line(1, "case ", serviceId, ":");
@@ -298,7 +298,7 @@ public class FlexBuilder extends CodeBuilder
 
 	private CodeClass buildEnum(FlexFile file, EnumDataClass cls)
 	{
-		file.addImport("org.shypl.biser.Enum");
+		file.addImport("org.shypl.common.lang.Enum");
 		return new FlexEnumClass(defineClassName(cls), cls.values);
 	}
 

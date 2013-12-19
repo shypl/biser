@@ -71,8 +71,8 @@ public class JavaBuilder extends CodeBuilder
 
 		JavaMethod constructor = new JavaMethod(controller.name, null, Mod.at(Mod.PROTECTED));
 		codeClass.addMethod(constructor);
-		constructor.addArgument("logger", "Logger");
-		constructor.body.line("super(logger);");
+//		constructor.addArgument("logger", "Logger");
+//		constructor.body.line("super(logger);");
 
 		// services
 		JavaMethod route = new JavaMethod("route", "OutputBuffer", Mod.at(Mod.PROTECTED | Mod.OVERRIDE));
@@ -119,7 +119,7 @@ public class JavaBuilder extends CodeBuilder
 						route.body.line(4, "output.writeInt(input.readInt());");
 					}
 
-					route.body.line(4, "if (logger.isDebug()) {");
+					route.body.line(4, "if (logger.isTraceEnabled()) {");
 
 					for (Property property : service.properties) {
 						String arg = "arg" + (a++);
@@ -142,11 +142,11 @@ public class JavaBuilder extends CodeBuilder
 								args2.getLast(), ";");
 					}
 					if (debugArgs.isEmpty()) {
-						route.body.line(5, "logger.debug(\"> ", cls.name, ".", service.name, "()\");");
+						route.body.line(5, "logger.trace(\"> ", cls.name, ".", service.name, "()\");");
 					}
 					else {
 						route.body
-							.line(5, "logger.debug(\"> ", cls.name, ".", service.name, "(", Utils.join(debug, ", "),
+							.line(5, "logger.trace(\"> ", cls.name, ".", service.name, "(", Utils.join(debug, ", "),
 								")\", ", Utils.join(debugArgs, ", "), ");");
 					}
 
@@ -158,16 +158,16 @@ public class JavaBuilder extends CodeBuilder
 								";");
 						if (service.result == DataType.Primitive.BYTES) {
 							file.addImport("org.shypl.biser.BtpUtils");
-							route.body.line(5, "logger.debug(\"<< ", cls.name, ".", service.name,
+							route.body.line(5, "logger.trace(\"<< ", cls.name, ".", service.name,
 								": {}\", BtpUtils.convertBytesToHex(r));");
 						}
 						else if (service.result instanceof DataType.Array) {
 							file.addImport("java.util.Arrays");
-							route.body.line(5, "logger.debug(\"<< ", cls.name, ".", service.name,
+							route.body.line(5, "logger.trace(\"<< ", cls.name, ".", service.name,
 								": {}\", Arrays.toString(r));");
 						}
 						else {
-							route.body.line(5, "logger.debug(\"<< ", cls.name, ".", service.name, ": {}\", r);");
+							route.body.line(5, "logger.trace(\"<< ", cls.name, ".", service.name, ": {}\", r);");
 						}
 						route.body
 							.line(5, buildEncodeData(file, controller, codeClass, service.result, "r", "output"), ";");
@@ -233,7 +233,6 @@ public class JavaBuilder extends CodeBuilder
 		JavaFile file = new JavaFile(pkg.fullName());
 		file.addImport("org.shypl.biser.api.AbstractConnection");
 		file.addImport("org.shypl.biser.api.ConnectionChannel");
-		file.addImport("org.shypl.biser.api.Logger");
 
 		JavaClass noticeClass = new JavaClass("Notice", null, Mod.at(Mod.PUBLIC | Mod.FINAL));
 		JavaMethod constructor = new JavaMethod("Notice", null, Mod.at(Mod.PROTECTED));
@@ -254,9 +253,8 @@ public class JavaBuilder extends CodeBuilder
 		constructor = new JavaMethod(connection.name, null, Mod.at(Mod.PROTECTED));
 		connectionClass.addMethod(constructor);
 		constructor.addArgument("channel", "C");
-		constructor.addArgument("logger", "Logger");
 
-		constructor.body.line("super(channel, logger);");
+		constructor.body.line("super(channel);");
 
 		if (hasNotice) {
 			connectionClass.addProperty(new JavaProperty("notice", "Notice", Mod.at(Mod.PUBLIC | Mod.FINAL)));
@@ -319,7 +317,7 @@ public class JavaBuilder extends CodeBuilder
 				debug1.add(property.name + ": {}");
 				debug2.add(property.name);
 			}
-			method.body.line("_debug(\"< ", cls.name, ".", agent.name, "(", Utils.join(debug1, ", "), ")\", ",
+			method.body.line("_trace(\"< ", cls.name, ".", agent.name, "(", Utils.join(debug1, ", "), ")\", ",
 				Utils.join(debug2, ", "), ");");
 
 			method.body.line("final OutputBuffer b = new OutputBuffer();");
