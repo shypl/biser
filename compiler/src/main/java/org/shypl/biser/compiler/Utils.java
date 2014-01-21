@@ -5,7 +5,6 @@ import java.util.Collection;
 public class Utils
 {
 	private static final String[] singularExceptions = new String[]{
-		"lives"
 	};
 
 	static public String toSingular(String s)

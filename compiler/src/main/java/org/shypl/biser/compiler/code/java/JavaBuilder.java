@@ -486,15 +486,16 @@ public class JavaBuilder extends CodeBuilder
 
 		if (type instanceof DataType.Array) {
 
+			DataType subType = ((DataType.Array)type).type;
+
+			if (subType instanceof DataType.Primitive) {
+				return buffer + "." + defineBufferMethod(subType, true) + "Array()";
+			}
+
 			String name = codeClass.getDecoder(type);
 			if (name == null) {
 				name = codeClass.addDecoder(type);
 
-				DataType subType = ((DataType.Array)type).type;
-
-				if (subType instanceof DataType.Primitive) {
-					return buffer + "." + defineBufferMethod(subType, true) + "Array()";
-				}
 
 				JavaMethod method = new JavaMethod(name, typeName, Mod.at(Mod.PRIVATE));
 
@@ -587,23 +588,23 @@ public class JavaBuilder extends CodeBuilder
 		}
 
 		if (type instanceof DataType.Array) {
+			DataType subType = ((DataType.Array)type).type;
+
+			if (subType instanceof DataType.Primitive) {
+				return buffer + "." + defineBufferMethod(subType, false) + "Array(" + data + ")";
+			}
+
+			if (subType instanceof DataType.Data) {
+				DataClass typeClass = ((DataType.Data)subType).cls();
+				if (typeClass instanceof ObjectDataClass) {
+					return buffer + ".writeObjectArray(" + data + ")";
+				}
+				return buffer + ".writeEnumArray(" + data + ")";
+			}
 
 			String name = codeClass.getEncoder(type);
 			if (name == null) {
 				name = codeClass.addEncoder(type);
-				DataType subType = ((DataType.Array)type).type;
-
-				if (subType instanceof DataType.Primitive) {
-					return buffer + "." + defineBufferMethod(subType, false) + "Array(" + data + ")";
-				}
-
-				if (subType instanceof DataType.Data) {
-					DataClass typeClass = ((DataType.Data)subType).cls();
-					if (typeClass instanceof ObjectDataClass) {
-						return buffer + ".writeObjectArray(" + data + ")";
-					}
-					return buffer + ".writeEnumArray(" + data + ")";
-				}
 
 				JavaMethod method = new JavaMethod(name, "void", Mod.at(Mod.PRIVATE));
 
@@ -766,8 +767,8 @@ public class JavaBuilder extends CodeBuilder
 		}
 
 		if (type instanceof DataType.List) {
-			file.addImport("java.util.List");
-			return "List<" + defineDataTypeName(file, cls, ((DataType.List)type).type, true) + ">";
+			file.addImport("java.util.LinkedList");
+			return "LinkedList<" + defineDataTypeName(file, cls, ((DataType.List)type).type, true) + ">";
 		}
 
 		if (type instanceof DataType.Map) {

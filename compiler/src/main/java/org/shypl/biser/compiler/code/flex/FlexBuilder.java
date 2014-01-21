@@ -405,7 +405,7 @@ public class FlexBuilder extends CodeBuilder
 		}
 
 		if (type instanceof DataType.List) {
-			file.addImport("org.shypl.common.collection.IList");
+			file.addImport("org.shypl.common.collection.LinkedList");
 			file.addImport("org.shypl.common.collection.IListIterator");
 
 			String name = codeClass.getEncoder(type);
@@ -417,7 +417,7 @@ public class FlexBuilder extends CodeBuilder
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "OutputBuffer");
-				method.addArgument("v", "IList");
+				method.addArgument("v", "LinkedList");
 
 				method.body.line("b.writeInt(v.size);");
 				method.body.line("const i:IListIterator = v.iterator();");
@@ -431,7 +431,7 @@ public class FlexBuilder extends CodeBuilder
 		}
 
 		if (type instanceof DataType.Map) {
-			file.addImport("org.shypl.common.collection.IMap");
+			file.addImport("org.shypl.common.collection.LinkedMap");
 			file.addImport("org.shypl.common.collection.IMapIterator");
 
 			String name = codeClass.getEncoder(type);
@@ -445,7 +445,7 @@ public class FlexBuilder extends CodeBuilder
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "OutputBuffer");
-				method.addArgument("v", "IMap");
+				method.addArgument("v", "LinkedMap");
 
 				method.body.line("b.writeInt(v.size);");
 				method.body.line("const i:IMapIterator = v.iterator();");
@@ -519,7 +519,6 @@ public class FlexBuilder extends CodeBuilder
 
 		if (type instanceof DataType.List) {
 			file.addImport("org.shypl.common.collection.LinkedList");
-			file.addImport("org.shypl.common.collection.IList");
 
 			String name = codeClass.getDecoder(type);
 			if (name == null) {
@@ -527,12 +526,12 @@ public class FlexBuilder extends CodeBuilder
 
 				DataType subType = ((DataType.List)type).type;
 
-				FlexMethod method = new FlexMethod(name, "IList", Mod.at(Mod.PRIVATE));
+				FlexMethod method = new FlexMethod(name, "LinkedList", Mod.at(Mod.PRIVATE));
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "InputBuffer");
 
-				method.body.line("const v:IList = new LinkedList();");
+				method.body.line("const v:LinkedList = new LinkedList();");
 				method.body.line("const l:int = b.readInt();");
 				method.body.line("for (var i:int = 0; i < l; ++i) {");
 				method.body.line("\tv.add(", buildDecodeData(file, cls, codeClass, subType, "b"), ");");
@@ -545,7 +544,6 @@ public class FlexBuilder extends CodeBuilder
 
 		if (type instanceof DataType.Map) {
 			file.addImport("org.shypl.common.collection.LinkedMap");
-			file.addImport("org.shypl.common.collection.IMap");
 
 			String name = codeClass.getDecoder(type);
 			if (name == null) {
@@ -554,12 +552,12 @@ public class FlexBuilder extends CodeBuilder
 				DataType keyType = ((DataType.Map)type).keyType;
 				DataType valueType = ((DataType.Map)type).valueType;
 
-				FlexMethod method = new FlexMethod(name, "IMap", Mod.at(Mod.PRIVATE));
+				FlexMethod method = new FlexMethod(name, "LinkedMap", Mod.at(Mod.PRIVATE));
 
 				codeClass.addMethod(method);
 				method.addArgument("b", "InputBuffer");
 
-				method.body.line("const v:IMap = new LinkedMap();");
+				method.body.line("const v:LinkedMap = new LinkedMap();");
 				method.body.line("const l:int = b.readInt();");
 				method.body.line("for (var i:int = 0; i < l; ++i) {");
 				method.body.line("\tv.put(", buildDecodeData(file, cls, codeClass, keyType, "b"), ", ",
@@ -679,13 +677,13 @@ public class FlexBuilder extends CodeBuilder
 		}
 
 		if (type instanceof DataType.List) {
-			file.addImport("org.shypl.common.collection.IList");
-			return "IList";
+			file.addImport("org.shypl.common.collection.LinkedList");
+			return "LinkedList";
 		}
 
 		if (type instanceof DataType.Map) {
-			file.addImport("org.shypl.common.collection.IMap");
-			return "IMap";
+			file.addImport("org.shypl.common.collection.LinkedMap");
+			return "LinkedMap";
 		}
 
 		throw new RuntimeException();

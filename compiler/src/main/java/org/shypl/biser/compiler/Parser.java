@@ -12,9 +12,9 @@ import org.shypl.biser.compiler.prototype.Property;
 
 public class Parser
 {
-	static private String convertPropertyToClassName(String name)
+	static private String convertPropertyToClassName(String name, boolean isCollection)
 	{
-		return Utils.toCamelCase(Utils.toSingular(name), true);
+		return Utils.toCamelCase(isCollection ? Utils.toSingular(name) : name, true);
 	}
 
 	private final Package pkg;
@@ -140,7 +140,7 @@ public class Parser
 				tokenizer.check(Token.WORD);
 				String name = tokenizer.word();
 				tokenizer.next(Token.COLON);
-				method.addProperty(new Property(name, parseDataType(method.name + "_" + name, cls)));
+				method.addProperty(new Property(name, parseDataType(method.name + "_" + name, cls, false)));
 			}
 			token = tokenizer.next();
 		}
@@ -149,7 +149,7 @@ public class Parser
 			if (!isService) {
 				throw tokenizer.createUnexpectedTokenException();
 			}
-			method.serResult(parseDataType(method.name + "Result", cls));
+			method.serResult(parseDataType(method.name + "Result", cls, false));
 		}
 		else {
 			tokenizer.prev();
@@ -199,7 +199,7 @@ public class Parser
 
 			switch (token) {
 				case COLON:
-					cls.addProperty(new Property(name, parseDataType(name, cls)));
+					cls.addProperty(new Property(name, parseDataType(name, cls, false)));
 					break;
 
 				case SQUARE_BRACKET_OPEN:
@@ -236,7 +236,7 @@ public class Parser
 		}
 	}
 
-	private DataType parseDataType(String propertyName, Class scope) throws TokenizerException
+	private DataType parseDataType(String propertyName, Class scope, boolean isCollection) throws TokenizerException
 	{
 		Token token = tokenizer.next();
 
@@ -264,7 +264,7 @@ public class Parser
 				}
 
 				if (tokenizer.next() == Token.CURLY_BRACKET_OPEN) {
-					ObjectDataClass cls = new ObjectDataClass(pkg, convertPropertyToClassName(propertyName), scope, type);
+					ObjectDataClass cls = new ObjectDataClass(pkg, convertPropertyToClassName(propertyName, isCollection), scope, type);
 					parseObjectDataClassBody(cls);
 					return new DataType.Data(cls);
 				}
@@ -273,27 +273,27 @@ public class Parser
 			}
 
 			case CURLY_BRACKET_OPEN: {
-				ObjectDataClass cls = new ObjectDataClass(pkg, convertPropertyToClassName(propertyName), scope, null);
+				ObjectDataClass cls = new ObjectDataClass(pkg, convertPropertyToClassName(propertyName, isCollection), scope, null);
 				parseObjectDataClassBody(cls);
 				return new DataType.Data(cls);
 			}
 
 			case SQUARE_BRACKET_OPEN: {
-				EnumDataClass cls = new EnumDataClass(pkg, convertPropertyToClassName(propertyName), scope);
+				EnumDataClass cls = new EnumDataClass(pkg, convertPropertyToClassName(propertyName, isCollection), scope);
 				parseEnumDataClassBody(cls);
 				return new DataType.Data(cls);
 			}
 
 			case STAR:
-				return new DataType.Array(parseDataType(propertyName, scope));
+				return new DataType.Array(parseDataType(propertyName, scope, true));
 
 			case DOLLAR:
-				return new DataType.List(parseDataType(propertyName, scope));
+				return new DataType.List(parseDataType(propertyName, scope, true));
 
 			case AMPERSAND: {
-				final DataType key = parseDataType(propertyName + "Key", scope);
+				final DataType key = parseDataType(propertyName + "Key", scope, isCollection);
 				tokenizer.next(Token.MINUS);
-				return new DataType.Map(key, parseDataType(propertyName + "Value", scope));
+				return new DataType.Map(key, parseDataType(propertyName + "Value", scope, isCollection));
 			}
 
 			default:
