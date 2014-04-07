@@ -1,0 +1,47 @@
+<project name="Shypl Biser">
+
+	<target name="build-flash">
+		<property environment="env"/>
+		<property name="FLEX_HOME" value="${env.FLEX_HOME}"/>
+
+		<java jar="${FLEX_HOME}/lib/compc.jar" dir="${basedir}" fork="true" failonerror="true">
+			<jvmarg value="-Dfile.encoding=UTF-8"/>
+			<arg value="+flexlib=${FLEX_HOME}/frameworks"/>
+			<arg value="-source-path+=flash/src"/>
+			<arg value="-include-sources=flash/src"/>
+			<arg value="-library-path+=flash/lib"/>
+			<arg value="-output=bin/shypl-biser.swc"/>
+		</java>
+	</target>
+
+	<target name="build-java">
+		<mkdir dir="tmp"/>
+
+		<javac srcdir="java/src" destdir="tmp">
+			<classpath>
+				<fileset dir="java/lib">
+					<include name="*.jar"/>
+				</fileset>
+			</classpath>
+		</javac>
+
+		<jar destfile="bin/shypl-biser.jar" basedir="tmp"/>
+
+		<delete dir="tmp"/>
+	</target>
+
+	<target name="build-java-compiler">
+		<mkdir dir="tmp"/>
+
+		<javac srcdir="java-compiler/src" destdir="tmp"/>
+
+		<jar destfile="bin/shypl-biser-compiler.jar" basedir="tmp">
+			<manifest>
+				<attribute name="Main-Class" value="org.shypl.biser.compiler.Main"/>
+			</manifest>
+		</jar>
+
+		<delete dir="tmp"/>
+	</target>
+
+</project>
