@@ -1,7 +1,7 @@
 package org.shypl.biser.client
 {
 	import org.shypl.biser.OutputBuffer;
-	import org.shypl.logging.ILogger;
+	import org.shypl.common.logging.ILogger;
 
 	[Abstract]
 	public class Service

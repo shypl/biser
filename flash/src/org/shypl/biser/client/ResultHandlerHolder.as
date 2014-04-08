@@ -1,8 +1,8 @@
 package org.shypl.biser.client
 {
 	import org.shypl.biser.InputBuffer;
-	import org.shypl.lang.AbstractMethodException;
-	import org.shypl.logging.ILogger;
+	import org.shypl.common.lang.AbstractMethodException;
+	import org.shypl.common.logging.ILogger;
 
 	[Abstract]
 	public class ResultHandlerHolder

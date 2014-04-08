@@ -1,6 +1,6 @@
 package org.shypl.biser.client
 {
-	import org.shypl.lang.RuntimeException;
+	import org.shypl.common.lang.RuntimeException;
 
 	public class ConnectionException extends RuntimeException
 	{

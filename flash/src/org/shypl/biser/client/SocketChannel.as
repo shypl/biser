@@ -11,13 +11,13 @@ package org.shypl.biser.client
 	import flash.utils.ByteArray;
 	import flash.utils.Timer;
 
-	import org.shypl.lang.ErrorEventException;
-	import org.shypl.lang.IllegalArgumentException;
-	import org.shypl.lang.IllegalStateException;
-	import org.shypl.logging.ILogger;
-	import org.shypl.logging.LogManager;
-	import org.shypl.util.ByteUtils;
-	import org.shypl.util.CollectionUtils;
+	import org.shypl.common.lang.ErrorEventException;
+	import org.shypl.common.lang.IllegalArgumentException;
+	import org.shypl.common.lang.IllegalStateException;
+	import org.shypl.common.logging.ILogger;
+	import org.shypl.common.logging.LogManager;
+	import org.shypl.common.util.ByteUtils;
+	import org.shypl.common.util.CollectionUtils;
 
 	public class SocketChannel extends Channel
 	{

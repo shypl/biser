@@ -3,11 +3,11 @@ package org.shypl.biser.client
 	import flash.utils.ByteArray;
 
 	import org.shypl.biser.InputBuffer;
-	import org.shypl.lang.AbstractMethodException;
-	import org.shypl.logging.ILogger;
-	import org.shypl.util.CollectionUtils;
-	import org.shypl.util.Destroyable;
-	import org.shypl.util.IErrorHandler;
+	import org.shypl.common.lang.AbstractMethodException;
+	import org.shypl.common.logging.ILogger;
+	import org.shypl.common.util.CollectionUtils;
+	import org.shypl.common.util.Destroyable;
+	import org.shypl.common.util.IErrorHandler;
 
 	[Abstract]
 	public class AbstractApi extends Destroyable

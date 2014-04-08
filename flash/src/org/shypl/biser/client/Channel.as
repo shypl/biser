@@ -2,9 +2,9 @@ package org.shypl.biser.client
 {
 	import flash.utils.ByteArray;
 
-	import org.shypl.lang.AbstractMethodException;
-	import org.shypl.lang.IllegalStateException;
-	import org.shypl.util.Destroyable;
+	import org.shypl.common.lang.AbstractMethodException;
+	import org.shypl.common.lang.IllegalStateException;
+	import org.shypl.common.util.Destroyable;
 
 	[Abstract]
 	public class Channel extends Destroyable

@@ -2,7 +2,7 @@ package org.shypl.biser
 {
 	import flash.utils.ByteArray;
 
-	import org.shypl.lang.OrdinalEnum;
+	import org.shypl.common.lang.OrdinalEnum;
 
 	public class OutputBuffer
 	{

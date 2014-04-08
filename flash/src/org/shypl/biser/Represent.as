@@ -1,6 +1,6 @@
 package org.shypl.biser
 {
-	import org.shypl.util.StringRepresentMap;
+	import org.shypl.common.util.StringRepresentMap;
 
 	public class Represent extends StringRepresentMap
 	{
