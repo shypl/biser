@@ -220,7 +220,7 @@ public class BuilderJava extends Builder
 				for (Parameter property : parentProperties) {
 					constructor.addArgument(property.name, defineType(property.type, cls));
 				}
-				constructor.body.add("super(", Utils.join(names, ", "), ");");
+				constructor.body.line("super(", Utils.join(names, ", "), ");");
 			}
 
 			if (entity.hasProperties()) {

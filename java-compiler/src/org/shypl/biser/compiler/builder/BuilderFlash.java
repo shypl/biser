@@ -311,7 +311,7 @@ public class BuilderFlash extends Builder
 					constructor.addArgument(property.name, defineType(property.type, cls))
 						.defaultValue = defineDefaultValue(property.type);
 				}
-				constructor.body.add("super(", Utils.join(names, ", "), ");");
+				constructor.body.line("super(", Utils.join(names, ", "), ");");
 			}
 
 			if (entity.hasProperties()) {
