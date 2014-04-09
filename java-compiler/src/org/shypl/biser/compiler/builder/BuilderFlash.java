@@ -13,6 +13,8 @@ import org.shypl.biser.compiler.prototype.Type;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 public class BuilderFlash extends Builder
 {
@@ -103,6 +105,9 @@ public class BuilderFlash extends Builder
 			for (int i = 0; i < arguments.length; i++) {
 				final CodeParameter argument = arguments[i];
 				code.add(argument.name, ":", argument.type);
+				if (argument.defaultValue != null) {
+					code.add(" = ", argument.defaultValue);
+				}
 				if (i != arguments.length - 1) {
 					code.add(", ");
 				}
@@ -281,6 +286,46 @@ public class BuilderFlash extends Builder
 				.line("return object;");
 		}
 
+		// constructors
+		if (encodes.contains(entity)) {
+
+			final LinkedList<Parameter> parentProperties = new LinkedList<>();
+			if (entity.hasParent()) {
+				Entity e = entity;
+				do {
+					e = e.getParent();
+					final Parameter[] properties1 = e.getProperties();
+					for (int i = properties1.length - 1; i >= 0; i--) {
+						parentProperties.addFirst(properties1[i]);
+					}
+				}
+				while (e.hasParent());
+			}
+
+			CodeMethod constructor = null;
+
+			if (!parentProperties.isEmpty()) {
+				constructor = cls.addConstructor();
+				final List<String> names = new LinkedList<>();
+				for (Parameter property : parentProperties) {
+					constructor.addArgument(property.name, defineType(property.type, cls))
+						.defaultValue = defineDefaultValue(property.type);
+				}
+				constructor.body.add("super(", Utils.join(names, ", "), ");");
+			}
+
+			if (entity.hasProperties()) {
+				if (constructor == null) {
+					constructor = cls.addConstructor();
+				}
+				for (Parameter property : properties) {
+					constructor.addArgument(property.name, defineType(property.type, cls))
+						.defaultValue = defineDefaultValue(property.type);
+					constructor.body.line("this.", property.name, " = ", property.name, ";");
+				}
+			}
+		}
+
 		// decode
 		if (decodes.contains(entity)) {
 			cls.addImport("org.shypl.biser.InputBuffer");
@@ -437,6 +482,29 @@ public class BuilderFlash extends Builder
 		}
 
 		throw new IllegalArgumentException();
+	}
+
+	private String defineDefaultValue(final Type type)
+	{
+		if (type instanceof Type.Primitive) {
+			if (type == Type.Primitive.BOOL) {
+				return "false";
+			}
+			if (type == Type.Primitive.BYTE) {
+				return "0";
+			}
+			if (type == Type.Primitive.INT) {
+				return "0";
+			}
+			if (type == Type.Primitive.UINT) {
+				return "0";
+			}
+			if (type == Type.Primitive.DOUBLE) {
+				return "NaN";
+			}
+		}
+
+		return "null";
 	}
 
 	private void buildApiClientController(final Service[] services) throws IOException
