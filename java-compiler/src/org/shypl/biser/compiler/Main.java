@@ -11,10 +11,10 @@ public class Main
 			System.out.println("Start compilation (config: " + config.getAbsolutePath() + ")");
 			Compiler.compile(config);
 		}
-		//		catch (CompilerException e) {
-		//			System.out.println("ERROR: " + e.getMessage());
-		//			System.exit(1);
-		//		}
+		catch (CompilerException e) {
+			System.out.println("ERROR: " + e.getMessage());
+			System.exit(1);
+		}
 		catch (Throwable e) {
 			e.printStackTrace(System.out);
 			System.exit(1);
