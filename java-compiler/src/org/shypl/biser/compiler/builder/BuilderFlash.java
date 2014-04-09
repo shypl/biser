@@ -258,7 +258,7 @@ public class BuilderFlash extends Builder
 		// static decode
 		if (decodeFactories.contains(entity)) {
 			cls.addImport("org.shypl.biser.InputBuffer");
-			cls.addImport("org.shypl.lang.IllegalArgumentException");
+			cls.addImport("org.shypl.common.lang.IllegalArgumentException");
 
 			final CodeMethod method = cls.addMethod("decodeFactory", Mod.STATIC | Mod.PUBLIC, cls.name);
 			method.addArgument("buffer", "InputBuffer");
@@ -330,7 +330,7 @@ public class BuilderFlash extends Builder
 	{
 		if (decodeFactories.contains(entity)) {
 			cls.addImport("org.shypl.biser.InputBuffer");
-			cls.addImport("org.shypl.lang.IllegalArgumentException");
+			cls.addImport("org.shypl.common.lang.IllegalArgumentException");
 
 			final CodeMethod method = cls.addMethod("decode", Mod.STATIC | Mod.PUBLIC, cls.name);
 			method.addArgument("buffer", "InputBuffer");
@@ -376,7 +376,7 @@ public class BuilderFlash extends Builder
 		super.defineEntityDependencies(cls, entity);
 
 		if (entity.isEnum()) {
-			cls.addImport("org.shypl.lang.OrdinalEnum");
+			cls.addImport("org.shypl.common.lang.OrdinalEnum");
 			cls.setParent("OrdinalEnum");
 		}
 		else if (!entity.hasParent()) {
@@ -423,14 +423,14 @@ public class BuilderFlash extends Builder
 				return "Vector.<" + defineType(type1.type, cls) + ">";
 			}
 
-			cls.addImport("org.shypl.collection.LinkedList");
+			cls.addImport("org.shypl.common.collection.LinkedList");
 			defineType(type1.type, cls);
 			return "LinkedList";
 		}
 
 		if (type instanceof Type.Map) {
 			Type.Map type1 = (Type.Map)type;
-			cls.addImport("org.shypl.collection.LinkedMap");
+			cls.addImport("org.shypl.common.collection.LinkedMap");
 			defineType(type1.key, cls);
 			defineType(type1.value, cls);
 			return "LinkedMap";
@@ -446,7 +446,7 @@ public class BuilderFlash extends Builder
 		cls.addImport("org.shypl.biser.InputBuffer");
 		cls.addImport("org.shypl.biser.client.AbstractApi");
 		cls.addImport("org.shypl.biser.client.Channel");
-		cls.addImport("org.shypl.lang.IllegalArgumentException");
+		cls.addImport("org.shypl.common.lang.IllegalArgumentException");
 		cls.setParent("AbstractApi");
 
 		final CodeMethod constructor = cls.addConstructor();
