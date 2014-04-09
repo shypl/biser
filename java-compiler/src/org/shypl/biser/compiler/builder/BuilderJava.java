@@ -13,11 +13,14 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class BuilderJava extends Builder
 {
-	private final Map<ServiceMethod, CodeClass> serverResults = new HashMap<>();
+	private final Map<ServiceMethod, CodeClass> serverResults     = new HashMap<>();
+	private final Set<Service>                  forceSaveServices = new HashSet<>();
 
 	public BuilderJava(final Path path, final String pkg, final Side side)
 	{
@@ -50,6 +53,9 @@ public class BuilderJava extends Builder
 				for (Entity entity : service.getEntities()) {
 					buildEntity(entity);
 				}
+				save(getClass(service));
+			}
+			else if (forceSaveServices.contains(service)) {
 				save(getClass(service));
 			}
 		}
@@ -502,6 +508,7 @@ public class BuilderJava extends Builder
 	{
 		final CodeClass cls = createClass(Utils.toCamelCase(method.name) + "Result", Mod.PUBLIC | Mod.FINAL, true);
 		getClass(service).addInner(cls);
+		forceSaveServices.add(service);
 
 		cls.addImport("org.shypl.biser.OutputBuffer");
 		cls.addImport("org.shypl.biser.server.ClientConnection");
