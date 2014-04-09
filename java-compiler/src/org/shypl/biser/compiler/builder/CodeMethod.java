@@ -10,6 +10,7 @@ public class CodeMethod extends ModName
 	public final String result;
 	public final  Code                body       = new Code();
 	public final  Set<String>         throwsList = new LinkedHashSet<>();
+	public final List<String> head = new LinkedList<>();
 	private final List<CodeParameter> arguments  = new LinkedList<>();
 
 	public CodeMethod(final String name, final int mod, final String result)

@@ -100,6 +100,9 @@ public class BuilderFlash extends Builder
 		// constructors
 		if (cls.hasConstructors()) {
 			final CodeMethod constructor = cls.getConstructor();
+			for (String line : constructor.head) {
+				code.lineTab(2, line);
+			}
 			code.addTab(2, constructor.getModString(), "function ", constructor.name, "(");
 			final CodeParameter[] arguments = constructor.getArguments();
 			for (int i = 0; i < arguments.length; i++) {
@@ -121,6 +124,11 @@ public class BuilderFlash extends Builder
 
 		// methods
 		for (CodeMethod method : cls.getMethods()) {
+
+			for (String line : method.head) {
+				code.lineTab(2, line);
+			}
+
 			String mod = method.getModString();
 			if (method.isOverride()) {
 				mod = "override " + mod;
@@ -310,6 +318,7 @@ public class BuilderFlash extends Builder
 				for (Parameter property : parentProperties) {
 					constructor.addArgument(property.name, defineType(property.type, cls))
 						.defaultValue = defineDefaultValue(property.type);
+					names.add(property.name);
 				}
 				constructor.body.line("super(", Utils.join(names, ", "), ");");
 			}

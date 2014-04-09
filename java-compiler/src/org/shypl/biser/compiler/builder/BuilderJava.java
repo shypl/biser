@@ -196,7 +196,8 @@ public class BuilderJava extends Builder
 		// constructors
 		if (encodes.contains(entity)) {
 			// empty
-			cls.addConstructor();
+			cls.addConstructor()
+				.head.add("@SuppressWarnings(\"UnusedDeclaration\")");
 
 			// full
 			final LinkedList<Parameter> parentProperties = new LinkedList<>();
@@ -219,6 +220,7 @@ public class BuilderJava extends Builder
 				final List<String> names = new LinkedList<>();
 				for (Parameter property : parentProperties) {
 					constructor.addArgument(property.name, defineType(property.type, cls));
+					names.add(property.name);
 				}
 				constructor.body.line("super(", Utils.join(names, ", "), ");");
 			}
@@ -231,6 +233,10 @@ public class BuilderJava extends Builder
 					constructor.addArgument(property.name, defineType(property.type, cls));
 					constructor.body.line("this.", property.name, " = ", property.name, ";");
 				}
+			}
+
+			if (constructor != null) {
+				constructor.head.add("@SuppressWarnings(\"UnusedDeclaration\")");
 			}
 		}
 
@@ -640,6 +646,10 @@ public class BuilderJava extends Builder
 
 		// constructors
 		for (CodeMethod constructor : cls.getConstructors()) {
+			for (String line : constructor.head) {
+				code.lineTab(indent1, line);
+			}
+
 			code.addTab(indent1, constructor.getModString(), constructor.name, "(");
 			final CodeParameter[] arguments = constructor.getArguments();
 			for (int i = 0; i < arguments.length; i++) {
@@ -664,6 +674,9 @@ public class BuilderJava extends Builder
 				addEnumSep = false;
 			}
 
+			for (String line : method.head) {
+				code.lineTab(indent1, line);
+			}
 			if (method.isOverride()) {
 				code.lineTab(indent1, "@Override");
 			}
