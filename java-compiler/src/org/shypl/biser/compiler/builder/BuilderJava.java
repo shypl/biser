@@ -495,6 +495,8 @@ public class BuilderJava extends Builder
 				method.addArgument("client", "C");
 			}
 
+			method.throwsList.add("Exception");
+
 			for (Parameter argument : serviceMethod.getArguments()) {
 				method.addArgument(argument.name, defineType(argument.type, cls), true);
 			}
