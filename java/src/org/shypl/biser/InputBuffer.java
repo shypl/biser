@@ -57,34 +57,6 @@ public class InputBuffer
 		return readByteArray();
 	}
 
-	public double readDouble()
-	{
-		return Double.longBitsToDouble(((long)bytes[pos++] << 56) +
-			((long)(bytes[pos++] & 0xFF) << 48) +
-			((long)(bytes[pos++] & 0xFF) << 40) +
-			((long)(bytes[pos++] & 0xFF) << 32) +
-			((long)(bytes[pos++] & 0xFF) << 24) +
-			((bytes[pos++] & 0xFF) << 16) +
-			((bytes[pos++] & 0xFF) << 8) +
-			(bytes[pos++] & 0xFF));
-	}
-
-	public double[] readDoubleArray()
-	{
-		final int l = readInt();
-		if (l == -1) {
-			return null;
-		}
-
-		double[] a = new double[l];
-
-		for (int i = 0; i < l; ++i) {
-			a[i] = readDouble();
-		}
-
-		return a;
-	}
-
 	public int readInt()
 	{
 		int b = bytes[pos++] & 0xFF;
@@ -125,6 +97,99 @@ public class InputBuffer
 
 		for (int i = 0; i < l; ++i) {
 			a[i] = readInt();
+		}
+
+		return a;
+	}
+
+	public long readUint()
+	{
+		int b = bytes[pos++] & 0xFF;
+
+		switch (b) {
+			case 0xFF:
+				return ((long)bytes[pos++] << 24)
+					+ ((bytes[pos++] & 0xFF) << 16)
+					+ ((bytes[pos++] & 0xFF) << 8)
+					+ (bytes[pos++] & 0xFF);
+
+			case 0xFE:
+				return ((bytes[pos++] & 0xFF) << 16)
+					+ ((bytes[pos++] & 0xFF) << 8)
+					+ (bytes[pos++] & 0xFF);
+
+			case 0xFD:
+				return ((bytes[pos++] & 0xFF) << 8)
+					+ (bytes[pos++] & 0xFF);
+
+			case 0xFC:
+				return bytes[pos++] & 0xFF;
+
+			default:
+				return b;
+		}
+	}
+
+	public long[] readUintArray()
+	{
+		final int l = readInt();
+		if (l == -1) {
+			return null;
+		}
+
+		long[] a = new long[l];
+
+		for (int i = 0; i < l; ++i) {
+			a[i] = readUint();
+		}
+
+		return a;
+	}
+
+	public long readNum()
+	{
+		return (long)readDouble();
+	}
+
+	public long[] readNumArray()
+	{
+		final int l = readInt();
+		if (l == -1) {
+			return null;
+		}
+
+		long[] a = new long[l];
+
+		for (int i = 0; i < l; ++i) {
+			a[i] = readNum();
+		}
+
+		return a;
+	}
+
+	public double readDouble()
+	{
+		return Double.longBitsToDouble(((long)bytes[pos++] << 56) +
+			((long)(bytes[pos++] & 0xFF) << 48) +
+			((long)(bytes[pos++] & 0xFF) << 40) +
+			((long)(bytes[pos++] & 0xFF) << 32) +
+			((long)(bytes[pos++] & 0xFF) << 24) +
+			((bytes[pos++] & 0xFF) << 16) +
+			((bytes[pos++] & 0xFF) << 8) +
+			(bytes[pos++] & 0xFF));
+	}
+
+	public double[] readDoubleArray()
+	{
+		final int l = readInt();
+		if (l == -1) {
+			return null;
+		}
+
+		double[] a = new double[l];
+
+		for (int i = 0; i < l; ++i) {
+			a[i] = readDouble();
 		}
 
 		return a;
@@ -186,45 +251,6 @@ public class InputBuffer
 
 		for (int i = 0; i < l; ++i) {
 			a[i] = readString();
-		}
-
-		return a;
-	}
-
-	public long readUint()
-	{
-		int b = bytes[pos++] & 0xFF;
-
-		switch (b) {
-			case 0xFF:
-				return ((long)bytes[pos++] << 24) + ((bytes[pos++] & 0xFF) << 16) + ((bytes[pos++] & 0xFF) << 8) +
-					(bytes[pos++] & 0xFF);
-
-			case 0xFE:
-				return ((bytes[pos++] & 0xFF) << 16) + ((bytes[pos++] & 0xFF) << 8) + (bytes[pos++] & 0xFF);
-
-			case 0xFD:
-				return ((bytes[pos++] & 0xFF) << 8) + (bytes[pos++] & 0xFF);
-
-			case 0xFC:
-				return bytes[pos++] & 0xFF;
-
-			default:
-				return b;
-		}
-	}
-
-	public long[] readUintArray()
-	{
-		final int l = readInt();
-		if (l == -1) {
-			return null;
-		}
-
-		long[] a = new long[l];
-
-		for (int i = 0; i < l; ++i) {
-			a[i] = readUint();
 		}
 
 		return a;

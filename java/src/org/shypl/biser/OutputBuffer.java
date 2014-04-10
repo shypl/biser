@@ -3,9 +3,11 @@ package org.shypl.biser;
 import java.util.Arrays;
 import java.util.Collection;
 
-@SuppressWarnings("Convert2streamapi")
 public class OutputBuffer
 {
+	private static final long NUM_MAX = 0x20000000000000L; // 9 007 199 254 740 992
+	private static final long NUM_MIN = -0x20000000000000L; // -9 007 199 254 740 992
+
 	private int pos = 0;
 	private int    capacity;
 	private byte[] bytes;
@@ -113,115 +115,6 @@ public class OutputBuffer
 		writeByteArray(v);
 	}
 
-	public void writeDouble(final double v)
-	{
-		long l = Double.doubleToLongBits(v);
-
-		increaseCapacity(8);
-		bytes[pos++] = (byte)(l >>> 56);
-		bytes[pos++] = (byte)(l >>> 48);
-		bytes[pos++] = (byte)(l >>> 40);
-		bytes[pos++] = (byte)(l >>> 32);
-		bytes[pos++] = (byte)(l >>> 24);
-		bytes[pos++] = (byte)(l >>> 16);
-		bytes[pos++] = (byte)(l >>> 8);
-		bytes[pos++] = (byte)l;
-	}
-
-	public void writeDoubleArray(final double[] v)
-	{
-		if (v == null) {
-			writeInt(-1);
-		}
-		else {
-			writeInt(v.length);
-			for (double e : v) {
-				writeDouble(e);
-			}
-		}
-	}
-
-	public void writeDoubleArray(final Collection<Double> v)
-	{
-		if (v == null) {
-			writeInt(-1);
-		}
-		else {
-			writeInt(v.size());
-			for (double e : v) {
-				writeDouble(e);
-			}
-		}
-	}
-
-	public void writeEntity(final BiserEntity v)
-	{
-		if (v == null) {
-			writeInt(-1);
-		}
-		else {
-			writeInt(v._eid());
-			v.encode(this);
-		}
-	}
-
-	public void writeEntityArray(final BiserEntity[] v)
-	{
-		if (v == null) {
-			writeInt(-1);
-		}
-		else {
-			writeInt(v.length);
-			for (BiserEntity e : v) {
-				writeEntity(e);
-			}
-		}
-	}
-
-	public void writeEntityArray(final Collection<BiserEntity> v)
-	{
-		if (v == null) {
-			writeInt(-1);
-		}
-		else {
-			writeInt(v.size());
-			for (BiserEntity e : v) {
-				writeEntity(e);
-			}
-		}
-	}
-
-	public void writeEnum(final Enum v)
-	{
-		writeInt(v == null ? -1 : v.ordinal());
-	}
-
-	public void writeEnumArray(final Enum[] v)
-	{
-		if (v == null) {
-			writeInt(-1);
-		}
-		else {
-			writeInt(v.length);
-			for (Enum e : v) {
-				writeEnum(e);
-			}
-		}
-	}
-
-	public void writeEnumArray(final Collection<Enum> v)
-	{
-		if (v == null) {
-			writeInt(-1);
-		}
-		else {
-			writeInt(v.size());
-			for (Enum e : v) {
-				writeEnum(e);
-			}
-		}
-	}
-
 	public void writeInt(final int v)
 	{
 		if (v >= 0) {
@@ -298,6 +191,151 @@ public class OutputBuffer
 			writeInt(v.size());
 			for (int e : v) {
 				writeInt(e);
+			}
+		}
+	}
+
+	public void writeUint(final long v)
+	{
+		if (v < 0 || v > 0xFFFFFFFFL) {
+			throw new IllegalArgumentException();
+		}
+
+		if (v <= 0xFB) {
+			increaseCapacity(1);
+			bytes[pos++] = (byte)v;
+			return;
+		}
+
+		if (v <= 0xFF) {
+			increaseCapacity(2);
+			bytes[pos++] = (byte)0xFC;
+			bytes[pos++] = (byte)v;
+			return;
+		}
+
+		if (v <= 0xFFFF) {
+			increaseCapacity(3);
+			bytes[pos++] = (byte)0xFD;
+			bytes[pos++] = (byte)(v >>> 8);
+			bytes[pos++] = (byte)v;
+			return;
+		}
+
+		if (v <= 0xFFFFFF) {
+			increaseCapacity(4);
+			bytes[pos++] = (byte)0xFE;
+			bytes[pos++] = (byte)(v >>> 16);
+			bytes[pos++] = (byte)(v >>> 8);
+			bytes[pos++] = (byte)v;
+			return;
+		}
+
+		increaseCapacity(5);
+		bytes[pos++] = (byte)0xFF;
+		bytes[pos++] = (byte)(v >>> 24);
+		bytes[pos++] = (byte)(v >>> 16);
+		bytes[pos++] = (byte)(v >>> 8);
+		bytes[pos++] = (byte)v;
+	}
+
+	public void writeUintArray(final long[] v)
+	{
+		if (v == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(v.length);
+			for (long e : v) {
+				writeUint(e);
+			}
+		}
+	}
+
+	public void writeUintArray(final Collection<Long> v)
+	{
+		if (v == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(v.size());
+			for (Long e : v) {
+				writeUint(e);
+			}
+		}
+	}
+
+	public void writeNum(final long v)
+	{
+		if (v > NUM_MAX || v < NUM_MIN) {
+			throw new IllegalArgumentException();
+		}
+		writeDouble(v);
+	}
+
+	public void writeNumArray(final long[] v)
+	{
+		if (v == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(v.length);
+			for (long e : v) {
+				writeNum(e);
+			}
+		}
+	}
+
+	public void writeNumArray(final Collection<Long> v)
+	{
+		if (v == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(v.size());
+			for (long e : v) {
+				writeNum(e);
+			}
+		}
+	}
+
+	public void writeDouble(final double v)
+	{
+		long l = Double.doubleToLongBits(v);
+
+		increaseCapacity(8);
+		bytes[pos++] = (byte)(l >>> 56);
+		bytes[pos++] = (byte)(l >>> 48);
+		bytes[pos++] = (byte)(l >>> 40);
+		bytes[pos++] = (byte)(l >>> 32);
+		bytes[pos++] = (byte)(l >>> 24);
+		bytes[pos++] = (byte)(l >>> 16);
+		bytes[pos++] = (byte)(l >>> 8);
+		bytes[pos++] = (byte)l;
+	}
+
+	public void writeDoubleArray(final double[] v)
+	{
+		if (v == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(v.length);
+			for (double e : v) {
+				writeDouble(e);
+			}
+		}
+	}
+
+	public void writeDoubleArray(final Collection<Double> v)
+	{
+		if (v == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(v.size());
+			for (double e : v) {
+				writeDouble(e);
 			}
 		}
 	}
@@ -379,72 +417,70 @@ public class OutputBuffer
 		}
 	}
 
-	public void writeUint(final long v)
+	public void writeEntity(final BiserEntity v)
 	{
-		if (v < 0 || v > 0xFFFFFFFFL) {
-			throw new IllegalArgumentException();
+		if (v == null) {
+			writeInt(-1);
 		}
-
-		if (v <= 0xFB) {
-			increaseCapacity(1);
-			bytes[pos++] = (byte)v;
-			return;
+		else {
+			writeInt(v._eid());
+			v.encode(this);
 		}
-
-		if (v <= 0xFF) {
-			increaseCapacity(2);
-			bytes[pos++] = (byte)0xFC;
-			bytes[pos++] = (byte)v;
-			return;
-		}
-
-		if (v <= 0xFFFF) {
-			increaseCapacity(3);
-			bytes[pos++] = (byte)0xFD;
-			bytes[pos++] = (byte)(v >>> 8);
-			bytes[pos++] = (byte)v;
-			return;
-		}
-
-		if (v <= 0xFFFFFF) {
-			increaseCapacity(4);
-			bytes[pos++] = (byte)0xFE;
-			bytes[pos++] = (byte)(v >>> 16);
-			bytes[pos++] = (byte)(v >>> 8);
-			bytes[pos++] = (byte)v;
-			return;
-		}
-
-		increaseCapacity(5);
-		bytes[pos++] = (byte)0xFF;
-		bytes[pos++] = (byte)(v >>> 24);
-		bytes[pos++] = (byte)(v >>> 16);
-		bytes[pos++] = (byte)(v >>> 8);
-		bytes[pos++] = (byte)v;
 	}
 
-	public void writeUintArray(final long[] v)
+	public void writeEntityArray(final BiserEntity[] v)
 	{
 		if (v == null) {
 			writeInt(-1);
 		}
 		else {
 			writeInt(v.length);
-			for (long e : v) {
-				writeUint(e);
+			for (BiserEntity e : v) {
+				writeEntity(e);
 			}
 		}
 	}
 
-	public void writeUintArray(final Collection<Long> v)
+	public void writeEntityArray(final Collection<BiserEntity> v)
 	{
 		if (v == null) {
 			writeInt(-1);
 		}
 		else {
 			writeInt(v.size());
-			for (Long e : v) {
-				writeUint(e);
+			for (BiserEntity e : v) {
+				writeEntity(e);
+			}
+		}
+	}
+
+	public void writeEnum(final Enum v)
+	{
+		writeInt(v == null ? -1 : v.ordinal());
+	}
+
+	public void writeEnumArray(final Enum[] v)
+	{
+		if (v == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(v.length);
+			for (Enum e : v) {
+				writeEnum(e);
+			}
+		}
+	}
+
+	public void writeEnumArray(final Collection<Enum> v)
+	{
+		if (v == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(v.size());
+			for (Enum e : v) {
+				writeEnum(e);
 			}
 		}
 	}

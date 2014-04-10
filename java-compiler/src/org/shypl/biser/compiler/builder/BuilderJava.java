@@ -347,6 +347,9 @@ public class BuilderJava extends Builder
 			if (type == Type.Primitive.UINT) {
 				return forCollection ? "Long" : "long";
 			}
+			if (type == Type.Primitive.NUM) {
+				return forCollection ? "Long" : "long";
+			}
 			if (type == Type.Primitive.DOUBLE) {
 				return forCollection ? "Double" : "double";
 			}
@@ -733,6 +736,9 @@ public class BuilderJava extends Builder
 		}
 		else if (type == Type.Primitive.UINT) {
 			name = "Uint";
+		}
+		else if (type == Type.Primitive.NUM) {
+			name = "Num";
 		}
 		else if (type == Type.Primitive.DOUBLE) {
 			name = "Double";

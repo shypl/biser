@@ -27,10 +27,11 @@ public abstract class Type
 		public static final  Primitive   BYTES  = new Primitive("bytes");
 		public static final  Primitive   INT    = new Primitive("int");
 		public static final  Primitive   UINT   = new Primitive("uint");
+		public static final  Primitive   NUM    = new Primitive("num");
 		public static final  Primitive   DOUBLE = new Primitive("double");
 		public static final  Primitive   STRING = new Primitive("string");
 		private static final Primitive[] list   = new Primitive[]{
-			BOOL, BYTE, BYTES, INT, UINT, DOUBLE, STRING
+			BOOL, BYTE, BYTES, INT, UINT, NUM, DOUBLE, STRING
 		};
 
 		public static Primitive define(final String name)
@@ -64,7 +65,7 @@ public abstract class Type
 
 	public final static class Entity extends Type
 	{
-		private String                                    entityName;
+		private String entityName;
 		private EntityContainer                           container;
 		private org.shypl.biser.compiler.prototype.Entity entity;
 

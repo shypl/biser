@@ -65,25 +65,6 @@ package org.shypl.biser
 			return a;
 		}
 
-		public function readDouble():Number
-		{
-			return _bytes.readDouble();
-		}
-
-		public function readDoubleArray():Vector.<Number>
-		{
-			const l:int = readInt();
-			if (l === -1) {
-				return null;
-			}
-
-			const a:Vector.<Number> = new Vector.<Number>(l, true);
-			for (var i:int = 0; i < a.length; ++i) {
-				a[i] = readDouble();
-			}
-			return a;
-		}
-
 		public function readInt():int
 		{
 			var b:uint = _bytes.readUnsignedByte();
@@ -127,26 +108,6 @@ package org.shypl.biser
 			return a;
 		}
 
-		public function readString():String
-		{
-			const l:int = readInt();
-			return (l === -1) ? null : _bytes.readUTFBytes(l);
-		}
-
-		public function readStringArray():Vector.<String>
-		{
-			const l:int = readInt();
-			if (l === -1) {
-				return null;
-			}
-
-			const a:Vector.<String> = new Vector.<String>(l, true);
-			for (var i:int = 0; i < l; ++i) {
-				a[i] = readString();
-			}
-			return a;
-		}
-
 		public function readUint():uint
 		{
 			var b:uint = _bytes.readUnsignedByte();
@@ -180,6 +141,55 @@ package org.shypl.biser
 			const a:Vector.<uint> = new Vector.<uint>(l, true);
 			for (var i:int = 0; i < l; ++i) {
 				a[i] = readUint();
+			}
+			return a;
+		}
+
+		public function readNum():Number
+		{
+			return readDouble();
+		}
+
+		public function readNumArray():Vector.<Number>
+		{
+			return readDoubleArray();
+		}
+
+		public function readDouble():Number
+		{
+			return _bytes.readDouble();
+		}
+
+		public function readDoubleArray():Vector.<Number>
+		{
+			const l:int = readInt();
+			if (l === -1) {
+				return null;
+			}
+
+			const a:Vector.<Number> = new Vector.<Number>(l, true);
+			for (var i:int = 0; i < a.length; ++i) {
+				a[i] = readDouble();
+			}
+			return a;
+		}
+
+		public function readString():String
+		{
+			const l:int = readInt();
+			return (l === -1) ? null : _bytes.readUTFBytes(l);
+		}
+
+		public function readStringArray():Vector.<String>
+		{
+			const l:int = readInt();
+			if (l === -1) {
+				return null;
+			}
+
+			const a:Vector.<String> = new Vector.<String>(l, true);
+			for (var i:int = 0; i < l; ++i) {
+				a[i] = readString();
 			}
 			return a;
 		}

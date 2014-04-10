@@ -2,10 +2,14 @@ package org.shypl.biser
 {
 	import flash.utils.ByteArray;
 
+	import org.shypl.common.lang.IllegalArgumentException;
 	import org.shypl.common.lang.OrdinalEnum;
 
 	public class OutputBuffer
 	{
+		private static const NUM_MAX:Number = 0x20000000000000; // 9 007 199 254 740 992
+		private static const NUM_MIN:Number = -0x20000000000000; // -9 007 199 254 740 992
+
 		private const _bytes:ByteArray = new ByteArray();
 
 		public function get size():int
@@ -82,66 +86,6 @@ package org.shypl.biser
 			}
 		}
 
-		public function writeDouble(v:Number):void
-		{
-			_bytes.writeDouble(v);
-		}
-
-		public function writeDoubleArray(v:Vector.<Number>):void
-		{
-			if (v == null) {
-				writeInt(-1);
-			}
-			else {
-				writeInt(v.length);
-				for each (var e:Number in v) {
-					writeDouble(e);
-				}
-			}
-		}
-
-		public function writeEntity(v:BiserEntity):void
-		{
-			if (v === null) {
-				writeInt(-1);
-			}
-			else {
-				writeInt(v.__eid);
-				v.encode(this);
-			}
-		}
-
-		public function writeEntityArray(v:Object):void
-		{
-			if (v == null) {
-				writeInt(-1);
-			}
-			else {
-				writeInt(v.length);
-				for each (var e:BiserEntity in v) {
-					writeEntity(e);
-				}
-			}
-		}
-
-		public function writeEnum(v:OrdinalEnum):void
-		{
-			writeInt(v === null ? -1 : v.ordinal);
-		}
-
-		public function writeEnumArray(v:Object):void
-		{
-			if (v == null) {
-				writeInt(-1);
-			}
-			else {
-				writeInt(v.length);
-				for each (var e:OrdinalEnum in v) {
-					writeEnum(e);
-				}
-			}
-		}
-
 		public function writeInt(v:int):void
 		{
 			if (v >= 0) {
@@ -200,35 +144,6 @@ package org.shypl.biser
 			}
 		}
 
-		public function writeString(v:String):void
-		{
-			if (v == null) {
-				writeInt(-1);
-			}
-			else if (v.length == 0) {
-				writeInt(0);
-			}
-			else {
-				const bytes:ByteArray = new ByteArray();
-				bytes.writeUTFBytes(v);
-				writeInt(bytes.length);
-				_bytes.writeBytes(bytes);
-			}
-		}
-
-		public function writeStringArray(v:Vector.<String>):void
-		{
-			if (v == null) {
-				writeInt(-1);
-			}
-			else {
-				writeInt(v.length);
-				for each (var e:String in v) {
-					writeString(e);
-				}
-			}
-		}
-
 		public function writeUint(v:uint):void
 		{
 			if (v >= 0) {
@@ -274,6 +189,116 @@ package org.shypl.biser
 				writeInt(v.length);
 				for each (var e:uint in v) {
 					writeUint(e);
+				}
+			}
+		}
+
+		public function writeNum(v:Number):void
+		{
+			if (v > NUM_MAX || v < NUM_MIN) {
+				throw new IllegalArgumentException();
+			}
+			writeDouble(v);
+		}
+
+		public function writeNumArray(v:Vector.<Number>):void
+		{
+			if (v == null) {
+				writeInt(-1);
+			}
+			else {
+				writeInt(v.length);
+				for each (var e:Number in v) {
+					writeNum(e);
+				}
+			}
+		}
+
+		public function writeDouble(v:Number):void
+		{
+			_bytes.writeDouble(v);
+		}
+
+		public function writeDoubleArray(v:Vector.<Number>):void
+		{
+			if (v == null) {
+				writeInt(-1);
+			}
+			else {
+				writeInt(v.length);
+				for each (var e:Number in v) {
+					writeDouble(e);
+				}
+			}
+		}
+
+		public function writeString(v:String):void
+		{
+			if (v == null) {
+				writeInt(-1);
+			}
+			else if (v.length == 0) {
+				writeInt(0);
+			}
+			else {
+				const bytes:ByteArray = new ByteArray();
+				bytes.writeUTFBytes(v);
+				writeInt(bytes.length);
+				_bytes.writeBytes(bytes);
+			}
+		}
+
+		public function writeStringArray(v:Vector.<String>):void
+		{
+			if (v == null) {
+				writeInt(-1);
+			}
+			else {
+				writeInt(v.length);
+				for each (var e:String in v) {
+					writeString(e);
+				}
+			}
+		}
+
+		public function writeEntity(v:BiserEntity):void
+		{
+			if (v === null) {
+				writeInt(-1);
+			}
+			else {
+				writeInt(v.__eid);
+				v.encode(this);
+			}
+		}
+
+		public function writeEntityArray(v:Object):void
+		{
+			if (v == null) {
+				writeInt(-1);
+			}
+			else {
+				writeInt(v.length);
+				for each (var e:BiserEntity in v) {
+					writeEntity(e);
+				}
+			}
+		}
+
+		public function writeEnum(v:OrdinalEnum):void
+		{
+			writeInt(v === null ? -1 : v.ordinal);
+		}
+
+		public function writeEnumArray(v:Object):void
+		{
+			if (v == null) {
+				writeInt(-1);
+			}
+			else {
+				writeInt(v.length);
+				for each (var e:OrdinalEnum in v) {
+					writeEnum(e);
 				}
 			}
 		}

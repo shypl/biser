@@ -458,6 +458,9 @@ public class BuilderFlash extends Builder
 			if (type == Type.Primitive.UINT) {
 				return "uint";
 			}
+			if (type == Type.Primitive.NUM) {
+				return "Number";
+			}
 			if (type == Type.Primitive.DOUBLE) {
 				return "Number";
 			}
@@ -508,8 +511,11 @@ public class BuilderFlash extends Builder
 			if (type == Type.Primitive.UINT) {
 				return "0";
 			}
+			if (type == Type.Primitive.NUM) {
+				return "0";
+			}
 			if (type == Type.Primitive.DOUBLE) {
-				return "NaN";
+				return "0";
 			}
 		}
 
@@ -794,6 +800,9 @@ public class BuilderFlash extends Builder
 		}
 		else if (type == Type.Primitive.UINT) {
 			name = "Uint";
+		}
+		else if (type == Type.Primitive.NUM) {
+			name = "Num";
 		}
 		else if (type == Type.Primitive.DOUBLE) {
 			name = "Double";
