@@ -18,9 +18,9 @@ import java.util.List;
 
 public class BuilderFlash extends Builder
 {
-	public BuilderFlash(final Path path, final String pkg, final Side side)
+	public BuilderFlash(final Path path, final String stage, final String pkg, final Side side)
 	{
-		super(path, pkg, side, "as", "CollectionFactory");
+		super(path, stage, pkg, side, "as", "CollectionFactory");
 	}
 
 	@Override

@@ -100,17 +100,25 @@ public class Parser
 		tokenizer.check(Token.BRACKET_CURLY_OPEN);
 		try {
 			while (true) {
-				if (tokenizer.next() == Token.BRACKET_CURLY_CLOSE) {
+				Token token = tokenizer.next();
+				if (token == Token.BRACKET_CURLY_CLOSE) {
 					break;
 				}
-				tokenizer.check(Token.WORD);
-				final String name = tokenizer.word();
-				if (tokenizer.next() == Token.COLON) {
-					entity.addProperty(new Parameter(name, parseType(name, entity, false)));
+
+				if (token == Token.AT) {
+					tokenizer.next(Token.WORD);
+					parseMetaTag(entity);
 				}
 				else {
-					tokenizer.prev();
-					parseEntityContainer(entity, name);
+					tokenizer.check(Token.WORD);
+					final String name = tokenizer.word();
+					if (tokenizer.next() == Token.COLON) {
+						entity.addProperty(new Parameter(name, parseType(name, entity, false)));
+					}
+					else {
+						tokenizer.prev();
+						parseEntityContainer(entity, name);
+					}
 				}
 			}
 		}
@@ -118,6 +126,22 @@ public class Parser
 			throw e.expandName(entity.name);
 		}
 		return entity;
+	}
+
+	private void parseMetaTag(final Entity entity) throws PrototypeException
+	{
+		MetaTag tag = MetaTag.valueOf(tokenizer.word().toUpperCase());
+
+		switch (tag) {
+			case ENCODE:
+				tokenizer.next(Token.WORD);
+				entity.addEncodeStage(tokenizer.word());
+				break;
+			case DECODE:
+				tokenizer.next(Token.WORD);
+				entity.addDecodeStage(tokenizer.word());
+				break;
+		}
 	}
 
 	private Parameter parseParameter(String namePrefix, final EntityContainer container) throws PrototypeException

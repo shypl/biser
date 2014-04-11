@@ -24,9 +24,9 @@ public class BuilderJava extends Builder
 	private final Map<ServiceMethod, CodeClass> serverResults     = new HashMap<>();
 	private final Set<Service>                  forceSaveServices = new HashSet<>();
 
-	public BuilderJava(final Path path, final String pkg, final Side side)
+	public BuilderJava(final Path path, final String stage, final String pkg, final Side side)
 	{
-		super(path, pkg, side, "java", "CollectionFactory");
+		super(path, stage, pkg, side, "java", "CollectionFactory");
 	}
 
 	@Override
@@ -169,7 +169,7 @@ public class BuilderJava extends Builder
 		final Parameter[] properties = entity.getProperties();
 
 		// static decode
-		if (decodeFactories.contains(entity)) {
+		if (decodeFactories.contains(entity) || entity.hasDecodeStage(stage)) {
 			cls.addImport("org.shypl.biser.InputBuffer");
 
 			final CodeMethod method = cls.addMethod("decodeFactory", Mod.STATIC | Mod.PUBLIC, cls.name);
@@ -241,7 +241,7 @@ public class BuilderJava extends Builder
 		}
 
 		// decode
-		if (decodes.contains(entity)) {
+		if (decodes.contains(entity) || entity.hasDecodeStage(stage)) {
 			cls.addImport("org.shypl.biser.InputBuffer");
 
 			final CodeMethod method = cls.addMethod("decode", (hasParent ? Mod.OVERRIDE : 0) | Mod.PUBLIC, VOID);
@@ -255,7 +255,7 @@ public class BuilderJava extends Builder
 		}
 
 		// encode
-		if (encodes.contains(entity)) {
+		if (encodes.contains(entity) || entity.hasEncodeStage(stage)) {
 			cls.addImport("org.shypl.biser.OutputBuffer");
 
 			final CodeMethod method = cls.addMethod("encode", Mod.OVERRIDE | Mod.PUBLIC, VOID);

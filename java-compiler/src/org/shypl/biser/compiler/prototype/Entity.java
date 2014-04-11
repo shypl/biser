@@ -9,8 +9,10 @@ import java.util.Set;
 public class Entity extends EntityContainer
 {
 	private final String parentName;
-	private final Map<String, Parameter> properties = new LinkedHashMap<>();
-	private final Set<String>            enumValues = new HashSet<>();
+	private final Map<String, Parameter> properties   = new LinkedHashMap<>();
+	private final Set<String>            enumValues   = new HashSet<>();
+	private final Set<String>            encodeStages = new HashSet<>();
+	private final Set<String>            decodeStages = new HashSet<>();
 	private final boolean isEnum;
 	private       Entity  parent;
 	private       boolean ignoreFindEntity;
@@ -85,6 +87,26 @@ public class Entity extends EntityContainer
 	public boolean isOwnedService()
 	{
 		return owner instanceof Service || (owner instanceof Entity && ((Entity)owner).isOwnedService());
+	}
+
+	void addEncodeStage(final String stage)
+	{
+		encodeStages.add(stage);
+	}
+
+	void addDecodeStage(final String stage)
+	{
+		decodeStages.add(stage);
+	}
+
+	public boolean hasEncodeStage(final String stage)
+	{
+		return encodeStages.contains(stage);
+	}
+
+	public boolean hasDecodeStage(final String stage)
+	{
+		return decodeStages.contains(stage);
 	}
 
 	void addEnumValue(final String value) throws DuplicateNameException

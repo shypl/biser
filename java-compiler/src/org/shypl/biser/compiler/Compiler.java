@@ -49,7 +49,7 @@ public class Compiler
 				final Lang lang = Lang.valueOf(props.getProperty(stage + ".lang",
 					(side == Side.CLIENT ? Lang.FLASH : Lang.JAVA).toString()).toUpperCase());
 
-				compiler.compile(lang, new File(root, path).toPath(), pkg, side);
+				compiler.compile(lang, stage, new File(root, path).toPath(), pkg, side);
 			}
 		}
 	}
@@ -67,17 +67,17 @@ public class Compiler
 		this.charset = charset;
 	}
 
-	public void compile(final Lang lang, final Path path, final String packageName)
+	public void compile(final Lang lang, final String stage, final Path path, final String packageName)
 		throws IOException, PrototypeException
 	{
-		compile(lang, path, packageName, Side.SINGLE);
+		compile(lang, stage, path, packageName, Side.SINGLE);
 	}
 
-	public void compile(final Lang lang, final Path path, final String packageName, final Side side)
+	public void compile(final Lang lang, final String stage, final Path path, final String packageName, final Side side)
 		throws IOException, PrototypeException
 	{
 		clearDirectory(path.resolve(packageName.replace('.', '/')).toFile());
-		createBuilder(lang, path, packageName, side).build(collector.getEntities(), collector.getServices());
+		createBuilder(lang, stage, path, packageName, side).build(collector.getEntities(), collector.getServices());
 	}
 
 	public void loadDirectory(final File path) throws CompilerException
@@ -126,13 +126,13 @@ public class Compiler
 		}
 	}
 
-	private Builder createBuilder(final Lang lang, final Path path, final String packageName, final Side side)
+	private Builder createBuilder(final Lang lang, final String stage, final Path path, final String packageName, final Side side)
 	{
 		switch (lang) {
 			case JAVA:
-				return new BuilderJava(path, packageName, side);
+				return new BuilderJava(path, stage, packageName, side);
 			case FLASH:
-				return new BuilderFlash(path, packageName, side);
+				return new BuilderFlash(path, stage, packageName, side);
 		}
 
 		throw new IllegalArgumentException();

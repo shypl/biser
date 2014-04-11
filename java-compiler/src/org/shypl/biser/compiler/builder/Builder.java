@@ -22,21 +22,24 @@ public abstract class Builder
 	protected final Set<Type>   decodeCollections = new HashSet<>();
 	protected final Set<Type>   encodeCollections = new HashSet<>();
 	protected final Set<Entity> decodeFactories   = new HashSet<>();
-	protected final Set<Entity> encodeFactories   = new HashSet<>();
+	//	protected final Set<Entity> encodeFactories   = new HashSet<>();
 	protected final Set<Entity> decodes           = new HashSet<>();
 	protected final Set<Entity> encodes           = new HashSet<>();
 
 	protected final String collectionFactory;
+	protected final String stage;
 	protected final String pkg;
+
 	private final Map<Object, CodeClass> classes = new HashMap<>();
 	private final Path   path;
 	private final String pkgApi;
 	private final Side   side;
 	private final String ext;
 
-	protected Builder(final Path path, final String pkg, final Side side, final String ext, final String collectionFactory)
+	protected Builder(final Path path, final String stage, final String pkg, final Side side, final String ext, final String collectionFactory)
 	{
 		this.path = path;
+		this.stage = stage;
 		this.pkg = pkg;
 		this.side = side;
 		this.ext = ext;
@@ -70,6 +73,34 @@ public abstract class Builder
 	protected CodeClass buildEntity(final Entity entity) throws IOException
 	{
 		final CodeClass cls = getClass(entity);
+
+		if (entity.hasEncodeStage(stage)) {
+			encodes.add(entity);
+
+			if (!entity.isEnum()) {
+				if (entity.hasParent()) {
+					Entity parent = entity.getParent();
+					while (parent != null) {
+						encodes.add(parent);
+						parent = parent.getParent();
+					}
+				}
+			}
+		}
+		if (entity.hasDecodeStage(stage)) {
+			decodes.add(entity);
+			decodeFactories.add(entity);
+
+			if (!entity.isEnum()) {
+				if (entity.hasParent()) {
+					Entity parent = entity.getParent();
+					while (parent != null) {
+						decodes.add(parent);
+						parent = parent.getParent();
+					}
+				}
+			}
+		}
 
 		if (entity.isEnum()) {
 			cls.declareAsEnum(entity.getEnumValues());
