@@ -133,7 +133,7 @@ public class BuilderFlash extends Builder
 			if (method.isOverride()) {
 				mod = "override " + mod;
 			}
-			code.addTab(2, mod, "function ", method.name, "(");
+			code.addTab(2, mod, "function ", method.isGetter() ? "get " : "", method.name, "(");
 
 			final CodeParameter[] arguments = method.getArguments();
 			for (int i = 0; i < arguments.length; i++) {
