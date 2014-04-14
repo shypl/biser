@@ -351,9 +351,13 @@ public class BuilderFlash extends Builder
 
 		// encode
 		if (encodes.contains(entity)) {
+
+			CodeMethod method = cls.addMethod("_eid", Mod.OVERRIDE | Mod.PROTECTED, "int");
+			method.body.line("return ", entity.getId(), ";");
+
 			cls.addImport("org.shypl.biser.OutputBuffer");
 
-			final CodeMethod method = cls.addMethod("encode", Mod.OVERRIDE | Mod.PUBLIC, VOID);
+			method = cls.addMethod("encode", Mod.OVERRIDE | Mod.PUBLIC, VOID);
 			method.addArgument("buffer", "OutputBuffer");
 			if (hasParent) {
 				method.body.line("super.encode(buffer);");
