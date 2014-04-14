@@ -138,8 +138,16 @@ public class BuilderJava extends Builder
 
 					body.lineTab(1, "buffer.writeInt(0);")
 						.line("}")
-						.line("else {")
-						.lineTab(1, "for (", defineType(type1.type, cls, true), " e : collection) {")
+						.line("else {");
+
+					if (type1.isArray) {
+						body.lineTab(1, "buffer.writeInt(collection.length());");
+					}
+					else {
+						body.lineTab(1, "buffer.writeInt(collection.size());");
+					}
+
+					body.lineTab(1, "for (", defineType(type1.type, cls, true), " e : collection) {")
 						.lineTab(2, defineEncode("e", type1.type, "buffer", cls), ";")
 						.lineTab(1, "}")
 						.line("}");
@@ -152,6 +160,7 @@ public class BuilderJava extends Builder
 						.lineTab(1, "buffer.writeInt(0);")
 						.line("}")
 						.line("else {")
+						.lineTab(1, "buffer.writeInt(collection.size());")
 						.lineTab(1, "for (Map.Entry<", defineType(type1.key, cls, true), ", ", defineType(type1.value, cls, true),
 							"> e : collection.entrySet()) {")
 						.lineTab(2, defineEncode("e.getKey()", type1.key, "buffer", cls), ";")
