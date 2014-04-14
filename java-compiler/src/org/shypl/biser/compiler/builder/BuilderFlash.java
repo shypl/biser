@@ -530,13 +530,11 @@ public class BuilderFlash extends Builder
 		cls.addImport("org.shypl.biser.client.AbstractApi");
 		cls.addImport("org.shypl.biser.client.Channel");
 		cls.addImport("org.shypl.common.lang.IllegalArgumentException");
-		cls.addImport("org.shypl.common.util.IErrorHandler");
 		cls.setParent("AbstractApi");
 
 		final CodeMethod constructor = cls.addConstructor();
 		constructor.addArgument("_channel", "Channel");
-		constructor.addArgument("_errorHandler", "IErrorHandler");
-		constructor.body.line("super(_channel, _errorHandler);");
+		constructor.body.line("super(_channel);");
 
 		final CodeMethod route = cls.addMethod("_route", Mod.OVERRIDE | Mod.PROTECTED, VOID);
 		route.addArgument("service", "int");

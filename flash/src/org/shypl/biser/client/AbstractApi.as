@@ -7,7 +7,6 @@ package org.shypl.biser.client
 	import org.shypl.common.logging.ILogger;
 	import org.shypl.common.util.CollectionUtils;
 	import org.shypl.common.util.Destroyable;
-	import org.shypl.common.util.IErrorHandler;
 
 	[Abstract]
 	public class AbstractApi extends Destroyable
@@ -15,19 +14,11 @@ package org.shypl.biser.client
 		protected const _logger:ILogger = logger;
 		private var _resultHandlers:Vector.<ResultHandlerHolder> = new Vector.<ResultHandlerHolder>();
 		private var _channel:Channel;
-		private var _errorHandler:IErrorHandler;
 
-		public function AbstractApi(channel:Channel, errorHandler:IErrorHandler)
+		public function AbstractApi(channel:Channel)
 		{
 			_channel = channel;
-			_errorHandler = errorHandler;
 			_channel.bind(this);
-		}
-
-		internal function _catchChannelError(error:ConnectionException):void
-		{
-			_errorHandler.handleError(error);
-			destroy();
 		}
 
 		internal function _receiveMessage(bytes:ByteArray):void
@@ -70,7 +61,6 @@ package org.shypl.biser.client
 		override protected function doDestroy():void
 		{
 			super.doDestroy();
-			_errorHandler = null;
 			_channel.destroy();
 			_channel = null;
 			CollectionUtils.clear(_resultHandlers);

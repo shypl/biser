@@ -110,8 +110,8 @@ package org.shypl.biser.client
 		private function catchError(error:ConnectionException):void
 		{
 			logger.error(error.toString());
-			_api._catchChannelError(error);
 			destroy();
+			throw error;
 		}
 
 		private function close():void
