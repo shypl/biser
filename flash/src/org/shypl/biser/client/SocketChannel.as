@@ -160,10 +160,6 @@ package org.shypl.biser.client
 					readNewSid();
 					break;
 
-				case MARK_CLOSE:
-					close();
-					break;
-
 				default:
 					throw new ConnectionException("Illegal message mark " + b.toString(16) + ":" + b.toString(10));
 			}

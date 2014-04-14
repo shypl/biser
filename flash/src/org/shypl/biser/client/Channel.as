@@ -9,7 +9,6 @@ package org.shypl.biser.client
 	[Abstract]
 	public class Channel extends Destroyable
 	{
-		protected static const MARK_CLOSE:int = 0x00;
 		protected static const MARK_PING:int = 0xFF;
 		protected static const MARK_SID:int = 0xFE;
 		protected static const MARK_MSG_1:int = 0x01;

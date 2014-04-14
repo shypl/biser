@@ -12,7 +12,6 @@ public final class ClientConnection<C extends AbstractClient>
 	private final static byte MARK_MSG_2  = 0x02;
 	private final static byte MARK_MSG_3  = 0x03;
 	private final static byte MARK_MSG_4  = 0x04;
-	private final static byte MARK_CLOSE  = 0x00;
 	private final static byte MARK_SID    = (byte)0xFE;
 	private final static byte MARK_PING   = (byte)0xFF;
 
@@ -57,7 +56,6 @@ public final class ClientConnection<C extends AbstractClient>
 			closed = true;
 		}
 
-		channel.write(new byte[]{MARK_CLOSE});
 		channel.close();
 		client.handleDisconnect();
 	}
@@ -184,10 +182,6 @@ public final class ClientConnection<C extends AbstractClient>
 
 			case MARK_SID:
 				newSid();
-				break;
-
-			case MARK_CLOSE:
-				close();
 				break;
 
 			case MARK_POLICY:
