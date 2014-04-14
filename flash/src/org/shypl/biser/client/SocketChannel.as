@@ -32,7 +32,6 @@ package org.shypl.biser.client
 		private var _port:int;
 		private var _timeout:uint;
 		private var _connected:Boolean;
-		private var _api:AbstractApi;
 		private var _socket:Socket;
 		private var _messageQueue:Vector.<ByteArray> = new Vector.<ByteArray>();
 		private var _checkTimer:Timer;

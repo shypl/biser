@@ -17,7 +17,7 @@ package org.shypl.biser.client
 		protected static const MARK_MSG_3:int = 0x03;
 		protected static const MARK_MSG_4:int = 0x04;
 
-		private var _api:AbstractApi;
+		protected var _api:AbstractApi;
 
 		internal function bind(api:AbstractApi):void
 		{
