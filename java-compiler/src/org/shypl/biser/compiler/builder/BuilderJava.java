@@ -152,7 +152,8 @@ public class BuilderJava extends Builder
 						.lineTab(1, "buffer.writeInt(0);")
 						.line("}")
 						.line("else {")
-						.lineTab(1, "for (Map.Entry<Integer, String> e : collection.entrySet()) {")
+						.lineTab(1, "for (Map.Entry<", defineType(type1.key, cls, true), ", ", defineType(type1.key, cls, true),
+							"> e : collection.entrySet()) {")
 						.lineTab(2, defineEncode("e.getKey()", type1.key, "buffer", cls), ";")
 						.lineTab(2, defineEncode("e.getValue()", type1.value, "buffer", cls), ";")
 						.lineTab(1, "}")
