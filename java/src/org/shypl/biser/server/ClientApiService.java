@@ -24,6 +24,6 @@ public abstract class ClientApiService
 
 	protected final void _sendMessage(final OutputBuffer message)
 	{
-		connection.send(message.bytes());
+		connection.sendMessage(message.bytes());
 	}
 }

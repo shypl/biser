@@ -21,6 +21,6 @@ public abstract class ServerApiResult
 			throw new IllegalStateException();
 		}
 		sent = true;
-		connection.send(message.bytes());
+		connection.sendMessage(message.bytes());
 	}
 }

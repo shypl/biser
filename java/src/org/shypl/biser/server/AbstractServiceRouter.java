@@ -11,7 +11,7 @@ public abstract class AbstractServiceRouter<C extends AbstractClient>
 			final InputBuffer buffer = new InputBuffer(message);
 			final OutputBuffer response = route(client, buffer.readInt(), buffer.readInt(), buffer);
 			if (response != null) {
-				client.connection.send(response.bytes());
+				client.connection.sendMessage(response.bytes());
 			}
 		}
 		catch (Exception e) {
