@@ -104,7 +104,7 @@ public final class ClientConnection<C extends AbstractClient>
 			if (closed) {
 				return;
 			}
-			channel.write(message);
+			channel.write(data);
 		}
 	}
 
