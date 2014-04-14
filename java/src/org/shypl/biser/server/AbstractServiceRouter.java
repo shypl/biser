@@ -5,7 +5,7 @@ import org.shypl.biser.OutputBuffer;
 
 public abstract class AbstractServiceRouter<C extends AbstractClient>
 {
-	void receiveMessage(final C client, final byte[] message)
+	void receiveMessage(final C client, final byte[] message) throws Exception
 	{
 		try {
 			final InputBuffer buffer = new InputBuffer(message);
@@ -16,6 +16,7 @@ public abstract class AbstractServiceRouter<C extends AbstractClient>
 		}
 		catch (Exception e) {
 			client.disconnect();
+			throw e;
 		}
 	}
 

@@ -109,7 +109,7 @@ public final class ClientConnection<C extends AbstractClient>
 		}
 	}
 
-	public void receive(final byte[] data)
+	public void receive(final byte[] data) throws Exception
 	{
 		synchronized (lock) {
 			if (closed) {
@@ -154,7 +154,7 @@ public final class ClientConnection<C extends AbstractClient>
 		}
 	}
 
-	private void readMark()
+	private void readMark() throws Exception
 	{
 		final byte b = buffer.readByte();
 		switch (b) {
@@ -195,14 +195,14 @@ public final class ClientConnection<C extends AbstractClient>
 		}
 	}
 
-	private void newMsgSize(final int length)
+	private void newMsgSize(final int length) throws Exception
 	{
 		msgSize = 0;
 		msgLength = length;
 		readMsgSize();
 	}
 
-	private void readMsgSize()
+	private void readMsgSize() throws Exception
 	{
 		while (msgLength > 0 && buffer.isReadable()) {
 			msgSize |= (buffer.readByte() & 0xFF) << (8 * --msgLength);
@@ -219,7 +219,7 @@ public final class ClientConnection<C extends AbstractClient>
 		readMsgBody();
 	}
 
-	private void readMsgBody()
+	private void readMsgBody() throws Exception
 	{
 		final int bufferSize = buffer.size();
 		int remaining = msgSize - msgLength;
