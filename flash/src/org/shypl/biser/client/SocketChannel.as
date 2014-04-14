@@ -290,8 +290,6 @@ package org.shypl.biser.client
 
 		private function handleSocketEvent(event:Event):void
 		{
-			logger.trace("SocketEvent {}", event);
-
 			if (event.type == Event.CONNECT) {
 				logger.info("Connected");
 
@@ -336,8 +334,6 @@ package org.shypl.biser.client
 
 		private function handleSocketErrorEvent(event:ErrorEvent):void
 		{
-			logger.trace("SocketErrorEvent {}", event);
-
 			switch (event.type) {
 				case SecurityErrorEvent.SECURITY_ERROR:
 					throw new ConnectionException("Socket security error", new ErrorEventException(event));
@@ -353,8 +349,6 @@ package org.shypl.biser.client
 
 		private function handleSocketDataEvent(event:ProgressEvent):void
 		{
-			logger.trace("SocketDataEvent {}", event);
-
 			_checkTimer.stop();
 			_pinged = true;
 
