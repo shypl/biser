@@ -247,6 +247,7 @@ package org.shypl.biser.client
 					logger.debug("Received sid {}", ByteUtils.toHexString(_sid));
 				}
 				_state = STATE_MARK;
+				_allowReconnect = true;
 			}
 		}
 
@@ -306,7 +307,6 @@ package org.shypl.biser.client
 					_socket.removeEventListener(Event.CONNECT, handleSocketEvent);
 
 					_connected = true;
-					_allowReconnect = true;
 
 					if (_reconnect) {
 						if (logger.debugEnabled) {

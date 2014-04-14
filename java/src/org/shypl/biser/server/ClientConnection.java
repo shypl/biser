@@ -61,13 +61,50 @@ public final class ClientConnection<C extends AbstractClient>
 		client.handleDisconnect();
 	}
 
-	public void send(final byte[] data)
+	public void send(final byte[] message)
 	{
+		final int len = message.length;
+		final int offset;
+		final byte[] data;
+
+		if (len <= 0xFF) {
+			offset = 2;
+			data = new byte[offset + len];
+			data[0] = MARK_MSG_1;
+			data[1] = (byte)len;
+		}
+		else if (len <= 0xFFFF) {
+			offset = 3;
+			data = new byte[offset + len];
+			data[0] = MARK_MSG_2;
+			data[1] = (byte)(len >>> 8);
+			data[2] = (byte)len;
+		}
+		else if (len <= 0xFFFFFF) {
+			offset = 4;
+			data = new byte[offset + len];
+			data[0] = MARK_MSG_3;
+			data[1] = (byte)(len >>> 16);
+			data[2] = (byte)(len >>> 8);
+			data[3] = (byte)len;
+		}
+		else {
+			offset = 5;
+			data = new byte[offset + len];
+			data[0] = MARK_MSG_4;
+			data[1] = (byte)(len >>> 24);
+			data[2] = (byte)(len >>> 16);
+			data[3] = (byte)(len >>> 8);
+			data[4] = (byte)len;
+		}
+
+		System.arraycopy(message, 0, data, offset, len);
+
 		synchronized (lock) {
 			if (closed) {
 				return;
 			}
-			channel.write(data);
+			channel.write(message);
 		}
 	}
 

@@ -130,7 +130,7 @@ public class BuilderJava extends Builder
 					final Type.List type1 = (Type.List)type;
 
 					if (type1.isArray) {
-						body.line("else if (collection.length() == 0) {");
+						body.line("else if (collection.length == 0) {");
 					}
 					else {
 						body.line("else if (collection.isEmpty()) {");
@@ -141,7 +141,7 @@ public class BuilderJava extends Builder
 						.line("else {");
 
 					if (type1.isArray) {
-						body.lineTab(1, "buffer.writeInt(collection.length());");
+						body.lineTab(1, "buffer.writeInt(collection.length));");
 					}
 					else {
 						body.lineTab(1, "buffer.writeInt(collection.size());");
