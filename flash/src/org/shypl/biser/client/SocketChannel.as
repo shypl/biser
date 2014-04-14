@@ -108,13 +108,6 @@ package org.shypl.biser.client
 			_messageQueue = null;
 		}
 
-		private function catchError(error:ConnectionException):void
-		{
-			logger.error(error.toString());
-			destroy();
-			throw error;
-		}
-
 		private function close():void
 		{
 			logger.info("Close");
@@ -299,53 +292,45 @@ package org.shypl.biser.client
 		{
 			logger.trace("SocketEvent {}", event);
 
-			try {
-				if (event.type == Event.CONNECT) {
-					logger.info("Connected");
+			if (event.type == Event.CONNECT) {
+				logger.info("Connected");
 
-					_socket.removeEventListener(Event.CONNECT, handleSocketEvent);
+				_socket.removeEventListener(Event.CONNECT, handleSocketEvent);
 
-					_connected = true;
+				_connected = true;
 
-					if (_reconnect) {
-						if (logger.debugEnabled) {
-							logger.debug("Send sid {}", ByteUtils.toHexString(_sid));
-						}
-						_sid.position = 0;
-						_socket.writeByte(MARK_SID);
-						_socket.writeBytes(_sid);
-						_socket.flush();
-						_reconnect = false;
+				if (_reconnect) {
+					if (logger.debugEnabled) {
+						logger.debug("Send sid {}", ByteUtils.toHexString(_sid));
 					}
+					_sid.position = 0;
+					_socket.writeByte(MARK_SID);
+					_socket.writeBytes(_sid);
+					_socket.flush();
+					_reconnect = false;
+				}
 
-					if (_messageQueue.length != 0) {
-						for (var i:int = 0; i < _messageQueue.length; i++) {
-							writeMessage(_messageQueue[i]);
-							_messageQueue[i] = null;
-						}
-						_socket.flush();
-						_messageQueue.length = 0;
+				if (_messageQueue.length != 0) {
+					for (var i:int = 0; i < _messageQueue.length; i++) {
+						writeMessage(_messageQueue[i]);
+						_messageQueue[i] = null;
 					}
+					_socket.flush();
+					_messageQueue.length = 0;
+				}
 
-					if (_connected) {
-						_checkTimer.start();
-					}
+				if (_connected) {
+					_checkTimer.start();
+				}
+			}
+			else {
+				if (_sid) {
+					logger.warn("Connection lost");
+					reconnect();
 				}
 				else {
-					if (_sid) {
-						logger.warn("Connection lost");
-						reconnect();
-					}
-					else {
-						throw new ConnectionException("Connection lost");
-					}
+					throw new ConnectionException("Connection lost");
 				}
-			}
-			catch (e:ConnectionException) {
-				catchError(e);
-			}
-			catch (e:Error) {
-				catchError(new ConnectionException("Error in handle socket data", e));
 			}
 		}
 
@@ -355,13 +340,13 @@ package org.shypl.biser.client
 
 			switch (event.type) {
 				case SecurityErrorEvent.SECURITY_ERROR:
-					catchError(new ConnectionException("Socket security error", new ErrorEventException(event)));
+					throw new ConnectionException("Socket security error", new ErrorEventException(event));
 					break;
 				case IOErrorEvent.IO_ERROR:
-					catchError(new ConnectionException("Socket io error", new ErrorEventException(event)));
+					throw new ConnectionException("Socket io error", new ErrorEventException(event));
 					break;
 				default:
-					catchError(new ConnectionException("Socket error", new ErrorEventException(event)));
+					throw new ConnectionException("Socket error", new ErrorEventException(event));
 					break;
 			}
 		}
@@ -370,65 +355,49 @@ package org.shypl.biser.client
 		{
 			logger.trace("SocketDataEvent {}", event);
 
-			try {
-				_checkTimer.stop();
-				_pinged = true;
+			_checkTimer.stop();
+			_pinged = true;
 
-				while (_connected && _socket.bytesAvailable != 0) {
-					switch (_state) {
-						case STATE_MARK:
-							readMark();
-							break;
+			while (_connected && _socket.bytesAvailable != 0) {
+				switch (_state) {
+					case STATE_MARK:
+						readMark();
+						break;
 
-						case STATE_MSG_SIZE:
-							readMsgSize();
-							break;
+					case STATE_MSG_SIZE:
+						readMsgSize();
+						break;
 
-						case STATE_MSG_BODY:
-							readMsgBody();
-							break;
+					case STATE_MSG_BODY:
+						readMsgBody();
+						break;
 
-						case STATE_SID:
-							readSid();
-							break;
-					}
-				}
-
-				if (_connected) {
-					_checkTimer.start();
+					case STATE_SID:
+						readSid();
+						break;
 				}
 			}
-			catch (e:ConnectionException) {
-				catchError(e);
-			}
-			catch (e:Error) {
-				catchError(new ConnectionException("Error in handle socket data", e));
+
+			if (_connected) {
+				_checkTimer.start();
 			}
 		}
 
 		private function handleCheckTimerEvent(event:TimerEvent):void
 		{
-			try {
-				if (_pinged && _connected) {
-					_pinged = false;
-					_socket.writeByte(MARK_PING);
-					_socket.flush();
+			if (_pinged && _connected) {
+				_pinged = false;
+				_socket.writeByte(MARK_PING);
+				_socket.flush();
+			}
+			else {
+				logger.warn("Ping timeout expired");
+				if (_allowReconnect) {
+					reconnect();
 				}
 				else {
-					logger.warn("Ping timeout expired");
-					if (_allowReconnect) {
-						reconnect();
-					}
-					else {
-						throw new ConnectionException("Server did not respond for a long time, the connection is closed");
-					}
+					throw new ConnectionException("Server did not respond for a long time, the connection is closed");
 				}
-			}
-			catch (e:ConnectionException) {
-				catchError(e);
-			}
-			catch (e:Error) {
-				catchError(new ConnectionException("Error in handle socket data", e));
 			}
 		}
 	}
