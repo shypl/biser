@@ -34,9 +34,9 @@ package org.shypl.biser.client
 			throw new AbstractMethodException();
 		}
 
-		override protected function destroy0():void
+		override protected function doDestroy():void
 		{
-			super.destroy0();
+			super.doDestroy();
 			_api = null;
 		}
 

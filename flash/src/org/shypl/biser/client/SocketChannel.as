@@ -82,9 +82,9 @@ package org.shypl.biser.client
 			_socket.connect(_host, _port);
 		}
 
-		override protected function destroy0():void
+		override protected function doDestroy():void
 		{
-			super.destroy0();
+			super.doDestroy();
 			_checkTimer.stop();
 			_checkTimer.removeEventListener(TimerEvent.TIMER, handleCheckTimerEvent);
 			_checkTimer = null;

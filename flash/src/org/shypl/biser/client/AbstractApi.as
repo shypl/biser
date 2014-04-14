@@ -67,9 +67,9 @@ package org.shypl.biser.client
 			_channel.sendMessage(bytes);
 		}
 
-		override protected function destroy0():void
+		override protected function doDestroy():void
 		{
-			super.destroy0();
+			super.doDestroy();
 			_errorHandler = null;
 			_channel.destroy();
 			_channel = null;
