@@ -49,8 +49,11 @@ public class NettyChannelHandler<C extends AbstractClient> extends ChannelInboun
 		}
 		else if (msg instanceof ByteBuf) {
 			final ByteBuf buf = (ByteBuf)msg;
-			connection.receive(buf.array());
+
+			final byte[] data = new byte[buf.readableBytes()];
+			buf.readBytes(data);
 			buf.release();
+			connection.receive(data);
 		}
 		else {
 			ctx.fireChannelRead(msg);
