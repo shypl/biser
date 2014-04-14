@@ -57,6 +57,7 @@ public final class ClientConnection<C extends AbstractClient>
 			closed = true;
 		}
 
+		channel.write(new byte[]{MARK_CLOSE});
 		channel.close();
 		client.handleDisconnect();
 	}
