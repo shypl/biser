@@ -100,8 +100,10 @@ package org.shypl.biser.client
 
 			_api = null;
 
-			_sid.clear();
-			_sid = null;
+			if (_sid) {
+				_sid.clear();
+				_sid = null;
+			}
 
 			CollectionUtils.clear(_messageQueue);
 			_messageQueue = null;
@@ -128,7 +130,9 @@ package org.shypl.biser.client
 			_socket.close();
 			_socket = null;
 
-			_checkTimer.stop();
+			if (_checkTimer) {
+				_checkTimer.stop();
+			}
 
 			_state = STATE_MARK;
 			_msgSize = 0;
@@ -293,6 +297,8 @@ package org.shypl.biser.client
 
 		private function handleSocketEvent(event:Event):void
 		{
+			logger.trace("SocketEvent {}", event);
+
 			try {
 				if (event.type == Event.CONNECT) {
 					logger.info("Connected");
@@ -327,8 +333,13 @@ package org.shypl.biser.client
 					}
 				}
 				else {
-					logger.warn("Connection lost");
-					reconnect();
+					if (_sid) {
+						logger.warn("Connection lost");
+						reconnect();
+					}
+					else {
+						throw new ConnectionException("Connection lost");
+					}
 				}
 			}
 			catch (e:ConnectionException) {
@@ -341,6 +352,8 @@ package org.shypl.biser.client
 
 		private function handleSocketErrorEvent(event:ErrorEvent):void
 		{
+			logger.trace("SocketErrorEvent {}", event);
+
 			switch (event.type) {
 				case SecurityErrorEvent.SECURITY_ERROR:
 					catchError(new ConnectionException("Socket security error", new ErrorEventException(event)));
@@ -356,6 +369,8 @@ package org.shypl.biser.client
 
 		private function handleSocketDataEvent(event:ProgressEvent):void
 		{
+			logger.trace("SocketDataEvent {}", event);
+
 			try {
 				_checkTimer.stop();
 				_pinged = true;

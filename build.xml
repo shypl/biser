@@ -17,8 +17,8 @@
 	<target name="build-java">
 		<mkdir dir="tmp"/>
 
-		<javac srcdir="java/src" destdir="tmp">
-			<classpath>
+		<javac srcdir="java/src" destdir="tmp" debug="true">
+		<classpath>
 				<fileset dir="java/lib">
 					<include name="*.jar"/>
 				</fileset>
@@ -33,7 +33,7 @@
 	<target name="build-java-compiler">
 		<mkdir dir="tmp"/>
 
-		<javac srcdir="java-compiler/src" destdir="tmp"/>
+		<javac srcdir="java-compiler/src" destdir="tmp" debug="true"/>
 
 		<jar destfile="bin/shypl-biser-compiler.jar" basedir="tmp">
 			<manifest>
