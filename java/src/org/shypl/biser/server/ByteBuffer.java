@@ -28,5 +28,6 @@ class ByteBuffer
 	public void readBytes(final byte[] target, final int offset, final int length)
 	{
 		System.arraycopy(bytes, position, target, offset, length);
+		position += length;
 	}
 }
