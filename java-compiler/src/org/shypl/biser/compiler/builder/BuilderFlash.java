@@ -454,6 +454,7 @@ public class BuilderFlash extends Builder
 				return "int";
 			}
 			if (type == Type.Primitive.BYTES) {
+				cls.addImport("flash.utils.ByteArray");
 				return "ByteArray";
 			}
 			if (type == Type.Primitive.INT) {
