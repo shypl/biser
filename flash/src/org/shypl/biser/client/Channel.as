@@ -44,5 +44,10 @@ package org.shypl.biser.client
 		{
 			throw new AbstractMethodException();
 		}
+
+		protected function catchError(e:Error):void
+		{
+			_api._catchError(e);
+		}
 	}
 }

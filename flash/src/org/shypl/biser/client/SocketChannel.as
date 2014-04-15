@@ -71,14 +71,19 @@ package org.shypl.biser.client
 		{
 			logger.info("Connect to {}:{}", _host, _port);
 
-			_socket = new Socket();
-			_socket.addEventListener(Event.CONNECT, handleSocketEvent);
-			_socket.addEventListener(Event.CLOSE, handleSocketEvent);
-			_socket.addEventListener(IOErrorEvent.IO_ERROR, handleSocketErrorEvent);
-			_socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, handleSocketErrorEvent);
-			_socket.addEventListener(ProgressEvent.SOCKET_DATA, handleSocketDataEvent);
-			_socket.timeout = _timeout;
-			_socket.connect(_host, _port);
+			try {
+				_socket = new Socket();
+				_socket.addEventListener(Event.CONNECT, handleSocketEvent);
+				_socket.addEventListener(Event.CLOSE, handleSocketEvent);
+				_socket.addEventListener(IOErrorEvent.IO_ERROR, handleSocketErrorEvent);
+				_socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, handleSocketErrorEvent);
+				_socket.addEventListener(ProgressEvent.SOCKET_DATA, handleSocketDataEvent);
+				_socket.timeout = _timeout;
+				_socket.connect(_host, _port);
+			}
+			catch (e:Error) {
+				catchError(e);
+			}
 		}
 
 		override protected function doDestroy():void
@@ -251,80 +256,90 @@ package org.shypl.biser.client
 
 		private function writeMessage(message:ByteArray):void
 		{
-			if (_connected) {
-				const len:uint = message.length;
+			try {
+				if (_connected) {
+					const len:uint = message.length;
 
-				if (len <= 0xFF) {
-					_socket.writeByte(MARK_MSG_1);
-					_socket.writeByte(len);
-				}
-				else if (len <= 0xFFFF) {
-					_socket.writeByte(MARK_MSG_2);
-					_socket.writeByte(len >>> 8);
-					_socket.writeByte(len);
-				}
-				else if (len <= 0xFFFFFF) {
-					_socket.writeByte(MARK_MSG_3);
-					_socket.writeByte(len >>> 16);
-					_socket.writeByte(len >>> 8);
-					_socket.writeByte(len);
-				}
-				else if (len <= 0x7FFFFFFF) {
-					_socket.writeByte(MARK_MSG_4);
-					_socket.writeInt(len);
+					if (len <= 0xFF) {
+						_socket.writeByte(MARK_MSG_1);
+						_socket.writeByte(len);
+					}
+					else if (len <= 0xFFFF) {
+						_socket.writeByte(MARK_MSG_2);
+						_socket.writeByte(len >>> 8);
+						_socket.writeByte(len);
+					}
+					else if (len <= 0xFFFFFF) {
+						_socket.writeByte(MARK_MSG_3);
+						_socket.writeByte(len >>> 16);
+						_socket.writeByte(len >>> 8);
+						_socket.writeByte(len);
+					}
+					else if (len <= 0x7FFFFFFF) {
+						_socket.writeByte(MARK_MSG_4);
+						_socket.writeInt(len);
+					}
+					else {
+						throw new IllegalArgumentException("Maximum message length 2147483647 bytes");
+					}
+
+					_socket.writeBytes(message);
 				}
 				else {
-					throw new IllegalArgumentException("Maximum message length 2147483647 bytes");
+					throw new IllegalStateException("Connection is not opened");
 				}
-
-				_socket.writeBytes(message);
 			}
-			else {
-				throw new IllegalStateException("Connection is not opened");
+			catch (e:Error) {
+				catchError(e);
 			}
 		}
 
 		private function handleSocketEvent(event:Event):void
 		{
-			if (event.type == Event.CONNECT) {
-				logger.info("Connected");
+			try {
+				if (event.type == Event.CONNECT) {
+					logger.info("Connected");
 
-				_socket.removeEventListener(Event.CONNECT, handleSocketEvent);
+					_socket.removeEventListener(Event.CONNECT, handleSocketEvent);
 
-				_connected = true;
+					_connected = true;
 
-				if (_reconnect) {
-					if (logger.debugEnabled) {
-						logger.debug("Send sid {}", ByteUtils.toHexString(_sid));
+					if (_reconnect) {
+						if (logger.debugEnabled) {
+							logger.debug("Send sid {}", ByteUtils.toHexString(_sid));
+						}
+						_sid.position = 0;
+						_socket.writeByte(MARK_SID);
+						_socket.writeBytes(_sid);
+						_socket.flush();
+						_reconnect = false;
 					}
-					_sid.position = 0;
-					_socket.writeByte(MARK_SID);
-					_socket.writeBytes(_sid);
-					_socket.flush();
-					_reconnect = false;
-				}
 
-				if (_messageQueue.length != 0) {
-					for (var i:int = 0; i < _messageQueue.length; i++) {
-						writeMessage(_messageQueue[i]);
-						_messageQueue[i] = null;
+					if (_messageQueue.length != 0) {
+						for (var i:int = 0; i < _messageQueue.length; i++) {
+							writeMessage(_messageQueue[i]);
+							_messageQueue[i] = null;
+						}
+						_socket.flush();
+						_messageQueue.length = 0;
 					}
-					_socket.flush();
-					_messageQueue.length = 0;
-				}
 
-				if (_connected) {
-					_checkTimer.start();
-				}
-			}
-			else {
-				if (_sid) {
-					logger.warn("Connection lost");
-					reconnect();
+					if (_connected) {
+						_checkTimer.start();
+					}
 				}
 				else {
-					throw new ConnectionException("Connection lost");
+					if (_sid) {
+						logger.warn("Connection lost");
+						reconnect();
+					}
+					else {
+						throw new ConnectionException("Connection lost");
+					}
 				}
+			}
+			catch (e:Error) {
+				catchError(e);
 			}
 		}
 
@@ -332,44 +347,49 @@ package org.shypl.biser.client
 		{
 			switch (event.type) {
 				case SecurityErrorEvent.SECURITY_ERROR:
-					throw new ConnectionException("Socket security error", new ErrorEventException(event));
+					catchError(new ConnectionException("Socket security error", new ErrorEventException(event)));
 					break;
 				case IOErrorEvent.IO_ERROR:
-					throw new ConnectionException("Socket io error", new ErrorEventException(event));
+					catchError(new ConnectionException("Socket io error", new ErrorEventException(event)));
 					break;
 				default:
-					throw new ConnectionException("Socket error", new ErrorEventException(event));
+					catchError(new ConnectionException("Socket error", new ErrorEventException(event)));
 					break;
 			}
 		}
 
 		private function handleSocketDataEvent(event:ProgressEvent):void
 		{
-			_checkTimer.stop();
-			_pinged = true;
+			try {
+				_checkTimer.stop();
+				_pinged = true;
 
-			while (_connected && _socket.bytesAvailable != 0) {
-				switch (_state) {
-					case STATE_MARK:
-						readMark();
-						break;
+				while (_connected && _socket.bytesAvailable != 0) {
+					switch (_state) {
+						case STATE_MARK:
+							readMark();
+							break;
 
-					case STATE_MSG_SIZE:
-						readMsgSize();
-						break;
+						case STATE_MSG_SIZE:
+							readMsgSize();
+							break;
 
-					case STATE_MSG_BODY:
-						readMsgBody();
-						break;
+						case STATE_MSG_BODY:
+							readMsgBody();
+							break;
 
-					case STATE_SID:
-						readSid();
-						break;
+						case STATE_SID:
+							readSid();
+							break;
+					}
+				}
+
+				if (_connected) {
+					_checkTimer.start();
 				}
 			}
-
-			if (_connected) {
-				_checkTimer.start();
+			catch (e:Error) {
+				catchError(e);
 			}
 		}
 
@@ -386,7 +406,7 @@ package org.shypl.biser.client
 					reconnect();
 				}
 				else {
-					throw new ConnectionException("Server did not respond for a long time, the connection is closed");
+					catchError(new ConnectionException("Server did not respond for a long time, the connection is closed"));
 				}
 			}
 		}
