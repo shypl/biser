@@ -735,7 +735,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				int i = 0;
 				for (Parameter arg : action.getArguments()) {
 					DataType type = arg.getType();
-					CodeExpressionWord var = new CodeExpressionWord("arg" + i);
+					CodeExpressionWord var = new CodeExpressionWord("arg" + (++i));
 					executeBody.addStatement(defineDecode(new CodeExpressionVar(var.getWord(), getType(type)), reader, type));
 					logRequest.addArgument(var);
 					actionMethod.getArgument(arg.getName()).setType(getType(type));
