@@ -1,4 +1,0 @@
-Shypl Biser
-=====
-
-Binary serialization
