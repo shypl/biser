@@ -80,6 +80,8 @@
 			<manifest>
 				<attribute name="Main-Class" value="org.shypl.biser.compiler.Main"/>
 			</manifest>
+			<zipgroupfileset file="java/lib/shypl-common-*.jar"/>
+			<zipgroupfileset file="java/lib/snakeyaml-*.jar"/>
 		</jar>
 		<delete dir="tmp"/>
 	</target>
