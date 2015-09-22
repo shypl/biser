@@ -82,6 +82,7 @@
 			</manifest>
 			<zipgroupfileset file="java/lib/shypl-common-*.jar"/>
 			<zipgroupfileset file="java/lib/snakeyaml-*.jar"/>
+			<zipgroupfileset file="java/lib/commons-lang3-*.jar"/>
 		</jar>
 		<delete dir="tmp"/>
 	</target>
