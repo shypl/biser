@@ -102,7 +102,7 @@ public abstract class OopCodeBuilder implements TypeRepresenter<CodeType> {
 
 			for (int i = 0; i < argumentsSize; ++i) {
 				if (i > 0) {
-					logMessage.append(',');
+					logMessage.append(", ");
 				}
 				logMessage.append("{}");
 			}

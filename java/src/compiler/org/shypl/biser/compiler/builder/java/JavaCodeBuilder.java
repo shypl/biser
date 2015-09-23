@@ -48,7 +48,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 	private final Map<PrimitiveType, CodeType> primitiveObjects     = new HashMap<>();
 	private final Map<PrimitiveType, String>   constPrimitives      = new HashMap<>();
 	private final Map<PrimitiveType, String>   constPrimitiveArrays = new HashMap<>();
-	private final Map<PrimitiveType, String>   primitiveCamelNames = new HashMap<>();
+	private final Map<PrimitiveType, String>   primitiveCamelNames  = new HashMap<>();
 
 	private final TypeEncoderDefender typeEncoderDefender;
 	private final TypeDecoderDefender typeDecoderDefender;
@@ -492,43 +492,49 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			cls.setParent(engine.getClass("org.shypl.biser.api.server.ApiGate").parametrize(c));
 			cls.getModifier().add(CodeModifier.ABSTRACT | CodeModifier.PUBLIC);
 
-			CodeMethod method = cls.addMethod("getService");
-			method.getModifier().add(CodeModifier.PROTECTED | CodeModifier.FINAL | CodeModifier.OVERRIDE);
-			method.addThrows(engine.getClass("org.shypl.biser.api.ProtocolException"));
-			method.setReturnType(engine.getClass("org.shypl.biser.api.server.Service").parametrize(c));
-			method.getArgument("id").setType(primitiveInt);
 
-			CodeStatementSwitch swt = new CodeStatementSwitch(new CodeExpressionWord("id"));
-			method.getBody().addStatement(swt);
-			swt.getDefaultCase().addStatement(new CodeStatementThrow(new CodeExpressionNew(
-				engine.getClass("org.shypl.biser.api.ProtocolException"), new CodeExpressionStringConcat(
-				new CodeExpressionString("Service not exists: " + pack.getName() + ".<"),
-				new CodeExpressionWord("id"),
-				new CodeExpressionString(">")
-			))));
+			CodeMethod method = cls.addMethod("execute");
+			method.getModifier().add(CodeModifier.PROTECTED | CodeModifier.FINAL | CodeModifier.OVERRIDE);
+			method.addThrows(engine.getClass("java.lang.Exception"));
+			method.setReturnType(primitiveVoid);
+
+			method.getArgument("client").setType(c);
+			CodeExpression serviceId = method.getArgument("serviceId").setType(primitiveInt).getVariable();
+			CodeExpression actionId = method.getArgument("actionId").setType(primitiveInt).getVariable();
+			method.getArgument("reader").setType(engine.getClass("org.shypl.biser.io.ByteArrayReader"));
+			method.getArgument("writer").setType(engine.getClass("org.shypl.biser.io.ByteArrayWriter"));
+
+
+			CodeStatementSwitch serviceSwitch = new CodeStatementSwitch(serviceId);
+			method.getBody()
+				.addStatement(serviceSwitch)
+				.addStatement(new CodeStatementThrow(new CodeExpressionNew(
+					engine.getClass("org.shypl.biser.api.ProtocolException"), new CodeExpressionStringConcat(
+					new CodeExpressionString("Action not exists: " + pack.getName() + ".#"), serviceId, new CodeExpressionString(".#"), actionId
+				))));
 
 			for (ApiService service : services) {
-				CodeClass serviceClass = buildServerService(service);
+				CodeStatementSwitchCase serviceCase = serviceSwitch.addCase(String.valueOf(service.getId()));
+				CodeClass serviceClass = buildServerService(cls, service, serviceCase);
 
-				method = cls.addMethod("registerService" + service.getCamelName());
+				CodeParameter field = cls.getField("service" + service.getCamelName());
+				field.getModifier().add(CodeModifier.PRIVATE);
+				field.setType(serviceClass.parametrize(c));
+
+				method = cls.addMethod("register" + serviceClass.getName());
 				method.getModifier().set(CodeModifier.PUBLIC | CodeModifier.FINAL);
 				method.setReturnType(primitiveVoid);
 				method.getArgument("service").setType(serviceClass.parametrize(c));
 
 				CodeStatementIf statementIf = new CodeStatementIf(
-					new CodeExpressionBinaryOperator("!=", CodeExpressionWord.THIS.field(service.getName()), CodeExpressionWord.NULL));
+					new CodeExpressionBinaryOperator("!=", CodeExpressionWord.THIS.field(field.getName()), CodeExpressionWord.NULL));
 				statementIf.addStatement(new CodeStatementThrow(new CodeExpressionNew(engine.getClass("java.lang.RuntimeException"))));
 
 				method.getBody()
 					.addStatement(statementIf)
-					.addStatement(CodeExpressionWord.THIS.field(service.getName()).assign(new CodeExpressionWord("service")))
-					.addStatement(new CodeExpressionMethod("registerService", new CodeExpressionWord("service")));
+					.addStatement(CodeExpressionWord.THIS.field(field.getName()).assign(new CodeExpressionWord("service")));
 
-				CodeParameter field = cls.getField(service.getName());
-				field.getModifier().add(CodeModifier.PRIVATE);
-				field.setType(serviceClass.parametrize(c));
-				CodeStatementSwitchCase cs = swt.addCase(String.valueOf(service.getId()));
-				cs.addStatement(new CodeStatementReturn(service.getName()));
+				serviceCase.addStatement(CodeStatementBreak.INSTANCE);
 			}
 		}
 
@@ -568,7 +574,8 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				method.setReturnType(primitiveVoid);
 				CodeStatementBlock body = method.getBody();
 
-				CodeExpressionMethod log = new CodeExpressionMethod("_log", createActionLogMessage(ACTION_LOG_CLIENT, service, action, action.getArgumentsSize()));
+				CodeExpressionMethod log = new CodeExpressionMethod("_log",
+					createActionLogMessage(ACTION_LOG_CLIENT, service, action, action.getArgumentsSize()));
 				body.addStatement(log);
 				CodeExpressionWord writer = new CodeExpressionWord("_writer");
 				body.addStatement(new CodeExpressionVar(writer.getWord(), engine.getClass("org.shypl.biser.io.ByteArrayWriter")).assign(
@@ -610,7 +617,8 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 					method.setReturnType(primitiveVoid);
 					body = method.getBody();
 
-					log = new CodeExpressionWord("logger").method("trace", createActionLogMessage(ACTION_LOG_CLIENT_GLOBAL, service, action, action.getArgumentsSize()));
+					log = new CodeExpressionWord("logger")
+						.method("trace", createActionLogMessage(ACTION_LOG_CLIENT_GLOBAL, service, action, action.getArgumentsSize()));
 					body.addStatement(log);
 					writer = new CodeExpressionWord("writer");
 
@@ -624,143 +632,124 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			return cls;
 		}
 
-		private CodeClass buildServerService(ApiService service) {
-			CodeClass cls = pack.getClass("AbstractService" + service.getCamelName());
+		private CodeClass buildServerService(CodeClass gate, ApiService service, CodeStatementSwitchCase serviceCase) {
+			CodeClass cls = pack.getClass("Service" + service.getCamelName());
 			CodeGeneric c = cls.getGeneric("C");
 			c.setDependence(CodeGeneric.Dependence.EXTENDS, pack.getClass("Client"));
-			cls.setParent(engine.getClass("org.shypl.biser.api.server.Service").parametrize(c));
-			cls.getModifier().add(CodeModifier.ABSTRACT | CodeModifier.PUBLIC);
-
-
-			CodeMethod method = cls.addMethod("_executeAction");
-			method.getModifier().add(CodeModifier.FINAL | CodeModifier.OVERRIDE | CodeModifier.PROTECTED);
-			method.setReturnType(primitiveVoid);
-			method.addThrows(engine.getClass("java.lang.Exception"));
-			method.getArgument("id").setType(primitiveInt);
-			method.getArgument("reader").setType(engine.getClass("org.shypl.biser.io.ByteArrayReader"));
-			method.getArgument("writer").setType(engine.getClass("org.shypl.biser.io.ByteArrayWriter"));
-
-			CodeStatementSwitch swt = new CodeStatementSwitch(new CodeExpressionWord("id"));
-			method.getBody().addStatement(swt);
-
-			swt.getDefaultCase().addStatement(new CodeStatementThrow(new CodeExpressionNew(
-				engine.getClass("org.shypl.biser.api.ProtocolException"), new CodeExpressionStringConcat(
-				new CodeExpressionString("Action not exists: " + pack.getName() + "." + service.getName() + ".<"),
-				new CodeExpressionWord("id"),
-				new CodeExpressionString(">")
-			))));
+			cls.setInterface(true);
+			cls.getModifier().add(CodeModifier.PUBLIC);
 
 			CodeExpressionWord reader = new CodeExpressionWord("reader");
 			CodeExpressionWord writer = new CodeExpressionWord("writer");
+			CodeExpressionVar logger = new CodeExpressionVar("logger", engine.getClass("org.slf4j.Logger"));
+
+			CodeStatementSwitch actionSwitch = new CodeStatementSwitch("actionId");
+			serviceCase.addStatement(actionSwitch);
 
 			for (ApiAction action : service.getServerActions()) {
-				CodeStatementSwitchCase cs = swt.addCase(String.valueOf(action.getId()));
-				CodeMethod executeMethod = cls.addMethod("_execute" + action.getCamelName());
 				CodeMethod actionMethod = cls.addMethod(action.getName());
+				actionMethod.getModifier().add(CodeModifier.INTERFACE);
+				actionMethod.addThrows(engine.getClass("java.lang.Exception"));
+				actionMethod.getArgument(action.hasArgumentName("client") ? "_client"  : "client").setType(c);
 
+				CodeMethod executeMethod = gate.addMethod("execute_" + service.getName() + '_' + action.getName());
+				CodeExpressionMethod executeCall = new CodeExpressionMethod(executeMethod.getName());
+				executeMethod.getModifier().add(CodeModifier.PRIVATE);
+				executeMethod.getArgument("client").setType(c);
+				executeCall.addArgument("client");
+				executeMethod.getArgument(reader.getWord()).setType(engine.getClass("org.shypl.biser.io.ByteArrayReader"));
+				executeCall.addArgument(reader);
 				if (action.hasResult() && !action.isResultDeferred()) {
-					cs.addStatement(new CodeExpressionMethod(executeMethod.getName(), reader, writer));
+					executeMethod.getArgument(writer.getWord()).setType(engine.getClass("org.shypl.biser.io.ByteArrayWriter"));
+					executeCall.addArgument(writer);
+				}
+				executeMethod.setReturnType(primitiveVoid);
+				executeMethod.addThrows(engine.getClass("java.lang.Exception"));
+
+				CodeStatementSwitchCase actionCase = actionSwitch.addCase(String.valueOf(action.getId()));
+				actionCase.addStatement(executeCall)
+					.addStatement(CodeStatementBreak.INSTANCE);
+
+
+				CodeStatementBlock executeBody = executeMethod.getBody();
+				executeBody.addStatement(logger.assign("client.getLogger()"));
+				CodeExpressionMethod logRequest = new CodeExpressionMethod(logger.getVariable(), "trace", createActionLogMessage(ACTION_LOG_SERVER, service, action, action.getArgumentsSize()));
+				CodeExpressionMethod actionCall = new CodeExpressionMethod(new CodeExpressionWord("service" + service.getCamelName()), actionMethod.getName());
+				actionCall.addArgument("client");
+				DataType resultType = action.getResultType();
+
+				CodeClass responseClass = null;
+				if (action.hasResult()) {
+					if (action.isResultDeferred()) {
+						actionMethod.setReturnType(primitiveVoid);
+
+						responseClass = pack.getClass("Response" + service.getCamelName() + "" + Utils.convertToCamel(actionMethod.getName()));
+						responseClass.setParent(engine.getClass("org.shypl.biser.api.server.ActionDeferredResponse"));
+						responseClass.getModifier().add(CodeModifier.FINAL);
+
+						CodeMethod method = responseClass.addMethod(responseClass.getName());
+						method.getArgument("client").setType(pack.getClass("Client"));
+						method.getArgument("responseId").setType(primitiveInt);
+						method.getBody()
+							.addStatement(new CodeExpressionMethod("super", new CodeExpressionWord("client"), new CodeExpressionWord("responseId")));
+
+						method = responseClass.addMethod("send");
+						method.getModifier().add(CodeModifier.PUBLIC);
+						method.setReturnType(primitiveVoid);
+						method.getArgument("result").setType(getType(resultType));
+
+						method.getBody()
+							.addStatement(new CodeExpressionMethod("_log", createActionLogMessage(ACTION_LOG_SERVER_RESPONSE, service, action, 1), new CodeExpressionWord("result")))
+							.addStatement(defineEncode(new CodeExpressionWord("result"), writer, resultType))
+							.addStatement(new CodeExpressionMethod("_send"));
+
+						executeBody.addStatement(new CodeExpressionVar("response", responseClass).assign(new CodeExpressionNew(responseClass,
+							new CodeExpressionWord("client"),
+							new CodeExpressionMethod(reader, "readInt")
+						)));
+					}
+					else {
+						executeBody.addStatement(new CodeExpressionMethod(writer, "writeInt", new CodeExpressionMethod(reader, "readInt")));
+						actionMethod.setReturnType(getType(resultType));
+					}
 				}
 				else {
-					cs.addStatement(new CodeExpressionMethod(executeMethod.getName(), reader));
+					actionMethod.setReturnType(primitiveVoid);
 				}
-				buildServerServiceAction(service, action, executeMethod, actionMethod, reader, writer);
 
-				cs.addStatement(CodeStatementBreak.INSTANCE);
+				if (action.hasArguments()) {
+					int i = 0;
+					for (Parameter arg : action.getArguments()) {
+						DataType type = arg.getType();
+						CodeExpressionWord var = new CodeExpressionWord("arg" + (++i));
+						executeBody.addStatement(defineDecode(new CodeExpressionVar(var.getWord(), getType(type)), reader, type));
+						logRequest.addArgument(var);
+						actionMethod.getArgument(arg.getName()).setType(getType(type));
+						actionCall.addArgument(var);
+					}
+				}
+
+				executeBody.addStatement(logRequest);
+
+				if (action.hasResult()) {
+					if (action.isResultDeferred()) {
+						actionCall.addArgument(new CodeExpressionWord("response"));
+						actionMethod.getArgument("response").setType(responseClass);
+						executeBody.addStatement(actionCall);
+					}
+					else {
+						executeBody.addStatement(new CodeExpressionVar("result", getType(resultType)).assign(actionCall));
+						executeBody
+							.addStatement(new CodeExpressionMethod(logger.getVariable(), "trace", createActionLogMessage(ACTION_LOG_SERVER_RESPONSE, service, action, 1), new CodeExpressionWord("result")));
+						executeBody.addStatement(defineEncode(new CodeExpressionWord("result"), writer, resultType));
+					}
+				}
+				else {
+					executeBody.addStatement(actionCall);
+				}
 			}
 
 			return cls;
-		}
-
-		private void buildServerServiceAction(ApiService service, ApiAction action, CodeMethod executeMethod, CodeMethod actionMethod,
-			CodeExpressionWord reader,
-			CodeExpressionWord writer)
-		{
-			executeMethod.getModifier().add(CodeModifier.PRIVATE);
-			executeMethod.getArgument(reader.getWord()).setType(engine.getClass("org.shypl.biser.io.ByteArrayReader"));
-			if (action.hasResult() && !action.isResultDeferred()) {
-				executeMethod.getArgument(writer.getWord()).setType(engine.getClass("org.shypl.biser.io.ByteArrayWriter"));
-			}
-			executeMethod.setReturnType(primitiveVoid);
-			executeMethod.addThrows(engine.getClass("java.lang.Exception"));
-
-			actionMethod.getModifier().add(CodeModifier.PROTECTED | CodeModifier.ABSTRACT);
-			actionMethod.addThrows(engine.getClass("java.lang.Exception"));
-
-			CodeStatementBlock executeBody = executeMethod.getBody();
-			CodeExpressionMethod logRequest = new CodeExpressionMethod("_log", createActionLogMessage(ACTION_LOG_SERVER, service, action, action.getArgumentsSize()));
-			CodeExpressionMethod actionCall = new CodeExpressionMethod(actionMethod.getName());
-			DataType resultType = action.getResultType();
-
-			CodeClass responseClass = null;
-			if (action.hasResult()) {
-				if (action.isResultDeferred()) {
-					actionMethod.setReturnType(primitiveVoid);
-
-					responseClass = pack.getClass("Response" + service.getCamelName() + "" + Utils.convertToCamel(actionMethod.getName()));
-					responseClass.setParent(engine.getClass("org.shypl.biser.api.server.ActionDeferredResponse"));
-					responseClass.getModifier().add(CodeModifier.FINAL);
-
-					CodeMethod method = responseClass.addMethod(responseClass.getName());
-					method.getArgument("client").setType(pack.getClass("Client"));
-					method.getArgument("responseId").setType(primitiveInt);
-					method.getBody()
-						.addStatement(new CodeExpressionMethod("super", new CodeExpressionWord("client"), new CodeExpressionWord("responseId")));
-
-					method = responseClass.addMethod("send");
-					method.getModifier().add(CodeModifier.PUBLIC);
-					method.setReturnType(primitiveVoid);
-					method.getArgument("result").setType(getType(resultType));
-
-					method.getBody()
-						.addStatement(new CodeExpressionMethod("_log", createActionLogMessage(ACTION_LOG_SERVER_RESPONSE, service, action, 1), new CodeExpressionWord("result")))
-						.addStatement(defineEncode(new CodeExpressionWord("result"), writer, resultType))
-						.addStatement(new CodeExpressionMethod("_send"));
-
-					executeBody.addStatement(new CodeExpressionVar("response", responseClass).assign(new CodeExpressionNew(responseClass,
-						new CodeExpressionMethod("getClient"),
-						new CodeExpressionMethod(reader, "readInt")
-					)));
-				}
-				else {
-					executeBody.addStatement(new CodeExpressionMethod(writer, "writeInt", new CodeExpressionMethod(reader, "readInt")));
-					actionMethod.setReturnType(getType(resultType));
-				}
-			}
-			else {
-				actionMethod.setReturnType(primitiveVoid);
-			}
-
-			if (action.hasArguments()) {
-				int i = 0;
-				for (Parameter arg : action.getArguments()) {
-					DataType type = arg.getType();
-					CodeExpressionWord var = new CodeExpressionWord("arg" + (++i));
-					executeBody.addStatement(defineDecode(new CodeExpressionVar(var.getWord(), getType(type)), reader, type));
-					logRequest.addArgument(var);
-					actionMethod.getArgument(arg.getName()).setType(getType(type));
-					actionCall.addArgument(var);
-				}
-			}
-
-			executeBody.addStatement(logRequest);
-
-			if (action.hasResult()) {
-				if (action.isResultDeferred()) {
-					actionCall.addArgument(new CodeExpressionWord("response"));
-					actionMethod.getArgument("response").setType(responseClass);
-					executeBody.addStatement(actionCall);
-				}
-				else {
-					executeBody.addStatement(new CodeExpressionVar("result", getType(resultType)).assign(actionCall));
-					executeBody
-						.addStatement(new CodeExpressionMethod("_log", createActionLogMessage(ACTION_LOG_SERVER_RESPONSE, service, action, 1), new CodeExpressionWord("result")));
-					executeBody.addStatement(defineEncode(new CodeExpressionWord("result"), writer, resultType));
-				}
-			}
-			else {
-				executeBody.addStatement(actionCall);
-			}
 		}
 	}
 }

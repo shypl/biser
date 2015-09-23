@@ -3,7 +3,6 @@ package org.shypl.biser.api.client {
 	import flash.utils.IDataInput;
 
 	import org.shypl.biser.io.BiserReader;
-
 	import org.shypl.biser.io.StreamReader;
 	import org.shypl.common.lang.AbstractMethodException;
 	import org.shypl.common.lang.IllegalStateException;
@@ -36,16 +35,12 @@ package org.shypl.biser.api.client {
 				resultHandler.process(reader, _connection.getLogger());
 			}
 			else {
-				getService(reader.readInt())._executeAction0(reader.readInt(), reader);
+				execute(reader.readInt(), reader.readInt(), reader);
 			}
 		}
 
 		internal function sendMessage(data:ByteArray):void {
 			_connection.sendMessage(data);
-		}
-
-		internal function log(message:String, args:Array):void {
-			_connection.getLogger().log(Level.TRACE, message, args);
 		}
 
 		internal function registerResultHandler(holder:ResultHandlerHolder):int {
@@ -56,13 +51,17 @@ package org.shypl.biser.api.client {
 			return _resultHandlerCounter;
 		}
 
-		[Abstract]
-		protected function getService(id:int):Service {
-			throw new AbstractMethodException();
+		internal function _log(message:String, ...args):void {
+			_connection.getLogger().log(Level.TRACE, message, args);
 		}
 
-		protected final function registerService(service:Service):void {
-			service._setGate(this);
+		protected final function log(message:String, ...args):void {
+			_connection.getLogger().log(Level.TRACE, message, args);
+		}
+
+		[Abstract]
+		protected function execute(serviceId:int, actionId:int, reader:BiserReader):void {
+			throw new AbstractMethodException();
 		}
 	}
 }

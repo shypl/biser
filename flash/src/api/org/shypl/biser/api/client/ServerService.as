@@ -16,7 +16,7 @@ package org.shypl.biser.api.client {
 		}
 
 		protected final function _log(message:String, ...args):void {
-			_gate.log(message, args);
+			_gate._log(message, args);
 		}
 
 		protected final function _prepareMessage(actionId:int, holder:ResultHandlerHolder = null):BiserWriter {

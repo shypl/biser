@@ -13,6 +13,10 @@ public class CodeStatementSwitch implements CodeStatement {
 		this.value = value;
 	}
 
+	public CodeStatementSwitch(String word) {
+		this(new CodeExpressionWord(word));
+	}
+
 	public Collection<CodeStatementSwitchCase> getCases() {
 		return cases;
 	}

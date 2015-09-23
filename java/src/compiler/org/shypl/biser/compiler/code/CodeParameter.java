@@ -14,8 +14,9 @@ public class CodeParameter extends CodeNamedObject implements CodeModifiable, Co
 		return modifier;
 	}
 
-	public void setType(CodeType type) {
+	public CodeParameter setType(CodeType type) {
 		this.type = type;
+		return this;
 	}
 
 	public CodeType getType() {

@@ -473,12 +473,61 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 				CodeMethod method = cls.addMethod(cls.getName());
 				method.getModifier().add(CodeModifier.PUBLIC);
-				method.getBody().addStatement(new CodeExpressionWord("_api").assign(new CodeExpressionNew(pack.getClass("ServerApi"), CodeExpressionWord.THIS)));
+				method.getBody()
+					.addStatement(new CodeExpressionWord("_api").assign(new CodeExpressionNew(pack.getClass("ServerApi"), CodeExpressionWord.THIS)));
 
 				method = cls.addMethod("api");
 				method.getModifier().add(CodeModifier.PUBLIC | CodeModifier.GETTER);
 				method.setReturnType(pack.getClass("ServerApi"));
 				method.getBody().addStatement(new CodeStatementReturn("_api"));
+			}
+		}
+
+		public void buildClient(List<ApiService> services) {
+			CodeClass cls = pack.getClass("ApiGate");
+			cls.setParent(engine.getClass("org.shypl.biser.api.client.AbstractApiGate"));
+			cls.getModifier().add(CodeModifier.PUBLIC);
+
+			CodeMethod method = cls.addMethod("execute");
+			method.getModifier().add(CodeModifier.PROTECTED | CodeModifier.FINAL | CodeModifier.OVERRIDE);
+			method.setReturnType(primitiveVoid);
+			method.getArgument("serviceId").setType(primitiveInt);
+			method.getArgument("actionId").setType(primitiveInt);
+			method.getArgument("reader").setType(engine.getClass("org.shypl.biser.io.BiserReader"));
+
+			CodeStatementSwitch serviceSwitch = new CodeStatementSwitch(new CodeExpressionWord("serviceId"));
+			method.getBody()
+				.addStatement(serviceSwitch)
+				.addStatement(new CodeStatementThrow(new CodeExpressionNew(
+					engine.getClass("org.shypl.biser.api.ApiException"), new CodeExpressionStringConcat(
+					new CodeExpressionString("Action not exists: " + pack.getName() + ".#"),
+					new CodeExpressionWord("serviceId"),
+					new CodeExpressionString(".#"),
+					new CodeExpressionWord("actionId"))
+				)));
+
+			for (ApiService service : services) {
+				CodeStatementSwitchCase serviceCase = serviceSwitch.addCase(String.valueOf(service.getId()));
+				CodeClass serviceClass = buildClientService(cls, serviceCase, service);
+
+				serviceCase.addStatement(CodeStatementBreak.INSTANCE);
+
+				CodeParameter field = cls.getField("service" + service.getCamelName());
+				field.getModifier().add(CodeModifier.PRIVATE);
+				field.setType(serviceClass);
+
+				method = cls.addMethod("registerService" + service.getCamelName());
+				method.getModifier().set(CodeModifier.PUBLIC | CodeModifier.FINAL);
+				method.setReturnType(primitiveVoid);
+				method.getArgument("service").setType(serviceClass);
+
+				CodeStatementIf statementIf = new CodeStatementIf(
+					new CodeExpressionBinaryOperator("!=", CodeExpressionWord.THIS.field(field.getName()), CodeExpressionWord.NULL));
+				statementIf.addStatement(new CodeStatementThrow(new CodeExpressionNew(engine.getClass("org.shypl.common.lang.RuntimeException"))));
+
+				method.getBody()
+					.addStatement(statementIf)
+					.addStatement(CodeExpressionWord.THIS.field(field.getName()).assign(new CodeExpressionWord("service")));
 			}
 		}
 
@@ -493,7 +542,7 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 			CodeExpressionWord gate = new CodeExpressionWord("gate");
 			for (ApiService service : services) {
 				CodeClass serviceClass = buildServerService(service);
-				CodeParameter field = cls.getField("_"  + service.getName());
+				CodeParameter field = cls.getField("_" + service.getName());
 				field.setType(serviceClass);
 				field.getModifier().add(CodeModifier.PRIVATE);
 				body.addStatement(new CodeExpressionAssign(field.getVariable(), new CodeExpressionNew(serviceClass, gate)));
@@ -549,7 +598,7 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 			if (action.hasResult()) {
 				CodeClass rhClass = buildServerServiceActionResult(service, action);
-				CodeParameter arg = method.getArgument("_resultHandler");
+				CodeParameter arg = method.getArgument(action.hasArgumentName("resultHandler") ? "_resultHandler" : "resultHandler");
 				arg.setType(rhClass);
 				prepareMessage.addArgument(new CodeExpressionNew(pack.getClass(rhClass.getName() + "_Holder"), arg.getVariable()));
 			}
@@ -594,93 +643,38 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 			method.getBody()
 				.addStatement(defineDecode(result, reader.getVariable(), action.getResultType()))
-				.addStatement(logger.getVariable().method("trace", createActionLogMessage(ACTION_LOG_SERVER_RESPONSE, service, action, 1), result.getVariable()))
+				.addStatement(
+					logger.getVariable().method("trace", createActionLogMessage(ACTION_LOG_SERVER_RESPONSE, service, action, 1), result.getVariable()))
 				.addStatement(field.getVariable().method(handleResult.getName(), result.getVariable()));
 
 			return cls;
 		}
 
-		public void buildClient(List<ApiService> services) {
-			CodeClass cls = pack.getClass("ApiGate");
-			cls.setParent(engine.getClass("org.shypl.biser.api.client.AbstractApiGate"));
+		private CodeClass buildClientService(CodeClass gate, CodeStatementSwitchCase serviceCase, ApiService service) {
+			CodeClass cls = pack.getClass("Service" + service.getCamelName());
+			cls.setInterface(true);
 			cls.getModifier().add(CodeModifier.PUBLIC);
 
-			CodeMethod method = cls.addMethod("getService");
-			method.getModifier().add(CodeModifier.PROTECTED | CodeModifier.FINAL | CodeModifier.OVERRIDE);
-			method.setReturnType(engine.getClass("org.shypl.biser.api.client.Service"));
-			method.getArgument("id").setType(primitiveInt);
+			CodeStatementSwitch actionSwitch = new CodeStatementSwitch(new CodeExpressionWord("actionId"));
+			serviceCase.addStatement(actionSwitch);
 
-			CodeStatementSwitch swt = new CodeStatementSwitch(new CodeExpressionWord("id"));
-			method.getBody().addStatement(swt);
-			swt.getDefaultCase().addStatement(new CodeStatementThrow(new CodeExpressionNew(
-				engine.getClass("org.shypl.biser.api.ApiException"), new CodeExpressionStringConcat(
-				new CodeExpressionString("Service not exists: " + pack.getName() + ".<"),
-				new CodeExpressionWord("id"),
-				new CodeExpressionString(">")
-			))));
-
-			for (ApiService service : services) {
-				CodeClass serviceClass = buildClientService(service);
-
-				method = cls.addMethod("registerService" + service.getCamelName());
-				method.getModifier().set(CodeModifier.PUBLIC | CodeModifier.FINAL);
-				method.setReturnType(primitiveVoid);
-				method.getArgument("service").setType(serviceClass);
-
-				CodeStatementIf statementIf = new CodeStatementIf(
-					new CodeExpressionBinaryOperator("!=", CodeExpressionWord.THIS.field(service.getName()), CodeExpressionWord.NULL));
-				statementIf.addStatement(new CodeStatementThrow(new CodeExpressionNew(engine.getClass("org.shypl.common.lang.RuntimeException"))));
-
-				method.getBody()
-					.addStatement(statementIf)
-					.addStatement(CodeExpressionWord.THIS.field(service.getName()).assign(new CodeExpressionWord("service")))
-					.addStatement(new CodeExpressionMethod("registerService", new CodeExpressionWord("service")));
-
-				CodeParameter field = cls.getField(service.getName());
-				field.getModifier().add(CodeModifier.PRIVATE);
-				field.setType(serviceClass);
-				CodeStatementSwitchCase cs = swt.addCase(String.valueOf(service.getId()));
-				cs.addStatement(new CodeStatementReturn(service.getName()));
-			}
-		}
-
-		private CodeClass buildClientService(ApiService service) {
-			CodeClass cls = pack.getClass("AbstractService" + service.getCamelName());
-			cls.setParent(engine.getClass("org.shypl.biser.api.client.Service"));
-			cls.getModifier().add(CodeModifier.ABSTRACT | CodeModifier.PUBLIC);
-
-			CodeMethod method = cls.addMethod("_executeAction");
-			method.getModifier().add(CodeModifier.FINAL | CodeModifier.OVERRIDE | CodeModifier.PROTECTED);
-			method.setReturnType(primitiveVoid);
-			method.getArgument("id").setType(primitiveInt);
-			method.getArgument("reader").setType(engine.getClass("org.shypl.biser.io.BiserReader"));
-
-			CodeStatementSwitch swt = new CodeStatementSwitch(new CodeExpressionWord("id"));
-			method.getBody().addStatement(swt);
-
-			swt.getDefaultCase().addStatement(new CodeStatementThrow(new CodeExpressionNew(
-				engine.getClass("org.shypl.biser.api.ApiException"), new CodeExpressionStringConcat(
-				new CodeExpressionString("Action not exists: " + pack.getName() + "." + service.getName() + ".<"),
-				new CodeExpressionWord("id"),
-				new CodeExpressionString(">")
-			))));
 
 			CodeExpressionWord reader = new CodeExpressionWord("reader");
 
 			for (ApiAction action : service.getClientActions()) {
-				CodeStatementSwitchCase cs = swt.addCase(String.valueOf(action.getId()));
-				CodeMethod executeMethod = cls.addMethod("_execute" + action.getCamelName());
+				CodeStatementSwitchCase actionCase = actionSwitch.addCase(String.valueOf(action.getId()));
+				CodeMethod executeMethod = gate.addMethod("execute_" + service.getName() + "_" + action.getName());
 				CodeMethod actionMethod = cls.addMethod(action.getName());
 
 				if (action.hasResult()) {
 					throw new RuntimeException("Not supported");
 				}
 				else {
-					cs.addStatement(new CodeExpressionMethod(executeMethod.getName(), reader));
+					actionCase.addStatement(new CodeExpressionMethod(executeMethod.getName(), reader));
 				}
 				buildClientServiceAction(service, action, executeMethod, actionMethod, reader);
 
-				cs.addStatement(CodeStatementBreak.INSTANCE);
+				actionCase.addStatement(CodeStatementBreak.INSTANCE);
 			}
 
 			return cls;
@@ -693,14 +687,13 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 			executeMethod.getArgument(reader.getWord()).setType(engine.getClass("org.shypl.biser.io.BiserReader"));
 			executeMethod.setReturnType(primitiveVoid);
 
-			actionMethod.getModifier().add(CodeModifier.PROTECTED | CodeModifier.ABSTRACT);
+			actionMethod.getModifier().add(CodeModifier.INTERFACE);
 			actionMethod.setReturnType(primitiveVoid);
-			actionMethod.getBody()
-				.addStatement(new CodeStatementThrow(new CodeExpressionNew(engine.getClass("org.shypl.common.lang.AbstractMethodException"))));
 
 			CodeStatementBlock executeBody = executeMethod.getBody();
-			CodeExpressionMethod logRequest = new CodeExpressionMethod("_log", createActionLogMessage(ACTION_LOG_CLIENT, service, action, action.getArgumentsSize()));
-			CodeExpressionMethod actionCall = new CodeExpressionMethod(actionMethod.getName());
+			CodeExpressionMethod logRequest = new CodeExpressionMethod("log",
+				createActionLogMessage(ACTION_LOG_CLIENT, service, action, action.getArgumentsSize()));
+			CodeExpressionMethod actionCall = new CodeExpressionMethod(new CodeExpressionWord("service" + service.getCamelName()), actionMethod.getName());
 
 			if (action.hasArguments()) {
 				int i = 0;

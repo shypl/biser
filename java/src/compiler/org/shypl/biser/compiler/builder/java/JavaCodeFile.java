@@ -354,7 +354,7 @@ public class JavaCodeFile extends OopCodeFile implements CodeVisitor {
 			writeSeparated(method.getThrows(), this::visit);
 		}
 
-		if (method.getModifier().is(CodeModifier.ABSTRACT)) {
+		if (method.getModifier().is(CodeModifier.ABSTRACT) || method.getModifier().is(CodeModifier.INTERFACE)) {
 			writeLine(";");
 		}
 		else {

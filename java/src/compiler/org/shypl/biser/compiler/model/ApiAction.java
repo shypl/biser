@@ -59,6 +59,10 @@ public class ApiAction {
 		return !arguments.isEmpty();
 	}
 
+	public boolean hasArgumentName(String name) {
+		return arguments.containsKey(name);
+	}
+
 	public int getArgumentsSize() {
 		return arguments.size();
 	}
