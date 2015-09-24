@@ -3,9 +3,16 @@ package org.shypl.biser.api {
 		private var _host:String;
 		private var _port:int;
 
-		public function ServerEntryAddress(host:String, port:int) {
-			_host = host;
-			_port = port;
+		public function ServerEntryAddress(address:String, port:int = -1) {
+			if (port == -1) {
+				var i:int = address.indexOf(":");
+				_host = address.substring(0, i);
+				_port = parseInt(address.substring(i + 1));
+			}
+			else {
+				_host = address;
+				_port = port;
+			}
 		}
 
 		public function get host():String {
