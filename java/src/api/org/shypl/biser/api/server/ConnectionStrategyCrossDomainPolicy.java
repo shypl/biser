@@ -11,6 +11,7 @@ class ConnectionStrategyCrossDomainPolicy extends ConnectionStrategy {
 	static {
 		byte[] bytes = "policy-file-request/>".getBytes(StandardCharsets.UTF_8);
 		PATTERN = new byte[bytes.length + 1];
+		System.arraycopy(bytes, 0, PATTERN, 0, bytes.length);
 		PATTERN[bytes.length] = 0;
 	}
 
@@ -29,12 +30,12 @@ class ConnectionStrategyCrossDomainPolicy extends ConnectionStrategy {
 				}
 			}
 			else {
-				byte[] request = new byte[position];
-				System.arraycopy(PATTERN, 0, request, 0, position + 1);
-				request[position + 1] = b;
+				byte[] request = new byte[position + 1];
+				System.arraycopy(PATTERN, 0, request, 0, position);
+				request[position] = b;
 
 				throw new ProtocolException(
-					"CrossDomainPolicy: Invalid request (" + Hex.encodeHexString(request) + ":" + new String(request, StandardCharsets.UTF_8) + ")");
+					"CrossDomainPolicy: Invalid request (" + new String(request, StandardCharsets.UTF_8) + " : " + Hex.encodeHexString(request) + ")");
 			}
 		}
 		while (connection.isReadableSync());

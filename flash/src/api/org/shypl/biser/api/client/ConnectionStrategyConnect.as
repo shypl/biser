@@ -45,10 +45,11 @@ package org.shypl.biser.api.client {
 			else {
 				var reason:ConnectionCloseReason = ConnectionCloseReason.defineByFlag(flag);
 				getLogger().info("Authorization fail, reason {}", reason);
-				if (_connectHandler) {
-					_connectHandler.handlerConnectFail(reason);
-				}
+				var connectHandler:ConnectHandler = _connectHandler;
 				_connection.doClose(reason);
+				if (connectHandler) {
+					connectHandler.handlerConnectFail(reason);
+				}
 			}
 		}
 
@@ -57,9 +58,10 @@ package org.shypl.biser.api.client {
 			data.readBytes(_sid, offset, Math.min(SID_LENGTH - offset, data.bytesAvailable));
 
 			if (_sid.bytesAvailable == SID_LENGTH) {
+				var connectHandler:ConnectHandler = _connectHandler;
 				_connection.authorize(_sid);
-				if (_connectHandler) {
-					_connectHandler.handlerConnectSuccess();
+				if (connectHandler) {
+					connectHandler.handlerConnectSuccess();
 				}
 			}
 		}

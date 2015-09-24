@@ -169,6 +169,10 @@ class Connection implements ConnectionChannelHandler {
 				logger.error("Protocol broken", e);
 				closeSync(Protocol.CLOSE_PROTOCOL_BROKEN);
 			}
+			catch (Throwable e) {
+				logger.error("Unexpected error", e);
+				closeSync(Protocol.CLOSE_SERVER_ERROR);
+			}
 		}
 		readerData = null;
 	}

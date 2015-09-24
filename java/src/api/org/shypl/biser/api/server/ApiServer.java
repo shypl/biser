@@ -67,6 +67,7 @@ public class ApiServer<C extends AbstractClient> {
 
 		byte[] crossDomainPolicyBytes = crossDomainPolicy.getBytes(StandardCharsets.UTF_8);
 		crossDomainPolicyResponse = new byte[crossDomainPolicyBytes.length + 1];
+		System.arraycopy(crossDomainPolicyBytes, 0, crossDomainPolicyResponse, 0, crossDomainPolicyBytes.length);
 		crossDomainPolicyResponse[crossDomainPolicyBytes.length] = 0;
 
 		entry = entryProvider.open(address, this::acceptConnection);
