@@ -668,7 +668,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 				CodeStatementSwitchCase actionCase = actionSwitch.addCase(String.valueOf(action.getId()));
 				actionCase.addStatement(executeCall)
-					.addStatement(CodeStatementBreak.INSTANCE);
+					.addStatement(CodeStatementReturn.EMPTY);
 
 
 				CodeStatementBlock executeBody = executeMethod.getBody();

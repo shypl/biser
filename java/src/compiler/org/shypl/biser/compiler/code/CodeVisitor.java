@@ -85,7 +85,9 @@ public interface CodeVisitor {
 	}
 
 	default void visitStatementReturn(CodeStatementReturn statement) {
-		visitStatementExpression(statement);
+		if (!statement.isEmpty()) {
+			visitStatementExpression(statement);
+		}
 	}
 
 	default void visitStatementThrow(CodeStatementThrow statement) {

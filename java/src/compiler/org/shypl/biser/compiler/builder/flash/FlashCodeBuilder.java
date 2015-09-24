@@ -674,7 +674,7 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 				}
 				buildClientServiceAction(service, action, executeMethod, actionMethod, reader);
 
-				actionCase.addStatement(CodeStatementBreak.INSTANCE);
+				actionCase.addStatement(CodeStatementReturn.EMPTY);
 			}
 
 			return cls;

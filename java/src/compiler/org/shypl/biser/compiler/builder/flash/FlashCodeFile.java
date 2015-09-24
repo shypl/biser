@@ -141,8 +141,13 @@ public class FlashCodeFile extends OopCodeFile implements CodeVisitor {
 
 	@Override
 	public void visitStatementReturn(CodeStatementReturn statement) {
-		write("return ");
-		visitStatementExpression(statement);
+		if (statement.isEmpty()) {
+			write("return");
+		}
+		else {
+			write("return ");
+			visitStatementExpression(statement);
+		}
 	}
 
 	@Override
