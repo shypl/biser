@@ -1,6 +1,4 @@
 package org.shypl.biser.api.client {
-	import flash.utils.ByteArray;
-
 	import org.shypl.biser.api.ApiException;
 	import org.shypl.common.timer.Timer;
 	import org.shypl.common.timer.TimerTask;
@@ -50,7 +48,7 @@ package org.shypl.biser.api.client {
 		}
 
 		private function nextAttempt():void {
-			_attemptTask = ++_attempt == 1 ? Timer.forNextFrame(run) : Timer.schedule(1000, run);
+			_attemptTask = (++_attempt == 1) ? Timer.forNextFrame(run) : Timer.schedule(1000, run);
 		}
 
 		private function run():void {
