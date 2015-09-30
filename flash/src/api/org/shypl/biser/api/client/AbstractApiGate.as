@@ -51,7 +51,7 @@ package org.shypl.biser.api.client {
 			return _resultHandlerCounter;
 		}
 
-		internal function _log(message:String, ...args):void {
+		internal function _log(message:String, args:Array):void {
 			_connection.getLogger().log(Level.TRACE, message, args);
 		}
 
