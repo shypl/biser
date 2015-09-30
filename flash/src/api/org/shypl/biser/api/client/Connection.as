@@ -62,9 +62,11 @@ package org.shypl.biser.api.client {
 
 		internal function doClose(reason:ConnectionCloseReason):void {
 			if (!_closed) {
+				var connected:Boolean = false;
 				_logger.info("Close by reason {}", reason);
 				_closed = true;
 				if (_connected) {
+					connected = true;
 					_connected = false;
 					_channelHandler.destroy();
 					_channel.writeByte(Protocol.CLOSE);
@@ -81,7 +83,9 @@ package org.shypl.biser.api.client {
 
 				stopReducer();
 
-				dispatchEvent(new ConnectionCloseEvent(reason));
+				if (connected) {
+					dispatchEvent(new ConnectionCloseEvent(reason));
+				}
 			}
 		}
 
