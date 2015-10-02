@@ -43,10 +43,11 @@
 32-bit unsigned integer (0 ... 4 294 967 295)
 
 #### Format
-As int
+* `0x00...0xFE` > 0 ... 254
+* `0xFE [XXXX]` > XXXX - 4 bytes of unsigned integer raw code
 
 #### Represent
-* Java: `int`
+* Java: `long`
 * ActionScript: `uint`
 
 

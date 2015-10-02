@@ -52,8 +52,24 @@ public class StreamReader implements BiserReader {
 	}
 
 	@Override
-	public int readUint() throws IOException {
-		return readInt();
+	public long readUint() throws IOException {
+		int b0 = read();
+
+		switch (b0) {
+			case 0xFF: {
+				long b1 = stream.read();
+				long b2 = stream.read();
+				long b3 = stream.read();
+				long b4 = stream.read();
+				if ((b1 | b2 | b3 | b4) < 0) {
+					throw new EOFException();
+				}
+				return ((b1 << 24) + (b2 << 16) + (b3 << 8) + b4);
+			}
+
+			default:
+				return b0 & 0xFF;
+		}
 	}
 
 	@Override

@@ -42,7 +42,7 @@ public class SafeReaderProxy implements BiserReader {
 	}
 
 	@Override
-	public int readUint() {
+	public long readUint() {
 		try {
 			return reader.readUint();
 		}

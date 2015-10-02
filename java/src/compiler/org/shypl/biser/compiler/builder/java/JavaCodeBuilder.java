@@ -68,7 +68,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		primitives.put(PrimitiveType.BYTE, engine.getPrimitive("byte"));
 		primitives.put(PrimitiveType.BOOL, engine.getPrimitive("boolean"));
 		primitives.put(PrimitiveType.INT, primitiveInt);
-		primitives.put(PrimitiveType.UINT, primitiveInt);
+		primitives.put(PrimitiveType.UINT, engine.getPrimitive("long"));
 		primitives.put(PrimitiveType.LONG, engine.getPrimitive("long"));
 		primitives.put(PrimitiveType.ULONG, engine.getPrimitive("long"));
 		primitives.put(PrimitiveType.DOUBLE, engine.getPrimitive("double"));
@@ -79,7 +79,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		primitiveObjects.put(PrimitiveType.BYTE, engine.getClass("java.lang.Byte"));
 		primitiveObjects.put(PrimitiveType.BOOL, engine.getClass("java.lang.Boolean"));
 		primitiveObjects.put(PrimitiveType.INT, engine.getClass("java.lang.Integer"));
-		primitiveObjects.put(PrimitiveType.UINT, engine.getClass("java.lang.Integer"));
+		primitiveObjects.put(PrimitiveType.UINT, engine.getClass("java.lang.Long"));
 		primitiveObjects.put(PrimitiveType.LONG, engine.getClass("java.lang.Long"));
 		primitiveObjects.put(PrimitiveType.ULONG, engine.getClass("java.lang.Long"));
 		primitiveObjects.put(PrimitiveType.DOUBLE, engine.getClass("java.lang.Double"));

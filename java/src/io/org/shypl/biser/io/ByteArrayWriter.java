@@ -48,7 +48,7 @@ public class ByteArrayWriter implements BiserWriter {
 	}
 
 	@Override
-	public void writeUint(int value) {
+	public void writeUint(long value) {
 		writer.writeUint(value);
 	}
 

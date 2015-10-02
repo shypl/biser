@@ -43,8 +43,22 @@ public class StreamWriter implements BiserWriter {
 	}
 
 	@Override
-	public void writeUint(int value) throws IOException {
-		writeInt(value);
+	public void writeUint(long value) throws IOException {
+		if (value < 0 || value > Integer.MAX_VALUE) {
+			throw new IllegalArgumentException();
+		}
+
+		if (value >= 0 && value <= 254) {
+			stream.write((int)value);
+		}
+		else {
+			buffer[0] = (byte)0xFF;
+			buffer[1] = (byte)(value >>> 24);
+			buffer[2] = (byte)(value >>> 16);
+			buffer[3] = (byte)(value >>> 8);
+			buffer[4] = (byte)value;
+			stream.write(buffer, 0, 5);
+		}
 	}
 
 	@Override

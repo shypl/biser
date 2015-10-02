@@ -11,7 +11,7 @@ public interface BiserWriter {
 
 	void writeInt(int value) throws IOException;
 
-	void writeUint(int value) throws IOException;
+	void writeUint(long value) throws IOException;
 
 	void writeLong(long value) throws IOException;
 

@@ -11,7 +11,7 @@ public interface BiserReader {
 
 	int readInt() throws IOException;
 
-	int readUint() throws IOException;
+	long readUint() throws IOException;
 
 	long readLong() throws IOException;
 

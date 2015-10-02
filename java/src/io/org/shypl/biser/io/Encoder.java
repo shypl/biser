@@ -8,7 +8,7 @@ public interface Encoder<T> {
 	Encoder<Byte>    BYTE   = (value, writer) -> writer.writeByte(value);
 	Encoder<Boolean> BOOL   = (value, writer) -> writer.writeBool(value);
 	Encoder<Integer> INT    = (value, writer) -> writer.writeInt(value);
-	Encoder<Integer> UINT   = (value, writer) -> writer.writeUint(value);
+	Encoder<Long>    UINT   = (value, writer) -> writer.writeUint(value);
 	Encoder<Long>    LONG   = (value, writer) -> writer.writeLong(value);
 	Encoder<Long>    ULONG  = (value, writer) -> writer.writeUlong(value);
 	Encoder<Double>  DOUBLE = (value, writer) -> writer.writeDouble(value);
