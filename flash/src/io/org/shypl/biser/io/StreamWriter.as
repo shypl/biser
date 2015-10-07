@@ -40,7 +40,13 @@ package org.shypl.biser.io {
 		}
 
 		public function writeUint(value:uint):void {
-			writeInt(value);
+			if (value >= 0 && value <= 254) {
+				_stream.writeByte(value);
+			}
+			else {
+				_stream.writeByte(0xFE);
+				_stream.writeUnsignedInt(value);
+			}
 		}
 
 		public function writeLong(value:Long):void {

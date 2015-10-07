@@ -55,6 +55,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 	private final CodePrimitive primitiveVoid;
 	private final CodePrimitive primitiveInt;
+	private final CodeClass     primitiveString;
 
 	public JavaCodeBuilder(String pack) {
 		super(new CodeEngine('.'), pack);
@@ -64,6 +65,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 		primitiveVoid = engine.getPrimitive("void");
 		primitiveInt = engine.getPrimitive("int");
+		primitiveString = engine.getClass("java.lang.String");
 
 		primitives.put(PrimitiveType.BYTE, engine.getPrimitive("byte"));
 		primitives.put(PrimitiveType.BOOL, engine.getPrimitive("boolean"));
@@ -72,7 +74,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		primitives.put(PrimitiveType.LONG, engine.getPrimitive("long"));
 		primitives.put(PrimitiveType.ULONG, engine.getPrimitive("long"));
 		primitives.put(PrimitiveType.DOUBLE, engine.getPrimitive("double"));
-		primitives.put(PrimitiveType.STRING, engine.getClass("java.lang.String"));
+		primitives.put(PrimitiveType.STRING, primitiveString);
 		primitives.put(PrimitiveType.DATE, engine.getClass("java.util.Date"));
 		primitives.put(PrimitiveType.BYTES, engine.getArray(engine.getPrimitive("byte")));
 
@@ -83,7 +85,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		primitiveObjects.put(PrimitiveType.LONG, engine.getClass("java.lang.Long"));
 		primitiveObjects.put(PrimitiveType.ULONG, engine.getClass("java.lang.Long"));
 		primitiveObjects.put(PrimitiveType.DOUBLE, engine.getClass("java.lang.Double"));
-		primitiveObjects.put(PrimitiveType.STRING, primitives.get(PrimitiveType.STRING));
+		primitiveObjects.put(PrimitiveType.STRING, primitiveString);
 		primitiveObjects.put(PrimitiveType.DATE, primitives.get(PrimitiveType.DATE));
 		primitiveObjects.put(PrimitiveType.BYTES, primitives.get(PrimitiveType.BYTES));
 
@@ -233,6 +235,20 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				bodyEncode.addStatement(defineEncode(classField, writer, field.getType()));
 				bodyDecode.addStatement(defineDecode(classField, reader, field.getType()));
 			}
+		}
+
+		// to string
+		method = cls.addMethod("_toString");
+		method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
+		method.setReturnType(primitiveVoid);
+		method.getArgument("fields").setType(engine.getClass("java.util.Map").parametrize(primitiveString, primitiveString));
+		methodBody = method.getBody();
+		CodeExpressionWord fields = new CodeExpressionWord("fields");
+		CodeClass stringUtils = engine.getClass("org.shypl.common.util.StringUtils");
+
+		for (Parameter field : type.getFields()) {
+			methodBody.addStatement(fields.method("put",
+				new CodeExpressionString(field.getName()), stringUtils.method("toString", CodeExpressionWord.THIS.field(field.getName()))));
 		}
 	}
 

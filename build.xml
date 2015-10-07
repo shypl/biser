@@ -1,4 +1,6 @@
 <project name="shypl-biser">
+	<property file="build.properties"/>
+
 	<taskdef classpath="build/shypl-ant-1.1.2.jar" resource="tasks.properties"/>
 
 	<target name="build" depends="build-flash, build-java"/>
@@ -8,12 +10,11 @@
 
 	<target name="build-flash-io">
 		<property environment="env"/>
-		<property name="FLEX_HOME" value="${env.FLEX_HOME}"/>
 		<property file="project.properties"/>
 
-		<java jar="${FLEX_HOME}/lib/compc.jar" fork="true" failonerror="true">
+		<java jar="${build.flex_home}/lib/compc.jar" fork="true" failonerror="true">
 			<jvmarg value="-Dfile.encoding=UTF-8"/>
-			<arg value="+flexlib=${FLEX_HOME}/frameworks"/>
+			<arg value="+flexlib=${build.flex_home}/frameworks"/>
 			<arg value="-source-path=flash/src/io"/>
 			<arg value="-output=bin/${project.artifact}-io-${project.version}.swc"/>
 			<arg value="-external-library-path+=flash/lib"/>
@@ -23,12 +24,11 @@
 
 	<target name="build-flash-api">
 		<property environment="env"/>
-		<property name="FLEX_HOME" value="${env.FLEX_HOME}"/>
 		<property file="project.properties"/>
 
-		<java jar="${FLEX_HOME}/lib/compc.jar" fork="true" failonerror="true">
+		<java jar="${build.flex_home}/lib/compc.jar" fork="true" failonerror="true">
 			<jvmarg value="-Dfile.encoding=UTF-8"/>
-			<arg value="+flexlib=${FLEX_HOME}/frameworks"/>
+			<arg value="+flexlib=${build.flex_home}/frameworks"/>
 			<arg value="-source-path=flash/src/api"/>
 			<arg value="-output=bin/${project.artifact}-api-${project.version}.swc"/>
 			<arg value="-external-library-path+=flash/lib"/>

@@ -113,16 +113,16 @@ public class StreamWriterTest {
 	@Test
 	public void testWriteUint() throws Exception {
 		//arrange
-		final int[] values = {-2147483648, -128, -127, -1, 0, 127, 128, 253, 254, 2147483647};
+		final long[] values = {0, 127, 128, 253, 254, Integer.MAX_VALUE};
 
 		final ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		final StreamWriter writer = new StreamWriter(stream);
 
 		//act
-		for (int value : values) {
+		for (long value : values) {
 			writer.writeUint(value);
 		}
-		for (int value : values) {
+		for (long value : values) {
 			Encoder.UINT.encode(value, writer);
 		}
 

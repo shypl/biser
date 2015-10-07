@@ -38,7 +38,14 @@ package org.shypl.biser.io {
 		}
 
 		public function readUint():uint {
-			return readInt();
+			const b:int = _stream.readUnsignedByte();
+
+			switch (b) {
+				case 0xFF:
+					return _stream.readUnsignedInt();
+				default:
+					return b;
+			}
 		}
 
 		public function readLong():Long {

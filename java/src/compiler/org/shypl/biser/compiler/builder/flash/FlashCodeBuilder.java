@@ -163,11 +163,12 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 		CodeParameter decoder = cls.getField("_DECODER");
 		decoder.getModifier().set(CodeModifier.PUBLIC | CodeModifier.STATIC | CodeModifier.CONST);
 		decoder.setType(engine.getClass("org.shypl.biser.io.Decoder"));
-		decoder.setValue(new CodeExpressionNew(entityDecoderClass));
+		decoder.setValue(new CodeExpressionNew(entityDecoderClass, cls));
 
 		method = entityDecoderClass.addMethod(entityDecoderClass.getName());
 		method.getModifier().set(CodeModifier.PUBLIC);
-		method.getBody().addStatement(new CodeExpressionMethod("super", cls));
+		method.getArgument("type").setType(engine.getClass("Class"));
+		method.getBody().addStatement(new CodeExpressionMethod("super", new CodeExpressionWord("type")));
 
 		method = entityDecoderClass.addMethod("factory");
 		method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
@@ -217,6 +218,20 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 				bodyEncode.addStatement(defineEncode(classField, writer, field.getType()));
 				bodyDecode.addStatement(defineDecode(classField, reader, field.getType()));
 			}
+		}
+
+		// to string
+		method = cls.addMethod("_toString");
+		method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
+		method.setReturnType(primitiveVoid);
+		method.getArgument("fields").setType(engine.getClass("org.shypl.common.collection.Map"));
+		methodBody = method.getBody();
+		CodeExpressionWord fields = new CodeExpressionWord("fields");
+		CodeClass stringUtils = engine.getClass("org.shypl.common.util.StringUtils");
+
+		for (Parameter field : type.getFields()) {
+			methodBody.addStatement(fields.method("put",
+				new CodeExpressionString(field.getName()), stringUtils.method("toString", CodeExpressionWord.THIS.field(field.getName()))));
 		}
 	}
 

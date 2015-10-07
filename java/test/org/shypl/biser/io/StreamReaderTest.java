@@ -164,7 +164,7 @@ public class StreamReaderTest {
 
 		for (int expected : expectedValues) {
 			//act
-			final int actual = reader.readUint();
+			final long actual = reader.readUint();
 
 			//assert
 			Assert.assertEquals(expected, actual);
@@ -172,7 +172,7 @@ public class StreamReaderTest {
 
 		for (int expected : expectedValues) {
 			//act
-			final int actual = Decoder.UINT.decode(reader);
+			final long actual = Decoder.UINT.decode(reader);
 
 			//assert
 			Assert.assertEquals(expected, actual);
