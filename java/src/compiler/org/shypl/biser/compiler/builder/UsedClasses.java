@@ -5,8 +5,9 @@ import org.shypl.biser.compiler.code.CodePackage;
 import org.shypl.biser.compiler.code.CodeVisitor;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class UsedClasses {
@@ -28,16 +29,33 @@ public class UsedClasses {
 		return classes.get(type).declarationFullName ? type.getFullName() : type.getName();
 	}
 
-	public Collection<CodeClass> getImportedClasses() {
-		Collection<CodeClass> collection = new ArrayList<>();
+	public List<CodeClass> getImportedClasses() {
+		return getImportedClasses(null);
+	}
+
+	public List<CodeClass> getImportedClasses(Comparator<CodeClass> comparator) {
+		List<CodeClass> list = new ArrayList<>();
 
 		for (Map.Entry<CodeClass, UseInfo> entry : classes.entrySet()) {
 			if (entry.getValue().requireImport) {
-				collection.add(entry.getKey());
+				list.add(entry.getKey());
 			}
 		}
 
-		return collection;
+		if (comparator == null) {
+			list.sort((o1, o2) -> o1.getFullName().compareTo(o2.getFullName()));
+		}
+		else {
+			list.sort((o1, o2) -> {
+				int compare = comparator.compare(o1, o2);
+				if (compare == 0) {
+					return o1.getFullName().compareTo(o2.getFullName());
+				}
+				return compare;
+			});
+		}
+
+		return list;
 	}
 
 	public void ignoreImportPackage(CodePackage pack) {

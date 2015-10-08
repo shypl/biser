@@ -19,6 +19,7 @@ import org.shypl.biser.compiler.code.CodeExpressionWord;
 import org.shypl.biser.compiler.code.CodeGeneric;
 import org.shypl.biser.compiler.code.CodeMethod;
 import org.shypl.biser.compiler.code.CodeModifier;
+import org.shypl.biser.compiler.code.CodePackage;
 import org.shypl.biser.compiler.code.CodeParameter;
 import org.shypl.biser.compiler.code.CodeParametrizedClass;
 import org.shypl.biser.compiler.code.CodePrimitive;
@@ -74,7 +75,13 @@ public class FlashCodeFile extends OopCodeFile implements CodeVisitor {
 	private void writeImports() {
 		Collection<CodeClass> importedClasses = usedClasses.getImportedClasses();
 		if (!importedClasses.isEmpty()) {
+			CodePackage prevRootPackage = null;
 			for (CodeClass importedClass : importedClasses) {
+				CodePackage rootPackage = importedClass.getPackage().getFirstPackage();
+				if (prevRootPackage != null && prevRootPackage != rootPackage) {
+					writeLine();
+				}
+				prevRootPackage = rootPackage;
 				writeLine("import ", importedClass.getFullName(), ";");
 			}
 			writeLine();

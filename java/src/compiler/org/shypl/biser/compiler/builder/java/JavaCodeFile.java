@@ -18,6 +18,7 @@ import org.shypl.biser.compiler.code.CodeExpressionWord;
 import org.shypl.biser.compiler.code.CodeGeneric;
 import org.shypl.biser.compiler.code.CodeMethod;
 import org.shypl.biser.compiler.code.CodeModifier;
+import org.shypl.biser.compiler.code.CodePackage;
 import org.shypl.biser.compiler.code.CodeParameter;
 import org.shypl.biser.compiler.code.CodeParametrizedClass;
 import org.shypl.biser.compiler.code.CodePrimitive;
@@ -34,6 +35,7 @@ import org.shypl.biser.compiler.code.CodeType;
 import org.shypl.biser.compiler.code.CodeVisitor;
 
 import java.util.Collection;
+import java.util.Comparator;
 
 public class JavaCodeFile extends OopCodeFile implements CodeVisitor {
 	private UsedClasses usedClasses;
@@ -47,9 +49,31 @@ public class JavaCodeFile extends OopCodeFile implements CodeVisitor {
 		writeLine("package ", cls.getPackage().getFullName('.'), ";");
 		writeLine();
 
-		Collection<CodeClass> importedClasses = usedClasses.getImportedClasses();
+		Collection<CodeClass> importedClasses = usedClasses.getImportedClasses(new Comparator<CodeClass>() {
+			@Override
+			public int compare(CodeClass o1, CodeClass o2) {
+				CodePackage p1 = o1.getPackage().getFirstPackage();
+				CodePackage p2 = o2.getPackage().getFirstPackage();
+				if (p1 != p2) {
+					if (p1.getName().equals("java")) {
+						return 1;
+					}
+					if (p2.getName().equals("java")) {
+						return -1;
+					}
+				}
+
+				return 0;
+			}
+		});
 		if (!importedClasses.isEmpty()) {
+			CodePackage prevRootPackage = null;
 			for (CodeClass importedClass : importedClasses) {
+				CodePackage rootPackage = importedClass.getPackage().getFirstPackage();
+				if (prevRootPackage != null && prevRootPackage != rootPackage) {
+					writeLine();
+				}
+				prevRootPackage = rootPackage;
 				writeLine("import ", importedClass.getFullName(), ";");
 			}
 			writeLine();

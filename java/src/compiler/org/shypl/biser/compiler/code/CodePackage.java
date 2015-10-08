@@ -20,8 +20,16 @@ public class CodePackage extends CodeNamedObject {
 		return parent == null;
 	}
 
+	public boolean isFirst() {
+		return !isRoot() && parent.isRoot();
+	}
+
 	public CodeEngine getEngine() {
 		return parent.getEngine();
+	}
+
+	public CodePackage getFirstPackage() {
+		return isFirst() ? this : parent.getFirstPackage();
 	}
 
 	public CodePackage getPackage(String name) {
