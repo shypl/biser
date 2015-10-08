@@ -66,6 +66,7 @@ public abstract class AbstractClient {
 		taskQueue = new TaskQueue(server.getExecutor());
 	}
 
+	@SuppressWarnings("unchecked")
 	void receiveMessage(boolean even, byte[] data) {
 		taskQueue.add(() -> {
 			if (connected) {
