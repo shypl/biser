@@ -46,7 +46,11 @@ public abstract class AbstractClient {
 		return connected;
 	}
 
-	public Logger getLogger() {
+	public final TaskQueue getTaskQueue() {
+		return taskQueue;
+	}
+
+	public final Logger getLogger() {
 		return logger;
 	}
 

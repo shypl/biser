@@ -19,6 +19,10 @@ public abstract class ApiGate<C extends AbstractClient> {
 		message.send(server);
 	}
 
+	public void getClient(long clientId, ClientReceiver receiver) {
+		server.getClient(clientId, receiver);
+	}
+
 	void setServer(ApiServer server) {
 		this.server = server;
 	}

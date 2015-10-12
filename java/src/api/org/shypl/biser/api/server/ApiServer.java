@@ -33,7 +33,7 @@ public class ApiServer<C extends AbstractClient> {
 	private final byte[]        clientConnectionSidSalt = new byte[8];
 
 	private volatile boolean                   running = true;
-	private          Map<Long, AbstractClient> clients = new HashMap<>();
+	private          Map<Long, C> clients = new HashMap<>();
 	private ScheduledTask stopCheckTask;
 
 	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address) {
@@ -113,6 +113,18 @@ public class ApiServer<C extends AbstractClient> {
 		return logger;
 	}
 
+	public void getClient(long clientId, ClientReceiver<C> receiver) {
+		taskQueue.add(() -> {
+			C client = clients.get(clientId);
+			if (client == null) {
+				receiver.receiveNotConnectedClient(clientId);
+			}
+			else {
+				receiver.receiveConnectedClient(client);
+			}
+		});
+	}
+
 	void sendMessageForAllClients(byte[] message) {
 		taskQueue.add(() -> {
 			for (AbstractClient client : clients.values()) {
@@ -155,11 +167,11 @@ public class ApiServer<C extends AbstractClient> {
 		logger.trace("Release connection {} (connections: {})", connection.getRemoteAddress(), i);
 	}
 
-	void connectClient(AbstractClient client, Connection connection) {
+	void connectClient(C client, Connection connection) {
 		taskQueue.add(() -> {
 			if (connection.isOpened()) {
 				if (running) {
-					AbstractClient oldClient = clients.get(client.getId());
+					C oldClient = clients.get(client.getId());
 
 					if (oldClient == null) {
 						clients.put(client.getId(), client);
