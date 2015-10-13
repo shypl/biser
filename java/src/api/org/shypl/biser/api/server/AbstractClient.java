@@ -18,11 +18,12 @@ public abstract class AbstractClient {
 	private final long                id;
 	private final PrefixedLoggerProxy logger;
 	private       Connection          connection;
-	private       long              connectionId;
+	private       long                connectionId;
 	private       ApiServer           server;
 	private       TaskQueue           taskQueue;
 
 	private volatile boolean connected = true;
+	private volatile boolean active    = false;
 	private ScheduledTask reconnectTimeout;
 	private boolean       receiveMessageEven;
 	private boolean       sendMessageEven;
@@ -54,8 +55,8 @@ public abstract class AbstractClient {
 		return logger;
 	}
 
-	boolean hasConnection() {
-		return connection != null;
+	boolean isActive() {
+		return active;
 	}
 
 	Connection getConnection() {
@@ -83,9 +84,11 @@ public abstract class AbstractClient {
 
 	void sendMessage(byte[] data) {
 		taskQueue.add(() -> {
-			messages.addLast(data);
-			if (connected && sendMessageReady) {
-				sendMessage0(data);
+			if (connected) {
+				messages.addLast(data);
+				if (active && sendMessageReady) {
+					sendMessage0(data);
+				}
 			}
 		});
 	}
@@ -110,8 +113,9 @@ public abstract class AbstractClient {
 	void secConnection(Connection connection) {
 		taskQueue.add(() -> {
 			if (connected) {
+				active = true;
 				this.connection = connection;
-				this.connectionId = connection.getId();
+				connectionId = connection.getId();
 				boolean r = cancelReconnectTimeout();
 				connection.setStrategy(new ConnectionStrategyMessaging(this));
 				if (r) {
@@ -124,6 +128,7 @@ public abstract class AbstractClient {
 	void handleConnectionBroken() {
 		taskQueue.add(() -> {
 			if (connected) {
+				active = false;
 				connection = null;
 				reconnectTimeout = taskQueue.schedule(() -> {
 					reconnectTimeout = null;
@@ -140,21 +145,18 @@ public abstract class AbstractClient {
 	void disconnect(byte reason, Runnable callback) {
 		taskQueue.add(() -> {
 			if (connected) {
-				connected = false;
 				cancelReconnectTimeout();
 				handleDisconnect();
 
 				server.removeClient(this);
-				if (hasConnection()) {
+				if (active) {
 					connection.close(reason);
 					connection = null;
 				}
-				if (callback != null) {
-					callback.run();
-				}
-			}
-			else {
-				server.removeClient(this);
+
+				connected = false;
+				active = false;
+
 				if (callback != null) {
 					callback.run();
 				}

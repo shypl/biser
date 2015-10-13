@@ -41,7 +41,7 @@ public abstract class ApiGate<C extends AbstractClient> {
 			}
 		}
 		catch (Exception e) {
-			if (client.hasConnection()) {
+			if (client.isActive()) {
 				client.getConnection().getLogger().error("Error on process client message", e);
 				client.getConnection().close(Protocol.CLOSE_SERVER_ERROR);
 			}
