@@ -1,7 +1,7 @@
 package org.shypl.biser.api.server;
 
 public interface ClientReceiver<C extends AbstractClient> {
-	void receiveConnectedClient(C client);
+	default void receiveNotConnectedClient(long clientId) {}
 
-	void receiveNotConnectedClient(long clientId);
+	void receiveConnectedClient(C client);
 }

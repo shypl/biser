@@ -13,17 +13,17 @@ public abstract class ApiGate<C extends AbstractClient> {
 			return new ByteArrayWriter();
 		}
 	};
-	private ApiServer server;
+	private ApiServer<C> server;
 
 	public void sendGlobalMessage(GlobalMessage message) {
 		message.send(server);
 	}
 
-	public void getClient(long clientId, ClientReceiver receiver) {
+	public void getClient(long clientId, ClientReceiver<C> receiver) {
 		server.getClient(clientId, receiver);
 	}
 
-	void setServer(ApiServer server) {
+	void setServer(ApiServer<C> server) {
 		this.server = server;
 	}
 
