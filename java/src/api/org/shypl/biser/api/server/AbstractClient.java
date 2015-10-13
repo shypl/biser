@@ -164,7 +164,7 @@ public abstract class AbstractClient {
 		});
 	}
 
-	protected void handleDisconnect() {}
+	protected abstract void handleDisconnect();
 
 	private void sendMessage0(byte[] data) {
 		sendMessageReady = false;
