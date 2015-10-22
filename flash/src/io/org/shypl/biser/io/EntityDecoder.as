@@ -28,9 +28,8 @@ package org.shypl.biser.io {
 			return entity;
 		}
 
-		[Abstract]
 		protected function factory(id:int):Entity {
-			throw new AbstractMethodException();
+			return new _type();
 		}
 	}
 }
