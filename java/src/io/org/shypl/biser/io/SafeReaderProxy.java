@@ -1,6 +1,7 @@
 package org.shypl.biser.io;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -215,6 +216,16 @@ public class SafeReaderProxy implements BiserReader {
 	public <K, V> Map<K, V> readMap(Decoder<K> keyDecoder, Decoder<V> valueDecoder) {
 		try {
 			return reader.readMap(keyDecoder, valueDecoder);
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public <E> Collection<E> readCollection(Decoder<E> elementDecoder) throws IOException {
+		try {
+			return reader.readCollection(elementDecoder);
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);

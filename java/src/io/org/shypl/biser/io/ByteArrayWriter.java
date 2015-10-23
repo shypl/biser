@@ -1,5 +1,7 @@
 package org.shypl.biser.io;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -135,5 +137,10 @@ public class ByteArrayWriter implements BiserWriter {
 	@Override
 	public <K, V> void writeMap(Map<K, V> map, Encoder<K> keyEncoder, Encoder<V> valueEncoder) {
 		writer.writeMap(map, keyEncoder, valueEncoder);
+	}
+
+	@Override
+	public <E> void writeCollection(Collection<E> collection, Encoder<E> elementEncoder) throws IOException {
+		writer.writeCollection(collection, elementEncoder);
 	}
 }

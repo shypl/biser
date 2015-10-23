@@ -422,12 +422,12 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				}
 			}
 
-			return decode(type);
+			return reader.method("readArray", type.represent(decoder));
 		}
 
 		@Override
 		public CodeExpression representMap(MapType type) {
-			return decode(type);
+			return reader.method("readMap", type.getKeyType().represent(decoder), type.getValueType().represent(decoder));
 		}
 
 		private CodeExpression decode(DataType type) {

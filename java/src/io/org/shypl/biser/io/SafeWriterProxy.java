@@ -1,6 +1,7 @@
 package org.shypl.biser.io;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -215,6 +216,16 @@ public class SafeWriterProxy implements BiserWriter {
 	public <K, V> void writeMap(Map<K, V> map, Encoder<K> keyEncoder, Encoder<V> valueEncoder) {
 		try {
 			writer.writeMap(map, keyEncoder, valueEncoder);
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public <E> void writeCollection(Collection<E> collection, Encoder<E> elementEncoder) throws IOException {
+		try {
+			writer.writeCollection(collection, elementEncoder);
 		}
 		catch (IOException e) {
 			throw new RuntimeException(e);

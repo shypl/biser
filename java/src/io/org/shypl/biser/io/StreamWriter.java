@@ -3,6 +3,7 @@ package org.shypl.biser.io;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -230,6 +231,19 @@ public class StreamWriter implements BiserWriter {
 			for (Map.Entry<K, V> entry : map.entrySet()) {
 				keyEncoder.encode(entry.getKey(), this);
 				valueEncoder.encode(entry.getValue(), this);
+			}
+		}
+	}
+
+	@Override
+	public <E> void writeCollection(Collection<E> collection, Encoder<E> elementEncoder) throws IOException {
+		if (collection == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(collection.size());
+			for (E value : collection) {
+				elementEncoder.encode(value, this);
 			}
 		}
 	}

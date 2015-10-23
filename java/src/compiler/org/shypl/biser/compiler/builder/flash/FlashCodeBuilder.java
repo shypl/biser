@@ -329,7 +329,6 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 	private class TypeEncoderDefender implements TypeRepresenter<CodeExpression> {
 
-		private final Map<PrimitiveType, String> primitiveMethods = new HashMap<>();
 		private final TypeEncoder    encoder;
 		private       CodeExpression target;
 		private       CodeExpression writer;
@@ -429,12 +428,14 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 		@Override
 		public CodeExpression representArray(ArrayType type) {
-			return new CodeExpressionBinaryOperator("as", decode(type), getType(type));
+			return new CodeExpressionBinaryOperator("as", reader.method("readArray", type.represent(decoder)), getType(type));
 		}
 
 		@Override
 		public CodeExpression representMap(MapType type) {
-			return new CodeExpressionCallClass(engine.getClass("org.shypl.common.collection.Map"), decode(type));
+			return new CodeExpressionCallClass(engine.getClass("org.shypl.common.collection.Map"),
+				reader.method("readMap", type.getKeyType().represent(decoder), type.getValueType().represent(decoder))
+			);
 		}
 
 		private CodeExpression decode(DataType type) {

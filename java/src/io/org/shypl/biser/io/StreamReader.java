@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InvalidObjectException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -306,6 +308,11 @@ public class StreamReader implements BiserReader {
 		}
 
 		return map;
+	}
+
+	@Override
+	public <E> Collection<E> readCollection(Decoder<E> elementDecoder) throws IOException {
+		return Arrays.asList(readArray(elementDecoder));
 	}
 
 	private int read() throws IOException {

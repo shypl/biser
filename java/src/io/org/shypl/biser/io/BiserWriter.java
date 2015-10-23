@@ -1,6 +1,7 @@
 package org.shypl.biser.io;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -46,4 +47,6 @@ public interface BiserWriter {
 	<E> void writeArray(E[] array, Encoder<E> elementEncoder) throws IOException;
 
 	<K, V> void writeMap(Map<K, V> map, Encoder<K> keyEncoder, Encoder<V> valueEncoder) throws IOException;
+
+	<E> void writeCollection(Collection<E> collection, Encoder<E> elementEncoder) throws IOException;
 }

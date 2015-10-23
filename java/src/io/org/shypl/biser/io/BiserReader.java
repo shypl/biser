@@ -1,6 +1,7 @@
 package org.shypl.biser.io;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
@@ -46,4 +47,6 @@ public interface BiserReader {
 	<E> E[] readArray(Decoder<E> elementDecoder) throws IOException;
 
 	<K, V> Map<K, V> readMap(Decoder<K> keyDecoder, Decoder<V> valueDecoder) throws IOException;
+
+	<E> Collection<E> readCollection(Decoder<E> elementDecoder) throws IOException;
 }
