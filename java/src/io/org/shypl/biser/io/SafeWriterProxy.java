@@ -213,7 +213,7 @@ public class SafeWriterProxy implements BiserWriter {
 	}
 
 	@Override
-	public <K, V> void writeMap(Map<K, V> map, Encoder<K> keyEncoder, Encoder<V> valueEncoder) {
+	public <K, V> void writeMap(Map<K, V> map, Encoder<? super K> keyEncoder, Encoder<? super V> valueEncoder) {
 		try {
 			writer.writeMap(map, keyEncoder, valueEncoder);
 		}
@@ -223,7 +223,7 @@ public class SafeWriterProxy implements BiserWriter {
 	}
 
 	@Override
-	public <E> void writeCollection(Collection<E> collection, Encoder<E> elementEncoder) throws IOException {
+	public <E> void writeCollection(Collection<E> collection, Encoder<? super E> elementEncoder) throws IOException {
 		try {
 			writer.writeCollection(collection, elementEncoder);
 		}

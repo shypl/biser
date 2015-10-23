@@ -44,9 +44,9 @@ public interface BiserReader {
 
 	double[] readDoubleArray() throws IOException;
 
-	<E> E[] readArray(Decoder<E> elementDecoder) throws IOException;
+	<E> E[] readArray(Decoder<? super E> elementDecoder) throws IOException;
 
-	<K, V> Map<K, V> readMap(Decoder<K> keyDecoder, Decoder<V> valueDecoder) throws IOException;
+	<K, V> Map<K, V> readMap(Decoder<? super K> keyDecoder, Decoder<? super V> valueDecoder) throws IOException;
 
-	<E> Collection<E> readCollection(Decoder<E> elementDecoder) throws IOException;
+	<E> Collection<E> readCollection(Decoder<? super E> elementDecoder) throws IOException;
 }

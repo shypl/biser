@@ -203,7 +203,7 @@ public class SafeReaderProxy implements BiserReader {
 	}
 
 	@Override
-	public <E> E[] readArray(Decoder<E> elementDecoder) {
+	public <E> E[] readArray(Decoder<? super E> elementDecoder) {
 		try {
 			return reader.readArray(elementDecoder);
 		}
@@ -213,7 +213,7 @@ public class SafeReaderProxy implements BiserReader {
 	}
 
 	@Override
-	public <K, V> Map<K, V> readMap(Decoder<K> keyDecoder, Decoder<V> valueDecoder) {
+	public <K, V> Map<K, V> readMap(Decoder<? super K> keyDecoder, Decoder<? super V> valueDecoder) {
 		try {
 			return reader.readMap(keyDecoder, valueDecoder);
 		}
@@ -223,7 +223,7 @@ public class SafeReaderProxy implements BiserReader {
 	}
 
 	@Override
-	public <E> Collection<E> readCollection(Decoder<E> elementDecoder) throws IOException {
+	public <E> Collection<E> readCollection(Decoder<? super E> elementDecoder) throws IOException {
 		try {
 			return reader.readCollection(elementDecoder);
 		}

@@ -276,25 +276,27 @@ public class StreamReader implements BiserReader {
 		return array;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public <E> E[] readArray(Decoder<E> elementDecoder) throws IOException {
+	public <E> E[] readArray(Decoder<? super E> elementDecoder) throws IOException {
 		int size = readInt();
 
 		if (size == -1) {
 			return null;
 		}
 
-		E[] array = elementDecoder.createArray(size);
+		E[] array = (E[])elementDecoder.createArray(size);
 
 		for (int i = 0; i < size; ++i) {
-			array[i] = elementDecoder.decode(this);
+			array[i] = (E)elementDecoder.decode(this);
 		}
 
 		return array;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public <K, V> Map<K, V> readMap(Decoder<K> keyDecoder, Decoder<V> valueDecoder) throws IOException {
+	public <K, V> Map<K, V> readMap(Decoder<? super K> keyDecoder, Decoder<? super V> valueDecoder) throws IOException {
 		int size = readInt();
 
 		if (size == -1) {
@@ -304,14 +306,14 @@ public class StreamReader implements BiserReader {
 		Map<K, V> map = new LinkedHashMap<>(size);
 
 		for (int i = 0; i < size; ++i) {
-			map.put(keyDecoder.decode(this), valueDecoder.decode(this));
+			map.put((K)keyDecoder.decode(this), (V)valueDecoder.decode(this));
 		}
 
 		return map;
 	}
 
 	@Override
-	public <E> Collection<E> readCollection(Decoder<E> elementDecoder) throws IOException {
+	public <E> Collection<E> readCollection(Decoder<? super E> elementDecoder) throws IOException {
 		return Arrays.asList(readArray(elementDecoder));
 	}
 

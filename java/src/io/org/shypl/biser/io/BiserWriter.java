@@ -46,7 +46,7 @@ public interface BiserWriter {
 
 	<E> void writeArray(E[] array, Encoder<E> elementEncoder) throws IOException;
 
-	<K, V> void writeMap(Map<K, V> map, Encoder<K> keyEncoder, Encoder<V> valueEncoder) throws IOException;
+	<K, V> void writeMap(Map<K, V> map, Encoder<? super K> keyEncoder, Encoder<? super V> valueEncoder) throws IOException;
 
-	<E> void writeCollection(Collection<E> collection, Encoder<E> elementEncoder) throws IOException;
+	<E> void writeCollection(Collection<E> collection, Encoder<? super E> elementEncoder) throws IOException;
 }

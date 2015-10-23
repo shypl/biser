@@ -222,7 +222,7 @@ public class StreamWriter implements BiserWriter {
 	}
 
 	@Override
-	public <K, V> void writeMap(Map<K, V> map, Encoder<K> keyEncoder, Encoder<V> valueEncoder) throws IOException {
+	public <K, V> void writeMap(Map<K, V> map, Encoder<? super K> keyEncoder, Encoder<? super V> valueEncoder) throws IOException {
 		if (map == null) {
 			writeInt(-1);
 		}
@@ -236,7 +236,7 @@ public class StreamWriter implements BiserWriter {
 	}
 
 	@Override
-	public <E> void writeCollection(Collection<E> collection, Encoder<E> elementEncoder) throws IOException {
+	public <E> void writeCollection(Collection<E> collection, Encoder<? super E> elementEncoder) throws IOException {
 		if (collection == null) {
 			writeInt(-1);
 		}

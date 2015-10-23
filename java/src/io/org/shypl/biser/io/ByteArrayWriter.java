@@ -135,12 +135,12 @@ public class ByteArrayWriter implements BiserWriter {
 	}
 
 	@Override
-	public <K, V> void writeMap(Map<K, V> map, Encoder<K> keyEncoder, Encoder<V> valueEncoder) {
+	public <K, V> void writeMap(Map<K, V> map, Encoder<? super K> keyEncoder, Encoder<? super V> valueEncoder) {
 		writer.writeMap(map, keyEncoder, valueEncoder);
 	}
 
 	@Override
-	public <E> void writeCollection(Collection<E> collection, Encoder<E> elementEncoder) throws IOException {
+	public <E> void writeCollection(Collection<E> collection, Encoder<? super E> elementEncoder) throws IOException {
 		writer.writeCollection(collection, elementEncoder);
 	}
 }
