@@ -428,7 +428,7 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 		@Override
 		public CodeExpression representArray(ArrayType type) {
-			return new CodeExpressionBinaryOperator("as", reader.method("readArray", type.represent(decoder)), getType(type));
+			return new CodeExpressionBinaryOperator("as", reader.method("readArray", type.getElementType().represent(decoder)), getType(type));
 		}
 
 		@Override

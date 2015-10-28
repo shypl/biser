@@ -422,7 +422,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				}
 			}
 
-			return reader.method("readArray", type.represent(decoder));
+			return reader.method("readArray", elementType.represent(decoder));
 		}
 
 		@Override

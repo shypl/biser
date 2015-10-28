@@ -6,7 +6,7 @@ package org.shypl.biser.io {
 	import org.shypl.common.util.CollectionUtils;
 
 	public class ArrayDecoder implements Decoder {
-		public static const cache:Dictionary = new Dictionary();
+		private static const cache:Dictionary = new Dictionary();
 
 		public static function factory(elementDecoder:Decoder):Decoder {
 			var arrayDecoder:Decoder = cache[elementDecoder];

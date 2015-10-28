@@ -3,14 +3,14 @@ package org.shypl.biser.compiler.model;
 import org.shypl.biser.compiler.Utils;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class ApiService {
-	private final int id;
+	private final int    id;
 	private final String name;
-	private final Map<String, ApiAction> serverActions = new HashMap<>();
-	private final Map<String, ApiAction> clientActions = new HashMap<>();
+	private final Map<String, ApiAction> serverActions = new LinkedHashMap<>();
+	private final Map<String, ApiAction> clientActions = new LinkedHashMap<>();
 	private final String camelName;
 
 	public ApiService(int id, String name) {

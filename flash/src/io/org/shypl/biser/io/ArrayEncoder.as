@@ -2,7 +2,7 @@ package org.shypl.biser.io {
 	import flash.utils.Dictionary;
 
 	public class ArrayEncoder implements Encoder {
-		public static const cache:Dictionary = new Dictionary();
+		private static const cache:Dictionary = new Dictionary();
 
 		public static function factory(elementEncoder:Encoder):Encoder {
 			var arrayEncoder:Encoder = cache[elementEncoder];
