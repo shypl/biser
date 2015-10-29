@@ -21,7 +21,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ApiServer<C extends AbstractClient> {
 
-	private final Logger                   logger;
+	private static final int DEFAULT_RECONNECT_TIMEOUT_SECONDS = 10 * 60;
+
+	private final Logger logger;
 	private final ScheduledExecutorService executor;
 	private final ApiGate<C>               gate;
 	private final ServerEntryAddress       address;
@@ -38,26 +40,31 @@ public class ApiServer<C extends AbstractClient> {
 	private ScheduledTask stopCheckTask;
 
 	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address) {
-		this(executor, entryProvider, gate, address, 10 * 60);
+		this(executor, entryProvider, gate, address, DEFAULT_RECONNECT_TIMEOUT_SECONDS);
 	}
 
 	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address,
 		int reconnectTimeoutSeconds)
 	{
-		this(executor, entryProvider, gate, address, reconnectTimeoutSeconds,
+		this(executor, entryProvider, gate, address,
 			"<?xml version=\"1.0\"?>\n"
 				+ "<!DOCTYPE cross-domain-policy SYSTEM \"http://www.adobe.com/xml/dtds/cross-domain-policy.dtd\">\n"
 				+ "<cross-domain-policy>\n"
 				+ "<site-control permitted-cross-domain-policies=\"all\" />\n"
 				+ "<allow-access-from domain=\"*\" to-ports=\"*\" secure=\"false\"/>\n"
 				+ "<allow-http-request-headers-from domain=\"*\" headers=\"*\" secure=\"false\"/>\n"
-				+ "</cross-domain-policy>"
+				+ "</cross-domain-policy>", reconnectTimeoutSeconds
 		);
 	}
 
 	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address,
-		int reconnectTimeoutSeconds,
 		String crossDomainPolicy)
+	{
+		this(executor, entryProvider, gate, address, crossDomainPolicy, DEFAULT_RECONNECT_TIMEOUT_SECONDS);
+	}
+
+	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address,
+		String crossDomainPolicy, int reconnectTimeoutSeconds)
 	{
 		logger = new PrefixedLoggerProxy(LoggerFactory.getLogger(ApiServer.class), "<" + address + "> ");
 
