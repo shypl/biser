@@ -2,7 +2,7 @@ package org.shypl.biser.compiler.code;
 
 public class CodeParameter extends CodeNamedObject implements CodeModifiable, CodeVisitable {
 	private final CodeModifier modifier = new CodeModifier();
-	private CodeType type;
+	private CodeType       type;
 	private CodeExpression value;
 
 	CodeParameter(String name) {

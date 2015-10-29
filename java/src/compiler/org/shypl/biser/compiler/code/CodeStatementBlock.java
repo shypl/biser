@@ -5,7 +5,7 @@ import java.util.Collection;
 
 public class CodeStatementBlock implements CodeStatement {
 	private final Collection<CodeStatement> statements = new ArrayList<>();
-	private boolean brackets = true;
+	private       boolean                   brackets   = true;
 
 	public CodeStatementBlock addStatement(CodeStatement statement) {
 		statements.add(statement);

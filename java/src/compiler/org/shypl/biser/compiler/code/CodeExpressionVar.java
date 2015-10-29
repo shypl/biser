@@ -1,7 +1,7 @@
 package org.shypl.biser.compiler.code;
 
 public class CodeExpressionVar implements CodeExpression {
-	private final String name;
+	private final String   name;
 	private final CodeType type;
 
 	public CodeExpressionVar(String name, CodeType type) {

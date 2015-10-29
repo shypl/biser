@@ -31,7 +31,7 @@ public class TokenEntry {
 
 	@Override
 	public String toString() {
-		return token.name() + (value != null ? (':' + value) : "") + '(' +  line + ":" + column + ')';
+		return token.name() + (value != null ? (':' + value) : "") + '(' + line + ":" + column + ')';
 	}
 
 	public boolean isToken(final Token type) {

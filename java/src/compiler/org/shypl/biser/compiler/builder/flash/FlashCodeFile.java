@@ -72,22 +72,6 @@ public class FlashCodeFile extends OopCodeFile implements CodeVisitor {
 		usedClasses = null;
 	}
 
-	private void writeImports() {
-		Collection<CodeClass> importedClasses = usedClasses.getImportedClasses();
-		if (!importedClasses.isEmpty()) {
-			CodePackage prevRootPackage = null;
-			for (CodeClass importedClass : importedClasses) {
-				CodePackage rootPackage = importedClass.getPackage().getFirstPackage();
-				if (prevRootPackage != null && prevRootPackage != rootPackage) {
-					writeLine();
-				}
-				prevRootPackage = rootPackage;
-				writeLine("import ", importedClass.getFullName(), ";");
-			}
-			writeLine();
-		}
-	}
-
 	@Override
 	public void visitTypePrimitive(CodePrimitive type) {
 		write(type.getName());
@@ -296,6 +280,22 @@ public class FlashCodeFile extends OopCodeFile implements CodeVisitor {
 		write(")");
 	}
 
+	private void writeImports() {
+		Collection<CodeClass> importedClasses = usedClasses.getImportedClasses();
+		if (!importedClasses.isEmpty()) {
+			CodePackage prevRootPackage = null;
+			for (CodeClass importedClass : importedClasses) {
+				CodePackage rootPackage = importedClass.getPackage().getFirstPackage();
+				if (prevRootPackage != null && prevRootPackage != rootPackage) {
+					writeLine();
+				}
+				prevRootPackage = rootPackage;
+				writeLine("import ", importedClass.getFullName(), ";");
+			}
+			writeLine();
+		}
+	}
+
 	private void writeClass(CodeClass cls) {
 		writeModifier(cls.getModifier());
 
@@ -346,7 +346,7 @@ public class FlashCodeFile extends OopCodeFile implements CodeVisitor {
 		if (method.getModifier().is(CodeModifier.GETTER)) {
 			write("get ");
 		}
-		else if(method.getModifier().is(CodeModifier.SETTER)) {
+		else if (method.getModifier().is(CodeModifier.SETTER)) {
 			write("set ");
 		}
 		write(method.getName(), "(");

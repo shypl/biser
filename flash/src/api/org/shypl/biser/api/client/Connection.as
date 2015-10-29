@@ -15,6 +15,8 @@ package org.shypl.biser.api.client {
 	[Event(type="org.shypl.biser.api.client.ConnectionEvent", name="CONNECTION_INACTIVE")]
 	[Event(type="org.shypl.biser.api.client.ConnectionCloseEvent", name="CONNECTION_CLOSE")]
 	public class Connection extends EventDispatcher {
+		private static const RECONNECT_MESSAGE_LENGTH:int = 8 + 16;
+
 		private var _connected:Boolean;
 		private var _closed:Boolean;
 
@@ -30,11 +32,13 @@ package org.shypl.biser.api.client {
 
 		private var _channel:Channel;
 		private var _channelHandler:ChannelHandlerNormal;
-		private var _sid:ByteArray;
+		private var _reconnectMessage:ByteArray;
+		private var _reconnectTimeout:int;
 		private var _reducer:ConnectionReducer;
 
 		public function Connection(channelProvider:ChannelProvider, gate:AbstractApiGate, address:ServerEntryAddress, authKey:String,
-			connectHandler:ConnectHandler) {
+			connectHandler:ConnectHandler
+		) {
 			_channelProvider = channelProvider;
 			_address = address;
 			_gate = gate;
@@ -89,15 +93,6 @@ package org.shypl.biser.api.client {
 			}
 		}
 
-		private function stopReducer():Boolean {
-			if (_reducer) {
-				_reducer.stop();
-				_reducer = null;
-				return true;
-			}
-			return false;
-		}
-
 		internal function connect(channel:Channel, authKey:String, connectHandler:ConnectHandler):ChannelHandler {
 			if (_closed) {
 				_logger.warn("Connect fail, connection closed");
@@ -149,7 +144,7 @@ package org.shypl.biser.api.client {
 			_channelHandler.setStrategy(new ConnectionStrategyConnect());
 
 			channel.writeByte(Protocol.RECONNECT);
-			channel.writeBytes(_sid);
+			channel.writeBytes(_reconnectMessage);
 
 			return _channelHandler;
 		}
@@ -164,7 +159,7 @@ package org.shypl.biser.api.client {
 				_channelHandler = null;
 				_channel = null;
 
-				_reducer = new ConnectionReducer(this);
+				_reducer = new ConnectionReducer(this, _reconnectTimeout);
 
 				dispatchEvent(new ConnectionEvent(ConnectionEvent.CONNECTION_INACTIVE));
 			}
@@ -181,18 +176,6 @@ package org.shypl.biser.api.client {
 			if (_connected && _sendMessageReady) {
 				sendMessage0(message);
 			}
-		}
-
-		private function sendMessage0(message:ByteArray):void {
-			_sendMessageReady = false;
-			_sendMessageEven = !_sendMessageEven;
-
-			var data:ByteArray = new ByteArray();
-			data.writeByte(_sendMessageEven ? Protocol.MESSAGE_EVEN : Protocol.MESSAGE_ODD);
-			data.writeInt(message.length);
-			data.writeBytes(message);
-
-			_channel.writeBytes(data);
 		}
 
 		internal function completeMessageSend(even:Boolean):void {
@@ -220,9 +203,11 @@ package org.shypl.biser.api.client {
 			}
 		}
 
-		internal function authorize(sid:ByteArray):void {
+		internal function authorize(message:ByteArray):void {
 			getLogger().info("Authorization success");
-			_sid = sid;
+			_reconnectMessage = new ByteArray();
+			message.readBytes(_reconnectMessage, 0, RECONNECT_MESSAGE_LENGTH);
+			_reconnectTimeout = message.readInt();
 
 			_channelHandler.setStrategy(new ConnectionStrategyMessaging());
 
@@ -231,6 +216,27 @@ package org.shypl.biser.api.client {
 			if (stopReducer()) {
 				_channel.writeByte(_receiveMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
 			}
+		}
+
+		private function stopReducer():Boolean {
+			if (_reducer) {
+				_reducer.stop();
+				_reducer = null;
+				return true;
+			}
+			return false;
+		}
+
+		private function sendMessage0(message:ByteArray):void {
+			_sendMessageReady = false;
+			_sendMessageEven = !_sendMessageEven;
+
+			var data:ByteArray = new ByteArray();
+			data.writeByte(_sendMessageEven ? Protocol.MESSAGE_EVEN : Protocol.MESSAGE_ODD);
+			data.writeInt(message.length);
+			data.writeBytes(message);
+
+			_channel.writeBytes(data);
 		}
 	}
 }

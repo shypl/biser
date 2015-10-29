@@ -6,11 +6,11 @@ package org.shypl.biser.api.client {
 	import org.shypl.biser.api.Protocol;
 
 	public class ConnectionStrategyConnect extends ConnectionStrategy {
-		private static const SID_LENGTH:int = 8 + 16;
+		private static const SUCCESS_MESSAGE_LENGTH:int = 8 + 16 + 4;
 
 		private var _connectHandler:ConnectHandler;
 		private var _stateFlag:Boolean = true;
-		private var _sid:ByteArray;
+		private var _message:ByteArray;
 
 		public function ConnectionStrategyConnect(connectHandler:ConnectHandler = null) {
 			_connectHandler = connectHandler;
@@ -34,13 +34,13 @@ package org.shypl.biser.api.client {
 		override internal function destroy():void {
 			super.destroy();
 			_connectHandler = null;
-			_sid = null;
+			_message = null;
 		}
 
 		private function readFlag(data:IDataInput):void {
 			var flag:int = data.readByte();
 			if (flag == Protocol.CONNECT_SUCCESS) {
-				_sid = new ByteArray();
+				_message = new ByteArray();
 			}
 			else {
 				var reason:ConnectionCloseReason = ConnectionCloseReason.defineByFlag(flag);
@@ -54,12 +54,12 @@ package org.shypl.biser.api.client {
 		}
 
 		private function readSid(data:IDataInput):void {
-			var offset:uint = _sid.bytesAvailable;
-			data.readBytes(_sid, offset, Math.min(SID_LENGTH - offset, data.bytesAvailable));
+			var offset:uint = _message.bytesAvailable;
+			data.readBytes(_message, offset, Math.min(SUCCESS_MESSAGE_LENGTH - offset, data.bytesAvailable));
 
-			if (_sid.bytesAvailable == SID_LENGTH) {
+			if (_message.bytesAvailable == SUCCESS_MESSAGE_LENGTH) {
 				var connectHandler:ConnectHandler = _connectHandler;
-				_connection.authorize(_sid);
+				_connection.authorize(_message);
 				if (connectHandler) {
 					connectHandler.handlerConnectSuccess();
 				}

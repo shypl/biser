@@ -61,7 +61,7 @@ public abstract class OopCodeBuilder implements TypeRepresenter<CodeType> {
 		public static final int ACTION_LOG_SERVER          = 0;
 		public static final int ACTION_LOG_CLIENT          = 1;
 		public static final int ACTION_LOG_SERVER_RESPONSE = 2;
-		public static final int ACTION_LOG_CLIENT_GLOBAL = 3;
+		public static final int ACTION_LOG_CLIENT_GLOBAL   = 3;
 		protected final CodePackage pack;
 
 		public SubPackageBuilder(String pack) {

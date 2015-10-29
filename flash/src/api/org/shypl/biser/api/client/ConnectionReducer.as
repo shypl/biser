@@ -9,10 +9,9 @@ package org.shypl.biser.api.client {
 		private var _timeoutTask:TimerTask;
 		private var _attemptTask:TimerTask;
 
-		public function ConnectionReducer(connection:Connection) {
+		public function ConnectionReducer(connection:Connection, reconnectTimeout:int) {
 			_connection = connection;
-
-			_timeoutTask = Timer.schedule(1000 * 60 * 10, handleTimeout);
+			_timeoutTask = Timer.schedule(1000 * 60 * reconnectTimeout, handleTimeout);
 			nextAttempt();
 		}
 

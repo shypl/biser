@@ -2,7 +2,6 @@ package org.shypl.biser.io {
 
 	import flash.utils.getQualifiedClassName;
 
-	import org.shypl.common.lang.AbstractMethodException;
 	import org.shypl.common.lang.IllegalArgumentException;
 
 	public class EntityDecoder extends TypedDecoder {

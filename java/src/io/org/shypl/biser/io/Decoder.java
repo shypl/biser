@@ -23,7 +23,7 @@ public interface Decoder<T> {
 			return reader.readInt();
 		}
 	};
-	Decoder<Long> UINT   = new TypedDecoder<Long>(Long.class) {
+	Decoder<Long>    UINT   = new TypedDecoder<Long>(Long.class) {
 		@Override
 		public Long decode(BiserReader reader) throws IOException {
 			return reader.readUint();

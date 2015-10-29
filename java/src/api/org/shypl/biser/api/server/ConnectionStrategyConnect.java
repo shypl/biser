@@ -13,15 +13,6 @@ class ConnectionStrategyConnect extends ConnectionStrategy {
 	private ScheduledTask timeout;
 
 	@Override
-	void setConnection(Connection connection) {
-		super.setConnection(connection);
-		timeout = connection.getTaskQueue().schedule(() -> {
-			this.connection.getLogger().warn("Connect: Authorization timeout expired");
-			this.connection.closeSync(Protocol.CLOSE_AUTHORIZATION_TIMEOUT_EXPIRED);
-		}, 30, TimeUnit.SECONDS);
-	}
-
-	@Override
 	public void handleData() throws ProtocolException {
 		if (index == -1) { // wait authorization
 			throw new ProtocolException("Connect: Received data while waiting for authorization");
@@ -46,6 +37,21 @@ class ConnectionStrategyConnect extends ConnectionStrategy {
 		}
 	}
 
+	@Override
+	public void handleClose(boolean broken) {
+		timeout.cancel();
+	}
+
+	@Override
+	void setConnection(Connection connection) {
+		super.setConnection(connection);
+		timeout = connection.getTaskQueue().schedule(() -> {
+			this.connection.getLogger().warn("Connect: Authorization timeout expired");
+			this.connection.closeSync(Protocol.CLOSE_AUTHORIZATION_TIMEOUT_EXPIRED);
+		}, 30, TimeUnit.SECONDS);
+	}
+
+	@SuppressWarnings("unchecked")
 	private void authorize(String key) {
 		connection.getLogger().trace("Connect: Authorize client by key {}", key);
 		ApiServer server = connection.getServer();
@@ -60,10 +66,5 @@ class ConnectionStrategyConnect extends ConnectionStrategy {
 			client.setServer(server);
 			server.connectClient(client, connection);
 		}
-	}
-
-	@Override
-	public void handleClose(boolean broken) {
-		timeout.cancel();
 	}
 }

@@ -7,7 +7,7 @@ import java.util.Collections;
 public class CodeExpressionNewArray implements CodeExpression {
 
 	private final CodeArray type;
-	private final int size;
+	private final int       size;
 	private final Collection<CodeExpression> elements = new ArrayList<>();
 
 	public CodeExpressionNewArray(CodeArray type, int size) {

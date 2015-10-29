@@ -7,6 +7,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class Entity {
+	@Override
+	public String toString() {
+		Map<String, String> fields = new LinkedHashMap<>();
+		_toString(fields);
+		return StringUtils.toString(fields);
+	}
+
 	protected int _id() {
 		return 0;
 	}
@@ -14,13 +21,6 @@ public abstract class Entity {
 	protected void _encode(BiserWriter writer) throws IOException {}
 
 	protected void _decode(BiserReader reader) throws IOException {}
-
-	@Override
-	public String toString() {
-		Map<String, String> fields = new LinkedHashMap<>();
-		_toString(fields);
-		return StringUtils.toString(fields);
-	}
 
 	protected void _toString(Map<String, String> fields) {
 	}

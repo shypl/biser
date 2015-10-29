@@ -4,7 +4,6 @@ package org.shypl.biser.api.client.channel {
 	import flash.events.ProgressEvent;
 	import flash.net.Socket;
 	import flash.utils.ByteArray;
-	import flash.utils.setTimeout;
 
 	import org.shypl.biser.api.client.Channel;
 	import org.shypl.biser.api.client.ChannelHandler;

@@ -2,9 +2,7 @@ package org.shypl.biser.io {
 	import flash.utils.ByteArray;
 
 	import org.shypl.common.collection.Map;
-
 	import org.shypl.common.lang.Enum;
-
 	import org.shypl.common.math.Long;
 
 	public class WriterProxy implements BiserWriter {

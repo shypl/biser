@@ -21,6 +21,4 @@ public class StructureTypeProxy extends StructureType {
 	void setSource(StructureType source) {
 		this.source = source;
 	}
-
-
 }

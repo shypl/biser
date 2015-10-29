@@ -775,12 +775,12 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			private final List<Arg> args = new ArrayList<>();
 			private       boolean   raw  = true;
 
-			public LogMethod(CodeExpression target, String method, int type, ApiService service, ApiAction action, int argumentsSize, Arg ...args) {
+			public LogMethod(CodeExpression target, String method, int type, ApiService service, ApiAction action, int argumentsSize, Arg... args) {
 				super(target, method, createActionLogMessage(type, service, action, argumentsSize));
 				Collections.addAll(this.args, args);
 			}
 
-			public LogMethod(String method, int type, ApiService service, ApiAction action, int argumentsSize, Arg ...args) {
+			public LogMethod(String method, int type, ApiService service, ApiAction action, int argumentsSize, Arg... args) {
 				super(method, createActionLogMessage(type, service, action, argumentsSize));
 				Collections.addAll(this.args, args);
 			}

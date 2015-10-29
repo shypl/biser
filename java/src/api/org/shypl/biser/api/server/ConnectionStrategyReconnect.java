@@ -20,7 +20,7 @@ class ConnectionStrategyReconnect extends ConnectionStrategy {
 
 			index += connection.readSync(buffer, index);
 			if (index == buffer.length) {
-				long clientId = ByteUtils.readLong(buffer, 0);;
+				long clientId = ByteUtils.readLong(buffer, 0);
 				buffer = Arrays.copyOfRange(buffer, 8, buffer.length);
 				if (connection.getLogger().isTraceEnabled()) {
 					connection.getLogger().trace("Reconnect: Try to establish connection (clientId: {}, sid: {})", clientId, Hex.encodeHexString(buffer));

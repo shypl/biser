@@ -101,7 +101,6 @@ public final class Compiler {
 		}
 	}
 
-
 	private static void clearDirectory(final File directory) throws CompilerException {
 		if (directory.exists() && directory.isDirectory()) {
 			final File[] files = directory.listFiles();

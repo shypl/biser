@@ -22,11 +22,11 @@ class ConnectionStrategyReception extends ConnectionStrategy {
 		}
 	}
 
+	@Override
+	public void handleClose(boolean broken) {}
+
 	private void direct(ConnectionStrategy strategy, String logMessage) {
 		connection.getLogger().trace(logMessage);
 		connection.setStrategy(strategy);
 	}
-
-	@Override
-	public void handleClose(boolean broken) {}
 }

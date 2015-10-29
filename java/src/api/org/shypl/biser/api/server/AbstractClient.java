@@ -1,5 +1,6 @@
 package org.shypl.biser.api.server;
 
+import org.apache.commons.codec.binary.Hex;
 import org.shypl.biser.api.ByteArrayBuilder;
 import org.shypl.biser.api.Protocol;
 import org.shypl.common.concurrent.ScheduledTask;
@@ -116,9 +117,26 @@ public abstract class AbstractClient {
 				active = true;
 				this.connection = connection;
 				connectionId = connection.getId();
-				boolean r = cancelReconnectTimeout();
+				boolean reconnect = cancelReconnectTimeout();
+				byte[] sid = server.getClientConnectionSid(this);
+
 				connection.setStrategy(new ConnectionStrategyMessaging(this));
-				if (r) {
+
+				if (connection.getLogger().isTraceEnabled()) {
+					connection.getLogger()
+						.trace("Client: Connection established (clientId: {}, connectionId: {}, sid: {})", id, connectionId, Hex.encodeHexString(sid));
+				}
+
+				connection.write(
+					new ByteArrayBuilder(1 + 8 + sid.length + 4) // sid.length = 16
+						.add(Protocol.CONNECT_SUCCESS)
+						.add(id)
+						.add(sid)
+						.add(server.getReconnectTimeoutSeconds())
+						.build()
+				);
+
+				if (reconnect) {
 					connection.write(receiveMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
 				}
 			}
@@ -130,10 +148,16 @@ public abstract class AbstractClient {
 			if (connected) {
 				active = false;
 				connection = null;
-				reconnectTimeout = taskQueue.schedule(() -> {
-					reconnectTimeout = null;
-					disconnect(Protocol.CLOSE_RECONNECT_TIMEOUT_EXPIRED);
-				}, 10, TimeUnit.MINUTES);
+				int reconnectTimeoutSeconds = server.getReconnectTimeoutSeconds();
+				if (reconnectTimeoutSeconds <= 0) {
+					disconnect(Protocol.CLOSE);
+				}
+				else {
+					this.reconnectTimeout = taskQueue.schedule(() -> {
+						this.reconnectTimeout = null;
+						disconnect(Protocol.CLOSE_RECONNECT_TIMEOUT_EXPIRED);
+					}, reconnectTimeoutSeconds, TimeUnit.SECONDS);
+				}
 			}
 		});
 	}

@@ -25,6 +25,7 @@ public class ApiServer<C extends AbstractClient> {
 	private final ScheduledExecutorService executor;
 	private final ApiGate<C>               gate;
 	private final ServerEntryAddress       address;
+	private final int                      reconnectTimeoutSeconds;
 	private final TaskQueue                taskQueue;
 	private final byte[]                   crossDomainPolicyResponse;
 	private final ServerEntry              entry;
@@ -32,12 +33,18 @@ public class ApiServer<C extends AbstractClient> {
 	private final AtomicInteger connectionCount         = new AtomicInteger();
 	private final byte[]        clientConnectionSidSalt = new byte[8];
 
-	private volatile boolean                   running = true;
+	private volatile boolean      running = true;
 	private          Map<Long, C> clients = new HashMap<>();
 	private ScheduledTask stopCheckTask;
 
 	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address) {
-		this(executor, entryProvider, gate, address,
+		this(executor, entryProvider, gate, address, 10 * 60);
+	}
+
+	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address,
+		int reconnectTimeoutSeconds)
+	{
+		this(executor, entryProvider, gate, address, reconnectTimeoutSeconds,
 			"<?xml version=\"1.0\"?>\n"
 				+ "<!DOCTYPE cross-domain-policy SYSTEM \"http://www.adobe.com/xml/dtds/cross-domain-policy.dtd\">\n"
 				+ "<cross-domain-policy>\n"
@@ -49,6 +56,7 @@ public class ApiServer<C extends AbstractClient> {
 	}
 
 	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address,
+		int reconnectTimeoutSeconds,
 		String crossDomainPolicy)
 	{
 		logger = new PrefixedLoggerProxy(LoggerFactory.getLogger(ApiServer.class), "<" + address + "> ");
@@ -56,6 +64,7 @@ public class ApiServer<C extends AbstractClient> {
 		this.executor = executor;
 		this.gate = gate;
 		this.address = address;
+		this.reconnectTimeoutSeconds = reconnectTimeoutSeconds;
 
 		logger.info("Start...");
 
@@ -123,6 +132,10 @@ public class ApiServer<C extends AbstractClient> {
 				receiver.receiveConnectedClient(client);
 			}
 		});
+	}
+
+	int getReconnectTimeoutSeconds() {
+		return reconnectTimeoutSeconds;
 	}
 
 	void sendMessageForAllClients(byte[] message) {

@@ -184,7 +184,5 @@ public interface CodeVisitor {
 		for (CodeExpression arg : expression.getArguments()) {
 			arg.visit(this);
 		}
-
 	}
-
 }

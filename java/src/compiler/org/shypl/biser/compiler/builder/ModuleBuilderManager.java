@@ -10,6 +10,11 @@ import java.util.Map;
 public final class ModuleBuilderManager {
 	private static Map<String, ModuleBuilder> builders = new HashMap<>();
 
+	static {
+		registerBuilder(new JavaModuleBuilder());
+		registerBuilder(new FlashModuleBuilder());
+	}
+
 	public static void registerBuilder(ModuleBuilder builder) {
 		builders.put(builder.getLang(), builder);
 	}
@@ -23,9 +28,4 @@ public final class ModuleBuilderManager {
 	}
 
 	private ModuleBuilderManager() {}
-
-	static {
-		registerBuilder(new JavaModuleBuilder());
-		registerBuilder(new FlashModuleBuilder());
-	}
 }

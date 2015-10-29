@@ -1,7 +1,5 @@
 package org.shypl.biser.api.server;
 
-import org.apache.commons.codec.binary.Hex;
-import org.shypl.biser.api.ByteArrayBuilder;
 import org.shypl.biser.api.Protocol;
 import org.shypl.biser.api.ProtocolException;
 import org.shypl.common.concurrent.ScheduledTask;
@@ -57,21 +55,6 @@ class ConnectionStrategyMessaging extends ConnectionStrategy {
 	@Override
 	void setConnection(Connection connection) {
 		super.setConnection(connection);
-		byte[] sid = connection.getServer().getClientConnectionSid(client);
-
-		if (connection.getLogger().isTraceEnabled()) {
-			connection.getLogger().trace("Client: Connection established (clientId: {}, connectionId: {}, sid: {})",
-				client.getId(), client.getConnection().getId(), Hex.encodeHexString(sid));
-		}
-
-		connection.write(
-			new ByteArrayBuilder(1 + 8 + sid.length) // sid.length = 16
-				.add(Protocol.CONNECT_SUCCESS)
-				.add(client.getId())
-				.add(sid)
-				.build()
-		);
-
 		checkPingTask = connection.getTaskQueue().schedulePeriodic(this::checkPing, CHECK_PING_SECONDS, CHECK_PING_SECONDS, TimeUnit.SECONDS);
 	}
 

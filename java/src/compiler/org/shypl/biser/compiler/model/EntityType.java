@@ -77,6 +77,10 @@ public class EntityType extends StructureType {
 		return representer.representEntity(this);
 	}
 
+	public List<EntityType> getChildren() {
+		return new ArrayList<>(children);
+	}
+
 	private int addChild(EntityType child) {
 		children.add(child);
 		return nextChildId();
@@ -84,9 +88,5 @@ public class EntityType extends StructureType {
 
 	private int nextChildId() {
 		return hasParent() ? parent.nextChildId() : ++childIdCounter;
-	}
-
-	public List<EntityType> getChildren() {
-		return new ArrayList<>(children);
 	}
 }

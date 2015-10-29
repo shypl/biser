@@ -7,10 +7,6 @@ public abstract class DataType {
 		this.name = name;
 	}
 
-	protected void setName(String name) {
-		this.name = name;
-	}
-
 	@Override
 	public String toString() {
 		return getName();
@@ -21,4 +17,8 @@ public abstract class DataType {
 	}
 
 	public abstract <T> T represent(TypeRepresenter<T> representer);
+
+	protected void setName(String name) {
+		this.name = name;
+	}
 }

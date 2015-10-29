@@ -5,7 +5,7 @@ import java.util.Collection;
 
 public class Model {
 	private final Collection<StructureType> structures;
-	private final Collection<ApiGate> apiGates;
+	private final Collection<ApiGate>       apiGates;
 
 	public Model(Collection<StructureType> structures, Collection<ApiGate> apiGates) {
 		this.apiGates = apiGates;
