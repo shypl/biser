@@ -100,7 +100,7 @@ public class ApiServer<C extends AbstractClient> {
 					for (AbstractClient client : clients.values()) {
 						client.disconnect(Protocol.CLOSE_SERVER_DOWN);
 					}
-					stopCheckTask = taskQueue.schedulePeriodic(this::doStop, 1, 1, TimeUnit.SECONDS);
+					stopCheckTask = taskQueue.schedulePeriodic(this::doStop, 0, 1, TimeUnit.SECONDS);
 				}
 				else {
 					logger.error("Is already stopped");
@@ -233,16 +233,17 @@ public class ApiServer<C extends AbstractClient> {
 		});
 	}
 
-	void removeClient(AbstractClient client) {
+	void removeClient(C client) {
 		taskQueue.add(() -> {
-			AbstractClient currentClient = clients.get(client.getId());
+			C currentClient = clients.get(client.getId());
 			if (currentClient == client) {
 				clients.remove(client.getId());
 				logger.trace("Remove client id={} (clients: {})", client.getId(), clients.size());
 			}
 			else {
-				logger.trace("Lose client id={}", client.getId(), clients.size());
+				logger.warn("Lose client id={}", client.getId(), clients.size());
 			}
+			gate.handleDisconnectClient(client);
 		});
 	}
 

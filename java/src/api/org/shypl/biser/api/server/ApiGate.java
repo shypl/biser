@@ -15,11 +15,11 @@ public abstract class ApiGate<C extends AbstractClient> {
 	};
 	private ApiServer<C> server;
 
-	public void sendGlobalMessage(GlobalMessage message) {
+	public final void sendGlobalMessage(GlobalMessage message) {
 		message.send(server);
 	}
 
-	public void getClient(long clientId, ClientReceiver<C> receiver) {
+	public final void getClient(long clientId, ClientReceiver<C> receiver) {
 		server.getClient(clientId, receiver);
 	}
 
@@ -50,6 +50,8 @@ public abstract class ApiGate<C extends AbstractClient> {
 			}
 		}
 	}
+
+	protected void handleDisconnectClient(C client) {}
 
 	protected abstract void execute(C client, int serviceId, int actionId, ByteArrayReader reader, ByteArrayWriter writer) throws Exception;
 

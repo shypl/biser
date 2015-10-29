@@ -9,8 +9,10 @@ import org.shypl.common.slf4j.PrefixedLoggerProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractClient {
@@ -18,16 +20,18 @@ public abstract class AbstractClient {
 
 	private final long                id;
 	private final PrefixedLoggerProxy logger;
-	private       Connection          connection;
-	private       long                connectionId;
-	private       ApiServer           server;
-	private       TaskQueue           taskQueue;
+
+	private Connection connection;
+	private long       connectionId;
+	private ApiServer  server;
+	private TaskQueue  taskQueue;
 
 	private volatile boolean connected = true;
 	private volatile boolean active    = false;
-	private ScheduledTask reconnectTimeout;
-	private boolean       receiveMessageEven;
-	private boolean       sendMessageEven;
+	private List<Runnable> disconnectHandlers;
+	private ScheduledTask  reconnectTimeout;
+	private boolean        receiveMessageEven;
+	private boolean        sendMessageEven;
 	private boolean       sendMessageReady = true;
 	private Deque<byte[]> messages         = new LinkedList<>();
 
@@ -48,12 +52,25 @@ public abstract class AbstractClient {
 		return connected;
 	}
 
-	public final TaskQueue getTaskQueue() {
-		return taskQueue;
-	}
-
 	public final Logger getLogger() {
 		return logger;
+	}
+
+	public final void addDisconnectHandler(Runnable handler) {
+		addTask(() -> {
+			if (disconnectHandlers == null) {
+				disconnectHandlers = new ArrayList<>(1);
+			}
+			disconnectHandlers.add(handler);
+		});
+	}
+
+	public final void addTask(Runnable task) {
+		taskQueue.add(() -> {
+			if (connected) {
+				task.run();
+			}
+		});
 	}
 
 	boolean isActive() {
@@ -74,22 +91,18 @@ public abstract class AbstractClient {
 
 	@SuppressWarnings("unchecked")
 	void receiveMessage(boolean even, byte[] data) {
-		taskQueue.add(() -> {
-			if (connected) {
-				receiveMessageEven = even;
-				connection.write(receiveMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
-				server.getGate().processMessage(this, data);
-			}
+		addTask(() -> {
+			receiveMessageEven = even;
+			connection.write(receiveMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
+			server.getGate().processMessage(this, data);
 		});
 	}
 
 	void sendMessage(byte[] data) {
-		taskQueue.add(() -> {
-			if (connected) {
-				messages.addLast(data);
-				if (active && sendMessageReady) {
-					sendMessage0(data);
-				}
+		addTask(() -> {
+			messages.addLast(data);
+			if (active && sendMessageReady) {
+				sendMessage0(data);
 			}
 		});
 	}
@@ -112,52 +125,48 @@ public abstract class AbstractClient {
 	}
 
 	void secConnection(Connection connection) {
-		taskQueue.add(() -> {
-			if (connected) {
-				active = true;
-				this.connection = connection;
-				connectionId = connection.getId();
-				boolean reconnect = cancelReconnectTimeout();
-				byte[] sid = server.getClientConnectionSid(this);
+		addTask(() -> {
+			active = true;
+			this.connection = connection;
+			connectionId = connection.getId();
+			boolean reconnect = cancelReconnectTimeout();
+			byte[] sid = server.getClientConnectionSid(this);
 
-				connection.setStrategy(new ConnectionStrategyMessaging(this));
+			connection.setStrategy(new ConnectionStrategyMessaging(this));
 
-				if (connection.getLogger().isTraceEnabled()) {
-					connection.getLogger()
-						.trace("Client: Connection established (clientId: {}, connectionId: {}, sid: {})", id, connectionId, Hex.encodeHexString(sid));
-				}
+			if (connection.getLogger().isTraceEnabled()) {
+				connection.getLogger()
+					.trace("Client: Connection established (clientId: {}, connectionId: {}, sid: {})", id, connectionId, Hex.encodeHexString(sid));
+			}
 
-				connection.write(
-					new ByteArrayBuilder(1 + 8 + sid.length + 4) // sid.length = 16
-						.add(Protocol.CONNECT_SUCCESS)
-						.add(id)
-						.add(sid)
-						.add(server.getReconnectTimeoutSeconds())
-						.build()
-				);
+			connection.write(
+				new ByteArrayBuilder(1 + 8 + sid.length + 4) // sid.length = 16
+					.add(Protocol.CONNECT_SUCCESS)
+					.add(id)
+					.add(sid)
+					.add(server.getReconnectTimeoutSeconds())
+					.build()
+			);
 
-				if (reconnect) {
-					connection.write(receiveMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
-				}
+			if (reconnect) {
+				connection.write(receiveMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
 			}
 		});
 	}
 
 	void handleConnectionBroken() {
-		taskQueue.add(() -> {
-			if (connected) {
-				active = false;
-				connection = null;
-				int reconnectTimeoutSeconds = server.getReconnectTimeoutSeconds();
-				if (reconnectTimeoutSeconds <= 0) {
-					disconnect(Protocol.CLOSE);
-				}
-				else {
-					this.reconnectTimeout = taskQueue.schedule(() -> {
-						this.reconnectTimeout = null;
-						disconnect(Protocol.CLOSE_RECONNECT_TIMEOUT_EXPIRED);
-					}, reconnectTimeoutSeconds, TimeUnit.SECONDS);
-				}
+		addTask(() -> {
+			active = false;
+			connection = null;
+			int reconnectTimeoutSeconds = server.getReconnectTimeoutSeconds();
+			if (reconnectTimeoutSeconds <= 0) {
+				disconnect(Protocol.CLOSE);
+			}
+			else {
+				this.reconnectTimeout = taskQueue.schedule(() -> {
+					this.reconnectTimeout = null;
+					disconnect(Protocol.CLOSE_RECONNECT_TIMEOUT_EXPIRED);
+				}, reconnectTimeoutSeconds, TimeUnit.SECONDS);
 			}
 		});
 	}
@@ -166,24 +175,34 @@ public abstract class AbstractClient {
 		disconnect(reason, null);
 	}
 
+	@SuppressWarnings("unchecked")
 	void disconnect(byte reason, Runnable callback) {
-		taskQueue.add(() -> {
-			if (connected) {
-				cancelReconnectTimeout();
-				handleDisconnect();
+		addTask(() -> {
+			connected = false;
+			cancelReconnectTimeout();
 
-				server.removeClient(this);
-				if (active) {
-					connection.close(reason);
-					connection = null;
+			if (disconnectHandlers != null) {
+				for (Runnable handler : disconnectHandlers) {
+					try {
+						handler.run();
+					}
+					catch (Throwable e) {
+						logger.warn("Error on handle disconnect", e);
+					}
 				}
+			}
 
-				connected = false;
+			handleDisconnect();
+
+			server.removeClient(this);
+			if (active) {
+				connection.close(reason);
+				connection = null;
 				active = false;
+			}
 
-				if (callback != null) {
-					callback.run();
-				}
+			if (callback != null) {
+				callback.run();
 			}
 		});
 	}
