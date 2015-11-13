@@ -156,7 +156,7 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 		}
 
 		// biser decoder
-		CodeClass entityDecoderClass = modulePackage.getClass(cls.getName() + "_Decoder");
+		CodeClass entityDecoderClass = modulePackage.getClass(type.getName() + "_Decoder");
 		entityDecoderClass.getModifier().add(CodeModifier.INTERNAL);
 		entityDecoderClass.setParent(engine.getClass("org.shypl.biser.io.EntityDecoder"));
 

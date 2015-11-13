@@ -23,7 +23,7 @@ public class ApiServer<C extends AbstractClient> {
 
 	private static final int DEFAULT_RECONNECT_TIMEOUT_SECONDS = 10 * 60;
 
-	private final Logger logger;
+	private final Logger                   logger;
 	private final ScheduledExecutorService executor;
 	private final ApiGate<C>               gate;
 	private final ServerEntryAddress       address;
@@ -32,11 +32,12 @@ public class ApiServer<C extends AbstractClient> {
 	private final byte[]                   crossDomainPolicyResponse;
 	private final ServerEntry              entry;
 
-	private final AtomicInteger connectionCount         = new AtomicInteger();
+	private final AtomicInteger connectionsAmount       = new AtomicInteger();
 	private final byte[]        clientConnectionSidSalt = new byte[8];
 
-	private volatile boolean      running = true;
-	private          Map<Long, C> clients = new HashMap<>();
+	private volatile boolean      running                  = true;
+	private volatile boolean      acceptConnectionsAllowed = true;
+	private          Map<Long, C> clients                  = new HashMap<>();
 	private ScheduledTask stopCheckTask;
 
 	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address) {
@@ -91,7 +92,20 @@ public class ApiServer<C extends AbstractClient> {
 		logger.info("Started");
 	}
 
+	public int getConnectionsAmount() {
+		return connectionsAmount.get();
+	}
+
+	public void allowAcceptConnections() {
+		acceptConnectionsAllowed = running;
+	}
+
+	public void disallowAcceptConnections() {
+		acceptConnectionsAllowed = false;
+	}
+
 	public void stop() {
+		disallowAcceptConnections();
 		if (running) {
 			taskQueue.add(() -> {
 				if (running) {
@@ -168,8 +182,8 @@ public class ApiServer<C extends AbstractClient> {
 	}
 
 	ConnectionChannelHandler acceptConnection(ConnectionChannel channel) {
-		if (running) {
-			int i = connectionCount.incrementAndGet();
+		if (acceptConnectionsAllowed) {
+			int i = connectionsAmount.incrementAndGet();
 			logger.trace("Accept connection {} (connections: {})", channel.getRemoteAddress(), i);
 
 			Connection connection = new Connection(this, channel);
@@ -183,7 +197,7 @@ public class ApiServer<C extends AbstractClient> {
 	}
 
 	void releaseConnection(Connection connection) {
-		int i = connectionCount.decrementAndGet();
+		int i = connectionsAmount.decrementAndGet();
 		logger.trace("Release connection {} (connections: {})", connection.getRemoteAddress(), i);
 	}
 
@@ -248,7 +262,7 @@ public class ApiServer<C extends AbstractClient> {
 	}
 
 	private void doStop() {
-		int cc = connectionCount.get();
+		int cc = connectionsAmount.get();
 		logger.info("Stop check: clients: {}, connections: {}", clients.size(), cc);
 
 		if (clients.isEmpty() && cc == 0) {
