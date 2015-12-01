@@ -168,6 +168,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			}
 			methodBody = method.getBody();
 
+			//noinspection Duplicates
 			if (type.hasParent()) {
 				CodeExpressionMethod superCall = new CodeExpressionMethod("super");
 				methodBody.addStatement(superCall);
@@ -203,6 +204,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 
 		// biser id
+		//noinspection Duplicates
 		if (type.getId() != 0) {
 			method = cls.addMethod("_id");
 			method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
@@ -545,12 +547,12 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				method.setReturnType(primitiveVoid);
 				method.getArgument("service").setType(serviceClass.parametrize(c));
 
-				CodeStatementIf statementIf = new CodeStatementIf(
-					new CodeExpressionBinaryOperator("!=", CodeExpressionWord.THIS.field(field.getName()), CodeExpressionWord.NULL));
-				statementIf.addStatement(new CodeStatementThrow(new CodeExpressionNew(engine.getClass("java.lang.RuntimeException"))));
+//				CodeStatementIf statementIf = new CodeStatementIf(
+//					new CodeExpressionBinaryOperator("!=", CodeExpressionWord.THIS.field(field.getName()), CodeExpressionWord.NULL));
+//				statementIf.addStatement(new CodeStatementThrow(new CodeExpressionNew(engine.getClass("java.lang.RuntimeException"))));
 
 				method.getBody()
-					.addStatement(statementIf)
+//					.addStatement(statementIf)
 					.addStatement(CodeExpressionWord.THIS.field(field.getName()).assign(new CodeExpressionWord("service")));
 
 				serviceCase.addStatement(CodeStatementBreak.INSTANCE);

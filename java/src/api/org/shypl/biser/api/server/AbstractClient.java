@@ -192,7 +192,12 @@ public abstract class AbstractClient {
 				}
 			}
 
-			handleDisconnect();
+			try {
+				handleDisconnect();
+			}
+			catch (Throwable e) {
+				logger.warn("Error on handle disconnect", e);
+			}
 
 			server.removeClient(this);
 			if (active) {

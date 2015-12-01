@@ -4,9 +4,7 @@
       <root url="file://$PROJECT_DIR$/dev/java/lib" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES>
-      <root url="jar://$USER_HOME$/.ideaLibSources/logback-classic-1.1.3-sources.jar!/" />
-    </SOURCES>
+    <SOURCES />
     <jarDirectory url="file://$PROJECT_DIR$/dev/java/lib" recursive="false" />
   </library>
 </component>
