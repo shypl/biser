@@ -50,6 +50,9 @@ class ConnectionStrategyMessaging extends ConnectionStrategy {
 		if (broken) {
 			client.handleConnectionBroken();
 		}
+		else {
+			client.disconnect();
+		}
 	}
 
 	@Override

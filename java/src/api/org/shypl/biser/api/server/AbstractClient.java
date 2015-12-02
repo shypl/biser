@@ -171,6 +171,10 @@ public abstract class AbstractClient {
 		});
 	}
 
+	void disconnect() {
+		disconnect((byte)0, null);
+	}
+
 	void disconnect(byte reason) {
 		disconnect(reason, null);
 	}
@@ -201,7 +205,12 @@ public abstract class AbstractClient {
 
 			server.removeClient(this);
 			if (active) {
-				connection.close(reason);
+				if (reason == 0) {
+					connection.close();
+				}
+				else {
+					connection.close(reason);
+				}
 				connection = null;
 				active = false;
 			}

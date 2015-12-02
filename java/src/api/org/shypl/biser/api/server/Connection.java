@@ -59,6 +59,12 @@ class Connection implements ConnectionChannelHandler {
 		return taskQueue;
 	}
 
+	public void close() {
+		if (opened) {
+			taskQueue.add(this::closeSync);
+		}
+	}
+
 	public void close(byte reason) {
 		if (opened) {
 			taskQueue.add(() -> closeSync(reason));
