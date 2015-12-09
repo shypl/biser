@@ -1,17 +1,17 @@
 package org.shypl.biser.api.client {
 	import org.shypl.biser.api.ApiException;
-	import org.shypl.common.timer.Timer;
-	import org.shypl.common.timer.TimerTask;
+	import org.shypl.common.timeline.GlobalTimeline;
+	import org.shypl.common.timeline.TimelineTask;
 
 	internal class ConnectionReducer implements ChannelOpenHandler {
 		private var _connection:Connection;
 		private var _attempt:int;
-		private var _timeoutTask:TimerTask;
-		private var _attemptTask:TimerTask;
+		private var _timeoutTask:TimelineTask;
+		private var _attemptTask:TimelineTask;
 
 		public function ConnectionReducer(connection:Connection, reconnectTimeout:int) {
 			_connection = connection;
-			_timeoutTask = Timer.schedule(1000 * 60 * reconnectTimeout, handleTimeout);
+			_timeoutTask = GlobalTimeline.schedule(1000 * 60 * reconnectTimeout, handleTimeout);
 			nextAttempt();
 		}
 
@@ -47,7 +47,7 @@ package org.shypl.biser.api.client {
 		}
 
 		private function nextAttempt():void {
-			_attemptTask = (++_attempt == 1) ? Timer.forNextFrame(run) : Timer.schedule(1000, run);
+			_attemptTask = (++_attempt == 1) ? GlobalTimeline.forNextFrame(run) : GlobalTimeline.schedule(1000, run);
 		}
 
 		private function run():void {

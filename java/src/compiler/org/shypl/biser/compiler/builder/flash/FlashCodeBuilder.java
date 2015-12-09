@@ -21,7 +21,6 @@ import org.shypl.biser.compiler.code.CodeParameter;
 import org.shypl.biser.compiler.code.CodePrimitive;
 import org.shypl.biser.compiler.code.CodeStatementBlock;
 import org.shypl.biser.compiler.code.CodeStatementBreak;
-import org.shypl.biser.compiler.code.CodeStatementIf;
 import org.shypl.biser.compiler.code.CodeStatementReturn;
 import org.shypl.biser.compiler.code.CodeStatementSwitch;
 import org.shypl.biser.compiler.code.CodeStatementSwitchCase;

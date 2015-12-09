@@ -4,8 +4,8 @@ package org.shypl.biser.api.client {
 
 	import org.shypl.biser.api.ApiException;
 	import org.shypl.biser.api.Protocol;
-	import org.shypl.common.timer.Timer;
-	import org.shypl.common.timer.TimerTask;
+	import org.shypl.common.timeline.GlobalTimeline;
+	import org.shypl.common.timeline.TimelineTask;
 
 	public class ConnectionStrategyMessaging extends ConnectionStrategy {
 
@@ -18,7 +18,7 @@ package org.shypl.biser.api.client {
 		private var _messageEven:Boolean;
 		private var _messageSize:int;
 		private var _buffer:ByteArray = new ByteArray();
-		private var _pingTask:TimerTask;
+		private var _pingTask:TimelineTask;
 
 		override public function handleData(data:IDataInput):void {
 			switch (_state) {
@@ -50,7 +50,7 @@ package org.shypl.biser.api.client {
 
 		override internal function init(connection:Connection, channelHandler:ChannelHandlerNormal):void {
 			super.init(connection, channelHandler);
-			_pingTask = Timer.scheduleRepeatable(30 * 1000, ping);
+			_pingTask = GlobalTimeline.scheduleRepeatable(30 * 1000, ping);
 		}
 
 		private function readFlag(data:IDataInput):void {

@@ -152,8 +152,9 @@ package org.shypl.biser.io {
 				writeInt(-1);
 			}
 			else {
-				writeInt(map.size);
-				if (map.size !== 0) {
+				var length:int = map.size();
+				writeInt(length);
+				if (length !== 0) {
 					const it:MapIterator = map.iterator();
 					while (it.next()) {
 						keyEncoder.encode(it.key, this);

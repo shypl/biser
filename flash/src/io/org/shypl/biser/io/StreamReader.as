@@ -3,7 +3,7 @@ package org.shypl.biser.io {
 	import flash.utils.IDataInput;
 	import flash.utils.getQualifiedClassName;
 
-	import org.shypl.common.collection.LinkedMap;
+	import org.shypl.common.collection.LinkedHashMap;
 	import org.shypl.common.collection.Map;
 	import org.shypl.common.lang.Enum;
 	import org.shypl.common.lang.RuntimeException;
@@ -163,7 +163,7 @@ package org.shypl.biser.io {
 				return null;
 			}
 
-			const map:Map = new LinkedMap();
+			const map:Map = new LinkedHashMap();
 
 			for (var i:int = 0; i < size; ++i) {
 				map.put(keyDecoder.decode(this), valueDecoder.decode(this));

@@ -1,25 +1,13 @@
 package org.shypl.biser.io {
-	import org.shypl.common.collection.LinkedMap;
+	import org.shypl.common.collection.LinkedHashMap;
 	import org.shypl.common.collection.Map;
 
 	[Abstract]
 	public class Entity {
 		public function toString():String {
-			var fields:LinkedMap = new LinkedMap();
+			var fields:Map = new LinkedHashMap();
 			_toString(fields);
 			return fields.toString();
-		}
-
-		internal final function _id0():int {
-			return _id();
-		}
-
-		internal final function _encode0(writer:BiserWriter):void {
-			_encode(writer);
-		}
-
-		internal final function _decode0(reader:BiserReader):void {
-			_decode(reader);
 		}
 
 		protected function _id():int {
@@ -33,6 +21,18 @@ package org.shypl.biser.io {
 		}
 
 		protected function _toString(fields:Map):void {
+		}
+
+		internal final function _id0():int {
+			return _id();
+		}
+
+		internal final function _encode0(writer:BiserWriter):void {
+			_encode(writer);
+		}
+
+		internal final function _decode0(reader:BiserReader):void {
+			_decode(reader);
 		}
 	}
 }
