@@ -5,7 +5,7 @@ import org.shypl.biser.io.ByteArrayReader;
 import org.shypl.biser.io.ByteArrayWriter;
 import org.slf4j.LoggerFactory;
 
-public abstract class ApiGate<C extends AbstractClient> {
+public abstract class ApiGateBase<C extends AbstractClient> {
 
 	private final ThreadLocal<ByteArrayWriter> outputStream = new ThreadLocal<ByteArrayWriter>() {
 		@Override
@@ -46,7 +46,7 @@ public abstract class ApiGate<C extends AbstractClient> {
 				client.getConnection().close(Protocol.CLOSE_SERVER_ERROR);
 			}
 			else {
-				LoggerFactory.getLogger(ApiGate.class).error("Error on process client message", e);
+				LoggerFactory.getLogger(ApiGateBase.class).error("Error on process client message", e);
 			}
 		}
 	}

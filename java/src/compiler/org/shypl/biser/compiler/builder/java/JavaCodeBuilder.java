@@ -510,7 +510,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			CodeClass cls = pack.getClass("AbstractApiGate");
 			CodeGeneric c = cls.getGeneric("C");
 			c.setDependence(CodeGeneric.Dependence.EXTENDS, pack.getClass("Client"));
-			cls.setParent(engine.getClass("org.shypl.biser.api.server.ApiGate").parametrize(c));
+			cls.setParent(engine.getClass("org.shypl.biser.api.server.ApiGateBase").parametrize(c));
 			cls.getModifier().add(CodeModifier.ABSTRACT | CodeModifier.PUBLIC);
 
 

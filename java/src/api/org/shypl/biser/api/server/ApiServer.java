@@ -25,7 +25,7 @@ public class ApiServer<C extends AbstractClient> {
 
 	private final Logger                   logger;
 	private final ScheduledExecutorService executor;
-	private final ApiGate<C>               gate;
+	private final ApiGateBase<C>           gate;
 	private final ServerEntryAddress       address;
 	private final int                      reconnectTimeoutSeconds;
 	private final TaskQueue                taskQueue;
@@ -40,12 +40,12 @@ public class ApiServer<C extends AbstractClient> {
 	private          Map<Long, C> clients                  = new HashMap<>();
 	private ScheduledTask stopCheckTask;
 
-	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address) {
+	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGateBase<C> gate, ServerEntryAddress address) {
 		this(executor, entryProvider, gate, address, DEFAULT_RECONNECT_TIMEOUT_SECONDS);
 	}
 
-	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address,
-		int reconnectTimeoutSeconds)
+	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGateBase<C> gate, ServerEntryAddress address,
+	                 int reconnectTimeoutSeconds)
 	{
 		this(executor, entryProvider, gate, address,
 			"<?xml version=\"1.0\"?>\n"
@@ -58,14 +58,14 @@ public class ApiServer<C extends AbstractClient> {
 		);
 	}
 
-	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address,
-		String crossDomainPolicy)
+	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGateBase<C> gate, ServerEntryAddress address,
+	                 String crossDomainPolicy)
 	{
 		this(executor, entryProvider, gate, address, crossDomainPolicy, DEFAULT_RECONNECT_TIMEOUT_SECONDS);
 	}
 
-	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGate<C> gate, ServerEntryAddress address,
-		String crossDomainPolicy, int reconnectTimeoutSeconds)
+	public ApiServer(ScheduledExecutorService executor, ServerEntryProvider entryProvider, ApiGateBase<C> gate, ServerEntryAddress address,
+	                 String crossDomainPolicy, int reconnectTimeoutSeconds)
 	{
 		logger = new PrefixedLoggerProxy(LoggerFactory.getLogger(ApiServer.class), "<" + address + "> ");
 
@@ -135,7 +135,7 @@ public class ApiServer<C extends AbstractClient> {
 		return executor;
 	}
 
-	public ApiGate<C> getGate() {
+	public ApiGateBase<C> getGate() {
 		return gate;
 	}
 
