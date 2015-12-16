@@ -56,7 +56,16 @@ class ConnectionStrategyConnect extends ConnectionStrategy {
 		connection.getLogger().trace("Connect: Authorize client by key {}", key);
 		ApiServer server = connection.getServer();
 
-		AbstractClient client = server.getGate().connectClient(key);
+		AbstractClient client;
+		try {
+			client = server.getGate().connectClient(key);
+		}
+		catch (Throwable e) {
+			connection.getLogger().error("Connect: Error", e);
+			connection.closeSync(Protocol.CLOSE_SERVER_ERROR);
+			return;
+		}
+
 		if (client == null) {
 			connection.getLogger().trace("Connect: Reject");
 			connection.closeSync(Protocol.CLOSE_CONNECT_REJECT);

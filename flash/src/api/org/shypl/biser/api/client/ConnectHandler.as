@@ -1,7 +1,7 @@
 package org.shypl.biser.api.client {
 	public interface ConnectHandler {
-		function handlerConnectSuccess():void;
+		function handleConnectSuccess():void;
 
-		function handlerConnectFail(reason:ConnectionCloseReason):void;
+		function handleConnectFail(reason:ConnectionCloseReason):void;
 	}
 }

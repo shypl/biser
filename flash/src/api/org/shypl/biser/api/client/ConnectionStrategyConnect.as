@@ -48,7 +48,7 @@ package org.shypl.biser.api.client {
 				var connectHandler:ConnectHandler = _connectHandler;
 				_connection.doClose(reason);
 				if (connectHandler) {
-					connectHandler.handlerConnectFail(reason);
+					connectHandler.handleConnectFail(reason);
 				}
 			}
 		}
@@ -61,7 +61,7 @@ package org.shypl.biser.api.client {
 				var connectHandler:ConnectHandler = _connectHandler;
 				_connection.authorize(_message);
 				if (connectHandler) {
-					connectHandler.handlerConnectSuccess();
+					connectHandler.handleConnectSuccess();
 				}
 			}
 		}

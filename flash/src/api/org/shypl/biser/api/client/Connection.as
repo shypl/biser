@@ -97,7 +97,7 @@ package org.shypl.biser.api.client {
 			if (_closed) {
 				_logger.warn("Connect fail, connection closed");
 				doClose(ConnectionCloseReason.CLIENT_ERROR);
-				connectHandler.handlerConnectFail(ConnectionCloseReason.CLOSE);
+				connectHandler.handleConnectFail(ConnectionCloseReason.CLOSE);
 				return new ChannelHandlerEmpty();
 			}
 

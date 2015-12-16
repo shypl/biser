@@ -73,6 +73,12 @@ public abstract class AbstractClient {
 		});
 	}
 
+	protected void handleConnect() {
+	}
+
+	protected void handleDisconnect() {
+	}
+
 	boolean isActive() {
 		return active;
 	}
@@ -136,21 +142,23 @@ public abstract class AbstractClient {
 
 			if (connection.getLogger().isTraceEnabled()) {
 				connection.getLogger()
-					.trace("Client: Connection established (clientId: {}, connectionId: {}, sid: {})", id, connectionId, Hex.encodeHexString(sid));
+				          .trace("Client: Connection established (clientId: {}, connectionId: {}, sid: {})", id, connectionId, Hex.encodeHexString(sid));
 			}
 
 			connection.write(
 				new ByteArrayBuilder(1 + 8 + sid.length + 4) // sid.length = 16
-					.add(Protocol.CONNECT_SUCCESS)
-					.add(id)
-					.add(sid)
-					.add(server.getReconnectTimeoutSeconds())
-					.build()
+				                                             .add(Protocol.CONNECT_SUCCESS)
+				                                             .add(id)
+				                                             .add(sid)
+				                                             .add(server.getReconnectTimeoutSeconds())
+				                                             .build()
 			);
 
 			if (reconnect) {
 				connection.write(receiveMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
 			}
+
+			handleConnect();
 		});
 	}
 
@@ -221,16 +229,14 @@ public abstract class AbstractClient {
 		});
 	}
 
-	protected void handleDisconnect() {}
-
 	private void sendMessage0(byte[] data) {
 		sendMessageReady = false;
 		sendMessageEven = !sendMessageEven;
 		connection.write(new ByteArrayBuilder(1 + 4 + data.length)
-			.add(sendMessageEven ? Protocol.MESSAGE_EVEN : Protocol.MESSAGE_ODD)
-			.add(data.length)
-			.add(data)
-			.build());
+			                 .add(sendMessageEven ? Protocol.MESSAGE_EVEN : Protocol.MESSAGE_ODD)
+			                 .add(data.length)
+			                 .add(data)
+			                 .build());
 	}
 
 	private boolean cancelReconnectTimeout() {

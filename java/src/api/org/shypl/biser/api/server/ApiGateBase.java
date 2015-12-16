@@ -55,5 +55,5 @@ public abstract class ApiGateBase<C extends AbstractClient> {
 
 	protected abstract void execute(C client, int serviceId, int actionId, ByteArrayReader reader, ByteArrayWriter writer) throws Exception;
 
-	protected abstract C connectClient(String key);
+	protected abstract C connectClient(String key) throws Exception;
 }
