@@ -7,6 +7,7 @@ import java.util.Map;
 
 public class CompilerConfig {
 	public Path                      source;
+	public String                    sourceCode;
 	public Map<String, ModuleConfig> modules;
 
 	public static class ModuleConfig {
