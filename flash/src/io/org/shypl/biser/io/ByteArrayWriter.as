@@ -17,6 +17,7 @@ package org.shypl.biser.io {
 		public function toByteArray():ByteArray {
 			var array:ByteArray = new ByteArray();
 			array.writeBytes(_array);
+			array.position = 0;
 			return array;
 		}
 
