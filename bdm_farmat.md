@@ -8,7 +8,7 @@
 			lang: <language>
 			pack: <package name>
 			target: <path to output directory>
-			api:
+			csi:
 				<api_name_1>: client | server
 				<api_name_2>: client | server
 				...

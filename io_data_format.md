@@ -44,7 +44,7 @@
 
 #### Format
 * `0x00...0xFE` > 0 ... 254
-* `0xFE [XXXX]` > XXXX - 4 bytes of unsigned integer raw code
+* `0xFF [XXXX]` > XXXX - 4 bytes of unsigned integer raw code
 
 #### Represent
 * Java: `long`
