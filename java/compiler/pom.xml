@@ -10,12 +10,8 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>biser-compiler</artifactId>
+	<artifactId>biser-java-compiler</artifactId>
 	<packaging>jar</packaging>
 
 	<name>Biser Java Compiler</name>
-
-	<dependencies>
-
-	</dependencies>
 </project>
