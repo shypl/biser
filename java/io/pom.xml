@@ -5,15 +5,19 @@
 
 	<parent>
 		<groupId>org.shypl.biser</groupId>
-		<artifactId>biser-java-parent</artifactId>
+		<artifactId>java-parent</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>biser-java-io</artifactId>
+	<artifactId>java-io</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Biser Java IO</name>
-
+	<dependencies>
+		<dependency>
+			<groupId>org.shypl</groupId>
+			<artifactId>jak</artifactId>
+		</dependency>
+	</dependencies>
 
 </project>

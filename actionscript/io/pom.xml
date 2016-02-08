@@ -5,24 +5,20 @@
 
 	<parent>
 		<groupId>org.shypl.biser</groupId>
-		<artifactId>java-parent</artifactId>
+		<artifactId>actionscript-paren</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>java-csi</artifactId>
-	<packaging>jar</packaging>
+	<artifactId>actionscript-io</artifactId>
+	<packaging>swc</packaging>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.shypl.biser</groupId>
-			<artifactId>java-io</artifactId>
-			<version>${version}</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-			<version>1.10</version>
+			<groupId>org.shypl</groupId>
+			<artifactId>asak</artifactId>
+			<type>swc</type>
 		</dependency>
 	</dependencies>
+
 </project>

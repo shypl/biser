@@ -4,17 +4,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.shypl.biser</groupId>
-	<artifactId>biser-parent</artifactId>
+	<artifactId>parent</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<name>Biser Parent</name>
+	<name>Biser</name>
+	<description>Binary serialization framework</description>
 	<url>https://github.com/shypl/biser.git</url>
-
-	<modules>
-		<module>java</module>
-		<module>flex</module>
-	</modules>
 
 	<licenses>
 		<license>
@@ -50,6 +46,15 @@
 		</snapshotRepository>
 	</distributionManagement>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<modules>
+		<module>java</module>
+		<module>actionscript</module>
+		<module>compiler</module>
+	</modules>
 
 	<build>
 		<plugins>
