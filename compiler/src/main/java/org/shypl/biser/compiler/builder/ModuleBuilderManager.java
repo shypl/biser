@@ -1,7 +1,7 @@
 package org.shypl.biser.compiler.builder;
 
 import org.shypl.biser.compiler.CompilerException;
-import org.shypl.biser.compiler.builder.actionscript.AsModuleBuilder;
+import org.shypl.biser.compiler.builder.flash.FlashModuleBuilder;
 import org.shypl.biser.compiler.builder.java.JavaModuleBuilder;
 
 import java.util.HashMap;
@@ -24,7 +24,7 @@ public final class ModuleBuilderManager {
 
 	static {
 		registerBuilder(new JavaModuleBuilder());
-		registerBuilder(new AsModuleBuilder());
+		registerBuilder(new FlashModuleBuilder());
 	}
 
 	private ModuleBuilderManager() {

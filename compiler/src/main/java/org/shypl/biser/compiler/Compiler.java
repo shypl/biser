@@ -5,7 +5,7 @@ import org.shypl.biser.compiler.model.Model;
 import org.shypl.biser.compiler.parser.Parser;
 import org.shypl.biser.compiler.parser.ParserException;
 import org.shypl.biser.compiler.parser.TokenStream;
-import org.shypl.jak.util.YamlConfigLoader;
+import org.shypl.common.util.YamlConfigLoader;
 
 import java.io.BufferedReader;
 import java.io.File;

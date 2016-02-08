@@ -16,7 +16,7 @@ Format:
 
 Represent:
 * java: `byte`
-* actionscript: `int` (-128...127)
+* flash: `int` (-128...127)
 
 
 #### Boolean
@@ -27,7 +27,7 @@ Format:
 
 Represent:
 * java: `boolean`
-* actionscript: `Boolean`
+* flash: `Boolean`
 
 
 #### Integer
@@ -40,7 +40,7 @@ Format:
 
 Represent:
 * java: `int`
-* actionscript: `int`
+* flash: `int`
 
 
 #### Unsigned integer
@@ -52,7 +52,7 @@ Format:
 
 Represent:
 * java: `long`
-* actionscript: `uint`
+* flash: `uint`
 
 
 #### Long integer
@@ -65,7 +65,7 @@ Format:
 
 Represent:
 * java: `long`
-* actionscript: `org.shypl.common.math.Long`
+* flash: `org.shypl.common.math.Long`
 
 
 #### Unsigned long integer
@@ -76,7 +76,7 @@ As long
 
 Represent:
 * java: `long`
-* actionscript: `org.shypl.common.math.Long`
+* flash: `org.shypl.common.math.Long`
 
 
 #### Number
@@ -87,7 +87,7 @@ Format:
 
 Represent:
 * java: `double`
-* actionscript: `Number`
+* flash: `Number`
 
 
 #### String
@@ -99,7 +99,7 @@ Format:
 
 Represent:
 * java: `String`
-* actionscript: `String`
+* flash: `String`
 
 
 #### Bytes
@@ -111,7 +111,7 @@ Format:
 
 Represent:
 * java: `byte[]`
-* actionscript: `ByteArray`
+* flash: `ByteArray`
 
 
 ### Structures
@@ -125,7 +125,7 @@ Format:
 
 Represent:
 * java: `Enum`
-* actionscript: `org.shypl.common.lang.Enum`
+* flash: `org.shypl.common.lang.Enum`
 
 
 #### Entity
@@ -136,7 +136,7 @@ Format:
 
 Represent:
 * java: `org.shypl.biser.io.Entity`
-* actionscript: `org.shypl.biser.io.Entity`
+* flash: `org.shypl.biser.io.Entity`
 
 
 ### Collections
@@ -151,7 +151,7 @@ Format:
 
 Represent:
 * java: `Array`
-* actionscript: `Vector`
+* flash: `Vector`
 
 
 #### Map
@@ -163,7 +163,7 @@ Format:
 
 Represent:
 * java: `java.util.Map`
-* actionscript: `org.shypl.common.collection.Map`
+* flash: `org.shypl.common.collection.Map`
 
 
 ## Data model definition format 
