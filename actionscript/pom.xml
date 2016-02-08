@@ -10,7 +10,7 @@
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>actionscript-paren</artifactId>
+	<artifactId>actionscript-parent</artifactId>
 	<packaging>pom</packaging>
 
 	<modules>
