@@ -59,9 +59,17 @@ public abstract class AbstractClient {
 	public final void addDisconnectHandler(Runnable handler) {
 		addTask(() -> {
 			if (disconnectHandlers == null) {
-				disconnectHandlers = new ArrayList<>(1);
+				disconnectHandlers = new LinkedList<>();
 			}
 			disconnectHandlers.add(handler);
+		});
+	}
+
+	public final void removeDisconnectHandler(Runnable handler) {
+		addTask(() -> {
+			if (disconnectHandlers != null) {
+				disconnectHandlers.remove(handler);
+			}
 		});
 	}
 
@@ -203,6 +211,7 @@ public abstract class AbstractClient {
 						logger.warn("Error on handle disconnect", e);
 					}
 				}
+				disconnectHandlers.clear();
 			}
 
 			try {
