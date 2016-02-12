@@ -157,8 +157,9 @@ public abstract class AbstractClient {
 			if (reconnect) {
 				connection.write(receiveMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
 			}
-
-			handleConnect();
+			else {
+				handleConnect();
+			}
 		});
 	}
 
