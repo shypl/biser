@@ -6,7 +6,7 @@ import org.shypl.biser.compiler.builder.OopModuleBuilder;
 
 public class FlashModuleBuilder extends OopModuleBuilder {
 	public FlashModuleBuilder() {
-		super("actionscript", "as");
+		super("flash", "as");
 	}
 
 	@Override
