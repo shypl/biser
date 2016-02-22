@@ -42,7 +42,7 @@
 
 				<executions>
 					<execution>
-						<phase>install</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>sources</goal>
 						</goals>
