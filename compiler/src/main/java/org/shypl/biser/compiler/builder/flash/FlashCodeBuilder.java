@@ -516,7 +516,7 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 			method.getBody()
 				.addStatement(serviceSwitch)
 				.addStatement(new CodeStatementThrow(new CodeExpressionNew(
-					engine.getClass("org.shypl.biser.csi.ApiException"), new CodeExpressionStringConcat(
+					engine.getClass("org.shypl.biser.csi.CsiException"), new CodeExpressionStringConcat(
 					new CodeExpressionString("Action not exists: " + pack.getName() + ".#"),
 					new CodeExpressionWord("serviceId"),
 					new CodeExpressionString(".#"),
