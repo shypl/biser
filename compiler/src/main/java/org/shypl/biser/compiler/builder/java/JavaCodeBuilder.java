@@ -247,6 +247,11 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		method.getArgument("fields").setType(engine.getClass("java.util.Map").parametrize(primitiveString, primitiveString));
 		methodBody = method.getBody();
 		CodeExpressionWord fields = new CodeExpressionWord("fields");
+
+		if (type.hasParent()) {
+			methodBody.addStatement(new CodeExpressionMethod("super._toString", fields));
+		}
+
 		CodeClass stringUtils = engine.getClass("org.shypl.common.util.StringUtils");
 
 		for (Parameter field : type.getFields()) {

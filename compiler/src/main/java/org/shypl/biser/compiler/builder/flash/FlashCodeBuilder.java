@@ -228,6 +228,11 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 		method.getArgument("fields").setType(engine.getClass("org.shypl.common.collection.Map"));
 		methodBody = method.getBody();
 		CodeExpressionWord fields = new CodeExpressionWord("fields");
+
+		if (type.hasParent()) {
+			methodBody.addStatement(new CodeExpressionMethod("super._toString", fields));
+		}
+
 		CodeClass stringUtils = engine.getClass("org.shypl.common.util.StringUtils");
 
 		for (Parameter field : type.getFields()) {
