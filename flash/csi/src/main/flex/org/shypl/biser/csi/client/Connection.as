@@ -1,6 +1,7 @@
 package org.shypl.biser.csi.client {
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
+	import flash.utils.setTimeout;
 
 	import org.shypl.biser.csi.Address;
 	import org.shypl.biser.csi.ConnectionCloseReason;
@@ -9,7 +10,9 @@ package org.shypl.biser.csi.client {
 	import org.shypl.common.logging.LogManager;
 	import org.shypl.common.logging.Logger;
 	import org.shypl.common.logging.PrefixedLoggerProxy;
+	import org.shypl.common.timeline.GlobalTimeline;
 	import org.shypl.common.util.HexUtils;
+	import org.shypl.common.util.callDelayed;
 
 	internal class Connection implements ChannelHandler, ChannelAcceptor {
 		private static const LOGGER:Logger = LogManager.getLogger(Connection);
@@ -106,7 +109,7 @@ package org.shypl.biser.csi.client {
 
 		public function failOpenChannel(error:Error):void {
 			_logger.debug("Open channel failed ({})", error);
-			_client.processConnectFail(error);
+			callDelayed(_client.processConnectFail, error);
 		}
 
 		public function handleChannelClose():void {
@@ -115,12 +118,12 @@ package org.shypl.biser.csi.client {
 			_alive = false;
 			_channel = null;
 			if (_opened) {
-				_client.processConnectionInterrupted();
+				callDelayed(_client.processConnectionInterrupted);
 				_processor.processClose();
 			}
 			else {
 				_processor.destroy();
-				_client.processDisconnected(_closeReason);
+				callDelayed(_client.processDisconnected, _closeReason);
 				free();
 			}
 		}
@@ -166,7 +169,7 @@ package org.shypl.biser.csi.client {
 			_activityTimeout = activityTimeout;
 			_recoveryTimeout = recoveryTimeout;
 
-			_client.processConnected();
+			callDelayed(_client.processConnected);
 		}
 
 		internal function recoverSession():void {
@@ -175,7 +178,7 @@ package org.shypl.biser.csi.client {
 			_channel.writeByte(_inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
 			_alive = true;
 
-			_client.processConnectionEstablished();
+			callDelayed(_client.processConnectionEstablished);
 		}
 
 		internal function sendByte(byte:int):void {

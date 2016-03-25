@@ -5,6 +5,7 @@ package org.shypl.biser.csi.client {
 	import org.shypl.biser.csi.ConnectionCloseReason;
 	import org.shypl.biser.csi.Protocol;
 	import org.shypl.common.lang.UnsupportedOperationException;
+	import org.shypl.common.util.callDelayed;
 
 	[Abstract]
 	internal class ConnectionProcessor {
@@ -83,7 +84,7 @@ package org.shypl.biser.csi.client {
 
 		private function processDataBodyInternal(buffer:ByteArray):void {
 			if (_waitDataForServerShutdownTimeout) {
-				_connection.client.processDisconnectWarning(buffer.readInt());
+				callDelayed(_connection.client.processDisconnectWarning, buffer.readInt());
 			}
 			else {
 				processDataBody(buffer);
