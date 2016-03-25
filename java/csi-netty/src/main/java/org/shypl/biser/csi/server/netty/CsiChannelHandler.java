@@ -111,6 +111,5 @@ class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel,
 
 	private void writeBuf(ByteBuf buf) {
 		channel.writeAndFlush(buf).addListener(this);
-		buf.release();
 	}
 }

@@ -79,7 +79,7 @@ package org.shypl.biser.csi.client {
 			++_attempt;
 
 			connection.logger.debug("Recovery: Attempt to connect ({})", _attempt);
-			connection.connect();
+			connection.openChannel();
 		}
 	}
 }

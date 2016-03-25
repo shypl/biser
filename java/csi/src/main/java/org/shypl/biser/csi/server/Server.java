@@ -41,7 +41,7 @@ public class Server {
 		this.api = api;
 
 		worker = new Worker(serverExecutor);
-		logger = new PrefixedLoggerProxy(LOGGER, '<' + api.getName() + "> ");
+		logger = new PrefixedLoggerProxy(LOGGER, '[' + api.getName() + "] ");
 	}
 
 	public final void start() {

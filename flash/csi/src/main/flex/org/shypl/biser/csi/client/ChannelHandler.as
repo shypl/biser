@@ -5,5 +5,7 @@ package org.shypl.biser.csi.client {
 		function handleChannelClose():void;
 
 		function handleChannelData(data:IDataInput):void;
+
+		function handleChannelError(error:Error):void;
 	}
 }

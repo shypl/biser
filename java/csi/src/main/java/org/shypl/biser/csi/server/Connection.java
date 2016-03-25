@@ -39,13 +39,13 @@ class Connection implements ChannelHandler {
 
 		this.server = server;
 		this.channel = channel;
-		logger = new PrefixedLoggerProxy(LoggerFactory.getLogger(Connection.class), "<" + server.getApi().getName() + '#' + channel.getRemoteAddress() + "> ");
+		logger = new PrefixedLoggerProxy(LoggerFactory.getLogger(Connection.class), "[" + server.getApi().getName() + '#' + channel.getRemoteAddress() + "] ");
 		worker = new WrappedTaskWorker(server.getExecutor(), this::wrapWorkerTask);
 
 		logger.debug("Open");
 
 		opened = true;
-		processor = new ConnectionProcessorReception();
+		setProcessor(new ConnectionProcessorReception());
 		activityTimeout = worker.scheduleTaskPeriodic(this::checkActivity, server.getSettings().getConnectionActivityTimeout(), TimeUnit.SECONDS);
 	}
 

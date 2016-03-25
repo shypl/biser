@@ -99,7 +99,7 @@ public abstract class Client {
 	}
 
 	void init(String apiName) {
-		logger = new PrefixedLoggerProxy(LOGGER, '<' + apiName + '#' + id + "> ");
+		logger = new PrefixedLoggerProxy(LOGGER, '[' + apiName + '#' + id + "] ");
 	}
 
 	Logger getLogger() {

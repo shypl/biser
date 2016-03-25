@@ -36,7 +36,7 @@ public abstract class Api<C extends Client> {
 
 	protected Api(String name) {
 		this.name = name;
-		logger = new PrefixedLoggerProxy(LOGGER, '<' + name + "> ");
+		logger = new PrefixedLoggerProxy(LOGGER, '[' + name + "] ");
 	}
 
 	public final String getName() {

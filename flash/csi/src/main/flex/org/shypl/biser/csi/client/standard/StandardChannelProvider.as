@@ -9,7 +9,7 @@ package org.shypl.biser.csi.client.standard {
 		public function StandardChannelProvider() {
 		}
 
-		public function provide(address:Address, acceptor:ChannelAcceptor):void {
+		public function openChannel(address:Address, acceptor:ChannelAcceptor):void {
 			if (address.isSocket()) {
 				provideSocket(address.socket, acceptor);
 			}

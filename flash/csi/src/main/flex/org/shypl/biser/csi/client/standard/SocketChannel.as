@@ -12,9 +12,6 @@ package org.shypl.biser.csi.client.standard {
 	import org.shypl.biser.csi.client.ChannelAcceptor;
 	import org.shypl.biser.csi.client.ChannelHandler;
 	import org.shypl.common.lang.ErrorEventException;
-	import org.shypl.common.lang.IllegalStateException;
-	import org.shypl.common.lang.RuntimeException;
-	import org.shypl.common.logging.LogManager;
 	import org.shypl.common.net.InetSocketAddress;
 
 	public class SocketChannel implements Channel {
@@ -40,15 +37,17 @@ package org.shypl.biser.csi.client.standard {
 				_socket.connect(address.host, address.port);
 			}
 			catch (e:Error) {
+				_acceptor.failOpenChannel(e);
 				free();
-				throw new RuntimeException("Cannot connect to socket", e);
 			}
 		}
 
 		public function close():void {
 			if (_opened) {
-				processClose();
+				_opened = false;
+				_handler.handleChannelClose();
 			}
+			free();
 		}
 
 		public function writeByte(byte:int):void {
@@ -63,15 +62,6 @@ package org.shypl.biser.csi.client.standard {
 				_socket.writeBytes(bytes);
 				_socket.flush();
 			}
-		}
-
-		private function processClose():void {
-			_opened = false;
-			if (_handler != null) {
-				freeSocket();
-				_handler.handleChannelClose();
-			}
-			free();
 		}
 
 		private function freeSocket():void {
@@ -105,23 +95,20 @@ package org.shypl.biser.csi.client.standard {
 		}
 
 		private function onClose(event:Event):void {
-			if (_opened) {
-				processClose();
-			}
-			else {
-				free();
-				throw new IllegalStateException("Unexpected closing of socket")
-			}
+			close();
 		}
 
 		private function onError(event:ErrorEvent):void {
+			var e:ErrorEventException = new ErrorEventException(event);
+
 			if (_opened) {
-				LogManager.getLogger(SocketChannel).warn("Error in socket: {}", event.text);
-				processClose();
+				_opened = false;
+				_handler.handleChannelError(e);
+				close();
 			}
 			else {
+				_acceptor.failOpenChannel(e);
 				free();
-				throw new ErrorEventException(event, "Error in socket");
 			}
 		}
 

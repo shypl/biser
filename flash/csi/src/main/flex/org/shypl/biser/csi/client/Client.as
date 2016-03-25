@@ -8,10 +8,12 @@ package org.shypl.biser.csi.client {
 	import org.shypl.common.logging.Logger;
 	import org.shypl.common.logging.PrefixedLoggerProxy;
 
-	[Event(type="org.shypl.biser.csi.client.ClientConnectionEvent", name="clientConnectionEstablished")]
-	[Event(type="org.shypl.biser.csi.client.ClientConnectionEvent", name="clientConnectionInterrupted")]
+	[Event(type="org.shypl.biser.csi.client.ClientEvent", name="clientConnected")]
+	[Event(type="org.shypl.biser.csi.client.ClientEvent", name="clientConnectionInterrupted")]
+	[Event(type="org.shypl.biser.csi.client.ClientEvent", name="clientConnectionEstablished")]
+	[Event(type="org.shypl.biser.csi.client.ClientConnectFailEvent", name="clientConnectFail")]
 	[Event(type="org.shypl.biser.csi.client.ClientDisconnectedEvent", name="clientDisconnected")]
-	[Event(type="org.shypl.biser.csi.client.ClientServerShutdownTimeoutEvent", name="clientServerShutdownTimeout")]
+	[Event(type="org.shypl.biser.csi.client.ClientDisconnectWarningEvent", name="clientDisconnectWarning")]
 	public class Client extends EventDispatcher {
 		private static const LOGGER:Logger = LogManager.getLogger(Client);
 
@@ -19,6 +21,7 @@ package org.shypl.biser.csi.client {
 		private var _api:Api;
 		private var _logger:PrefixedLoggerProxy;
 
+		private var _connecting:Boolean;
 		private var _connected:Boolean;
 		private var _connection:Connection;
 
@@ -26,7 +29,7 @@ package org.shypl.biser.csi.client {
 			_channelProvider = channelProvider;
 			_api = api;
 
-			_logger = new PrefixedLoggerProxy(LOGGER, "<" + _api.name + "> ");
+			_logger = new PrefixedLoggerProxy(LOGGER, "[" + _api.name + "] ");
 		}
 
 		internal function get channelProvider():ChannelProvider {
@@ -37,45 +40,72 @@ package org.shypl.biser.csi.client {
 			return _api;
 		}
 
+		public function isConnecting():Boolean {
+			return _connecting;
+		}
+
+		public function isConnected():Boolean {
+			return _connected;
+		}
+
 		public function connect(address:Address, authorizationKey:String):void {
-			if (_connected) {
-				throw new IllegalStateException("Client already connected");
+			if (isConnecting() || isConnected()) {
+				throw new IllegalStateException();
 			}
-			_logger.info("Connecting", address);
-			_connected = true;
+
+			_logger.info("Connecting to {}", address);
+			_connecting = true;
 			_connection = new Connection(this, address, authorizationKey);
 			_api.setConnection(_connection);
 		}
 
 		public function disconnect():void {
-			if (!_connected) {
-				throw new IllegalStateException("Client is no connected");
+			if (!isConnecting() && !isConnecting()) {
+				throw new IllegalStateException();
 			}
+			_connecting = false;
+
 			_logger.info("Disconnecting");
 			_connection.close(ConnectionCloseReason.NONE);
+		}
+
+		internal function processConnected():void {
+			_logger.info("Connected");
+			_connecting = false;
+			_connected = true;
+			dispatchEvent(new ClientEvent(ClientEvent.CLIENT_CONNECTED));
+		}
+
+		internal function processDisconnected(reason:ConnectionCloseReason):void {
+			_logger.info("Disconnected by reason {}", reason);
+
+			_connecting = false;
+			_connected = false;
 			_connection = null;
 			_api.setConnection(null);
-		}
-
-		internal function handleConnectionEstablished():void {
-			_logger.info("Connection established");
-			dispatchEvent(new ClientConnectionEvent(ClientConnectionEvent.CLIENT_CONNECTION_ESTABLISHED));
-		}
-
-		internal function handleConnectionInterrupted():void {
-			_logger.info("Connection interrupted");
-			dispatchEvent(new ClientConnectionEvent(ClientConnectionEvent.CLIENT_CONNECTION_INTERRUPTED));
-		}
-
-		internal function handleConnectionClosed(reason:ConnectionCloseReason):void {
-			_logger.info("Disconnected");
-			_connected = false;
 			dispatchEvent(new ClientDisconnectedEvent(reason));
 		}
 
-		internal function handleServerShutdownTimeout(seconds:int):void {
-			_logger.info("Server shutdown after {} seconds", seconds);
-			dispatchEvent(new ClientServerShutdownTimeoutEvent(seconds));
+		internal function processConnectFail(reason:Error):void {
+			_logger.info("Connect failed by reason {}", reason);
+			_connecting = false;
+			_connected = false;
+			dispatchEvent(new ClientConnectFailEvent(reason));
+		}
+
+		internal function processConnectionInterrupted():void {
+			_logger.info("Connection is interrupted");
+			dispatchEvent(new ClientEvent(ClientEvent.CLIENT_CONNECTION_INTERRUPTED));
+		}
+
+		internal function processConnectionEstablished():void {
+			_logger.info("Connection is established");
+			dispatchEvent(new ClientEvent(ClientEvent.CLIENT_CONNECTION_ESTABLISHED));
+		}
+
+		internal function processDisconnectWarning(timeout:int):void {
+			_logger.info("warning to disconnect after {} seconds", timeout);
+			dispatchEvent(new ClientDisconnectWarningEvent(timeout));
 		}
 	}
 }

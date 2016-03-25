@@ -39,13 +39,13 @@ package org.shypl.biser.csi.client {
 		public function Connection(client:Client, address:Address, authorizationKey:String) {
 			_client = client;
 			_address = address;
-			_logger = new PrefixedLoggerProxy(LOGGER, "<" + client.api.name + "> ");
+			_logger = new PrefixedLoggerProxy(LOGGER, "[" + client.api.name + "] ");
 
 			_opened = true;
 			_alive = false;
 
 			setProcessor(new ConnectionProcessorAuthorization(authorizationKey));
-			connect();
+			openChannel();
 		}
 
 		internal function get client():Client {
@@ -72,45 +72,6 @@ package org.shypl.biser.csi.client {
 			return _recoveryTimeout;
 		}
 
-		public function acceptChannel(channel:Channel):ChannelHandler {
-			if (_opened) {
-				_logger.debug("Channel accepted");
-
-				_channel = channel;
-				_processor.processAccept();
-				return this;
-			}
-
-			_logger.debug("Channel accepted on closed connection");
-
-			channel.close();
-			return null;
-		}
-
-		public function handleChannelClose():void {
-			_logger.debug("Channel closed (alive: {})", _alive);
-
-			_alive = false;
-			_channel = null;
-			if (_opened) {
-				_client.handleConnectionInterrupted();
-				_processor.processClose();
-			}
-			else {
-				_processor.destroy();
-				_client.handleConnectionClosed(_closeReason);
-				free();
-			}
-		}
-
-		public function handleChannelData(data:IDataInput):void {
-			_logger.trace("Receive: {}", data);
-
-			while (_opened && data.bytesAvailable > 0) {
-				_processor.processData(data);
-			}
-		}
-
 		public function close(reason:ConnectionCloseReason):void {
 			if (_opened) {
 				_logger.debug("Close by reason {} (alive: {})", reason, _alive);
@@ -127,6 +88,55 @@ package org.shypl.biser.csi.client {
 			}
 		}
 
+		public function acceptChannel(channel:Channel):ChannelHandler {
+			if (_opened) {
+				_alive = true;
+				_logger.debug("Channel opened");
+
+				_channel = channel;
+				_processor.processAccept();
+				return this;
+			}
+
+			_logger.debug("Channel opened on closed connection");
+
+			channel.close();
+			return null;
+		}
+
+		public function failOpenChannel(error:Error):void {
+			_logger.debug("Open channel failed ({})", error);
+			_client.processConnectFail(error);
+		}
+
+		public function handleChannelClose():void {
+			_logger.debug("Channel closed (alive: {})", _alive);
+
+			_alive = false;
+			_channel = null;
+			if (_opened) {
+				_client.processConnectionInterrupted();
+				_processor.processClose();
+			}
+			else {
+				_processor.destroy();
+				_client.processDisconnected(_closeReason);
+				free();
+			}
+		}
+
+		public function handleChannelData(data:IDataInput):void {
+			_logger.trace("Receive: {}", data);
+
+			while (_opened && data.bytesAvailable > 0) {
+				_processor.processData(data);
+			}
+		}
+
+		public function handleChannelError(error:Error):void {
+			_logger.warn("Channel error {} ", error);
+		}
+
 		internal function setProcessor(processor:ConnectionProcessor):void {
 			if (_processor != null) {
 				_processor.destroy();
@@ -135,9 +145,9 @@ package org.shypl.biser.csi.client {
 			_processor.init(this);
 		}
 
-		internal function connect():void {
-			_logger.debug("Request channel");
-			_client.channelProvider.provide(_address, this);
+		internal function openChannel():void {
+			_logger.debug("Open channel");
+			_client.channelProvider.openChannel(_address, this);
 		}
 
 		internal function interrupt():void {
@@ -152,13 +162,11 @@ package org.shypl.biser.csi.client {
 		internal function beginSession(sid:ByteArray, activityTimeout:int, recoveryTimeout:int):void {
 			_logger.debug("Begin session (sid: {}, activityTimeout: {}, recoveryTimeout: {})", sid, activityTimeout, recoveryTimeout);
 
-			_alive = true;
-
 			_sid = sid;
 			_activityTimeout = activityTimeout;
 			_recoveryTimeout = recoveryTimeout;
 
-			_client.handleConnectionEstablished();
+			_client.processConnected();
 		}
 
 		internal function recoverSession():void {
@@ -166,6 +174,8 @@ package org.shypl.biser.csi.client {
 
 			_channel.writeByte(_inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
 			_alive = true;
+
+			_client.processConnectionEstablished();
 		}
 
 		internal function sendByte(byte:int):void {

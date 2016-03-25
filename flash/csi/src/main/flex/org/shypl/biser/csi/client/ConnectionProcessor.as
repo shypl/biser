@@ -83,7 +83,7 @@ package org.shypl.biser.csi.client {
 
 		private function processDataBodyInternal(buffer:ByteArray):void {
 			if (_waitDataForServerShutdownTimeout) {
-				_connection.client.handleServerShutdownTimeout(buffer.readInt());
+				_connection.client.processDisconnectWarning(buffer.readInt());
 			}
 			else {
 				processDataBody(buffer);

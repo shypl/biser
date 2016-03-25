@@ -1,7 +1,7 @@
 package org.shypl.biser.csi.client {
 	import org.shypl.biser.csi.ConnectionCloseReason;
 
-	public class ClientDisconnectedEvent extends ClientConnectionEvent {
+	public class ClientDisconnectedEvent extends ClientEvent {
 		public static const CLIENT_DISCONNECTED:String = "clientDisconnected";
 
 		private var _reason:ConnectionCloseReason;
