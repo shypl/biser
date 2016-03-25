@@ -39,14 +39,14 @@ public abstract class OopModuleBuilder implements ModuleBuilder {
 			}
 		}
 
-		for (Api gate : model.getApis()) {
-			if (module.hasApi(gate.getName())) {
-				switch (module.getApiSide(gate.getName())) {
+		for (Api api : model.getApis()) {
+			if (module.hasApi(api.getName())) {
+				switch (module.getApiSide(api.getName())) {
 					case CLIENT:
-						codeBuilder.buildClientApi(gate);
+						codeBuilder.buildClientApi(api);
 						break;
 					case SERVER:
-						codeBuilder.buildServerApi(gate);
+						codeBuilder.buildServerApi(api);
 						break;
 				}
 			}
