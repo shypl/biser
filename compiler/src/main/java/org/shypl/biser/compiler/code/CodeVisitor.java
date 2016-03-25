@@ -190,4 +190,8 @@ public interface CodeVisitor {
 			arg.visit(this);
 		}
 	}
+
+	default void visitExpressionLambda(CodeExpressionLambda expression) {
+		expression.getBody().visit(this);
+	}
 }

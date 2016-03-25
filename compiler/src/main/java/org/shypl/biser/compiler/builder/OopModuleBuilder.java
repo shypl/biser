@@ -3,7 +3,7 @@ package org.shypl.biser.compiler.builder;
 import org.shypl.biser.compiler.CompilerException;
 import org.shypl.biser.compiler.Module;
 import org.shypl.biser.compiler.code.CodeClass;
-import org.shypl.biser.compiler.model.CsiGate;
+import org.shypl.biser.compiler.model.Api;
 import org.shypl.biser.compiler.model.EntityType;
 import org.shypl.biser.compiler.model.EnumType;
 import org.shypl.biser.compiler.model.Model;
@@ -39,14 +39,14 @@ public abstract class OopModuleBuilder implements ModuleBuilder {
 			}
 		}
 
-		for (CsiGate gate : model.getCsiGates()) {
-			if (module.hasCsi(gate.getName())) {
-				switch (module.getCsiSide(gate.getName())) {
+		for (Api gate : model.getApis()) {
+			if (module.hasApi(gate.getName())) {
+				switch (module.getApiSide(gate.getName())) {
 					case CLIENT:
-						codeBuilder.buildClientCsi(gate);
+						codeBuilder.buildClientApi(gate);
 						break;
 					case SERVER:
-						codeBuilder.buildServerCsi(gate);
+						codeBuilder.buildServerApi(gate);
 						break;
 				}
 			}

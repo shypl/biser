@@ -2,6 +2,7 @@ package org.shypl.biser.compiler.code;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class CodeStatementBlock implements CodeStatement {
 	private final Collection<CodeStatement> statements = new ArrayList<>();
@@ -17,7 +18,7 @@ public class CodeStatementBlock implements CodeStatement {
 		return this;
 	}
 
-	public Collection<CodeStatement> getStatements() {
+	public List<CodeStatement> getStatements() {
 		return new ArrayList<>(statements);
 	}
 
@@ -36,5 +37,9 @@ public class CodeStatementBlock implements CodeStatement {
 
 	public void setBrackets(boolean brackets) {
 		this.brackets = brackets;
+	}
+
+	public int countStatements() {
+		return statements.size();
 	}
 }

@@ -68,7 +68,7 @@ public final class Compiler {
 
 		for (Map.Entry<String, CompilerConfig.ModuleConfig> entry : config.modules.entrySet()) {
 			final CompilerConfig.ModuleConfig value = entry.getValue();
-			modules.add(new Module(entry.getKey(), value.lang, value.pack, value.target, value.csi));
+			modules.add(new Module(entry.getKey(), value.lang, value.pack, value.target, value.api));
 		}
 
 		compile(modules, model);

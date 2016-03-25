@@ -1,7 +1,5 @@
 package org.shypl.biser.io;
 
-import java.io.IOException;
-
 class ArrayEncoder<T> implements Encoder<T[]> {
 	private final Encoder<T> elementEncoder;
 
@@ -10,7 +8,7 @@ class ArrayEncoder<T> implements Encoder<T[]> {
 	}
 
 	@Override
-	public void encode(T[] value, BiserWriter writer) throws IOException {
+	public void encode(T[] value, DataWriter writer) {
 		writer.writeArray(value, elementEncoder);
 	}
 }

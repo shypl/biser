@@ -14,10 +14,10 @@ package org.shypl.biser.io {
 			return 0;
 		}
 
-		protected function _encode(writer:BiserWriter):void {
+		protected function _encode(writer:DataWriter):void {
 		}
 
-		protected function _decode(reader:BiserReader):void {
+		protected function _decode(reader:DataReader):void {
 		}
 
 		protected function _toString(fields:Map):void {
@@ -27,11 +27,11 @@ package org.shypl.biser.io {
 			return _id();
 		}
 
-		internal final function _encode0(writer:BiserWriter):void {
+		internal final function _encode0(writer:DataWriter):void {
 			_encode(writer);
 		}
 
-		internal final function _decode0(reader:BiserReader):void {
+		internal final function _decode0(reader:DataReader):void {
 			_decode(reader);
 		}
 	}

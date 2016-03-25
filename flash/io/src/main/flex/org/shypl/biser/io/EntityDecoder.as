@@ -9,7 +9,7 @@ package org.shypl.biser.io {
 			super(type);
 		}
 
-		override public function decode(reader:BiserReader):Object {
+		override public function decode(reader:DataReader):Object {
 			var id:int = reader.readInt();
 
 			if (id == -1) {

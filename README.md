@@ -72,7 +72,8 @@ Represent:
 64-bit unsigned long integer (0 ... 18 446 744 073 709 551 615)
 
 Format:
-As long
+* `0x00...0xFE` > 0 ... 254
+* `0xFF [XXXXXXXX]` > XXXXXXXX - 8 bytes of long integer raw code
 
 Represent:
 * java: `long`
@@ -177,7 +178,7 @@ Represent:
 			lang: <language>
 			pack: <package name>
 			target: <path to output directory>
-			csi:
+			api:
 				<api_name_1>: client | server
 				<api_name_2>: client | server
 				...

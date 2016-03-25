@@ -1,6 +1,6 @@
 package org.shypl.biser.compiler;
 
-import org.shypl.biser.compiler.model.CsiSide;
+import org.shypl.biser.compiler.model.ApiSide;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -12,9 +12,9 @@ public class Module {
 	private final String               lang;
 	private final String               pack;
 	private final Path                 target;
-	private final Map<String, CsiSide> csi;
+	private final Map<String, ApiSide> apiMap;
 
-	public Module(String name, String lang, String pack, Path target, Map<String, CsiSide> csi) {
+	public Module(String name, String lang, String pack, Path target, Map<String, ApiSide> apiMap) {
 		Objects.requireNonNull(name);
 		Objects.requireNonNull(lang);
 		Objects.requireNonNull(target);
@@ -23,7 +23,7 @@ public class Module {
 		this.lang = lang;
 		this.pack = pack;
 		this.target = target;
-		this.csi = csi;
+		this.apiMap = apiMap;
 	}
 
 	public String getName() {
@@ -42,15 +42,11 @@ public class Module {
 		return target;
 	}
 
-	public boolean hasCsi(String name) {
-		return csi.containsKey(name);
+	public boolean hasApi(String name) {
+		return apiMap.containsKey(name);
 	}
 
-	public CsiSide getCsiSide(String name) {
-		return csi.get(name);
-	}
-
-	public Map<String, CsiSide> getCsi() {
-		return csi;
+	public ApiSide getApiSide(String name) {
+		return apiMap.get(name);
 	}
 }

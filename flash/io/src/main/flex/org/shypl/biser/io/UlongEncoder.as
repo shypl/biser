@@ -4,7 +4,7 @@ package org.shypl.biser.io {
 	public final class UlongEncoder implements Encoder {
 		public static const INSTANCE:Encoder = new UlongEncoder();
 
-		public function encode(value:Object, writer:BiserWriter):void {
+		public function encode(value:Object, writer:DataWriter):void {
 			writer.writeUlong(Long(value));
 		}
 	}

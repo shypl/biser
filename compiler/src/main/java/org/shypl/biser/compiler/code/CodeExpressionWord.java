@@ -15,6 +15,10 @@ public class CodeExpressionWord implements CodeExpression {
 		this.word = word;
 	}
 
+	public CodeExpressionWord(int word) {
+		this(String.valueOf(word));
+	}
+
 	public String getWord() {
 		return word;
 	}

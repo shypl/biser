@@ -19,7 +19,7 @@ package org.shypl.biser.io {
 			_elementEncoder = elementEncoder;
 		}
 
-		public function encode(value:Object, writer:BiserWriter):void {
+		public function encode(value:Object, writer:DataWriter):void {
 			writer.writeArray(value, _elementEncoder);
 		}
 	}

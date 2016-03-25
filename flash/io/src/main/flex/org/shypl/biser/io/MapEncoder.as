@@ -14,7 +14,7 @@ package org.shypl.biser.io {
 			_valueEncoder = valueEncoder;
 		}
 
-		public function encode(value:Object, writer:BiserWriter):void {
+		public function encode(value:Object, writer:DataWriter):void {
 			writer.writeMap(Map(value), _keyEncoder, _valueEncoder);
 		}
 	}

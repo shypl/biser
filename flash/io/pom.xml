@@ -11,12 +11,18 @@
 	</parent>
 
 	<artifactId>biser-flash-io</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
 	<packaging>swc</packaging>
 
 	<dependencies>
 		<dependency>
 			<groupId>org.shypl.common</groupId>
 			<artifactId>common-flash</artifactId>
+			<type>swc</type>
+		</dependency>
+		<dependency>
+			<groupId>org.shypl.flexunit</groupId>
+			<artifactId>flexunit</artifactId>
 			<type>swc</type>
 		</dependency>
 	</dependencies>

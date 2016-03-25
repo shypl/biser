@@ -1,38 +1,39 @@
 package org.shypl.biser.csi.client {
 	import flash.utils.ByteArray;
 
-	import org.shypl.biser.io.BiserWriter;
-	import org.shypl.biser.io.StreamWriter;
+	import org.shypl.biser.csi.CommunicationLoggingUtils;
+	import org.shypl.biser.io.DataWriter;
 
-	[Abstract]
 	public class ServerService {
-		private var _id:int;
-		private var _gate:AbstractCsiGate;
-		private var _data:ByteArray;
+		private var _api:Api;
+		private var _serviceId:int;
+		private var _serviceName:String;
 
-		public function ServerService(id:int, gate:AbstractCsiGate) {
-			_id = id;
-			_gate = gate;
+		private var _message:ByteArray = new ByteArray();
+
+		public function ServerService(api:Api, serviceId:int, serviceName:String) {
+			_api = api;
+			_serviceId = serviceId;
+			_serviceName = serviceName;
 		}
 
-		protected final function _log(message:String, ...args):void {
-			_gate._log(message, args);
-		}
-
-		protected final function _prepareMessage(actionId:int, holder:ResultHandlerHolder = null):BiserWriter {
-			_data = new ByteArray();
-			var writer:StreamWriter = new StreamWriter(_data);
-			writer.writeInt(_id);
-			writer.writeInt(actionId);
+		protected final function _prepareMessage(methodId:int, holder:ResultHandlerHolder = null):DataWriter {
+			var writer:DataWriter = new DataWriter(_message);
+			writer.writeInt(_serviceId);
+			writer.writeInt(methodId);
 			if (holder != null) {
-				writer.writeInt(_gate.registerResultHandler(holder));
+				writer.writeInt(_api.registerResultHandler(holder));
 			}
 			return writer;
 		}
 
 		protected final function _sendMessage():void {
-			_gate.sendMessage(_data);
-			_data = null;
+			_api.sendMessage(_message);
+			_message.clear();
+		}
+
+		protected final function _log(methodName:String, ...args):void {
+			CommunicationLoggingUtils.logClientCall(_api.logger, _serviceName, methodName, args);
 		}
 	}
 }

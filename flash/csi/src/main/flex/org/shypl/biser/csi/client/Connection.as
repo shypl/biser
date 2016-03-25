@@ -1,246 +1,263 @@
 package org.shypl.biser.csi.client {
-	import flash.events.EventDispatcher;
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
 
+	import org.shypl.biser.csi.Address;
+	import org.shypl.biser.csi.ConnectionCloseReason;
 	import org.shypl.biser.csi.Protocol;
-	import org.shypl.biser.csi.ServerEntryAddress;
 	import org.shypl.common.collection.LinkedList;
-	import org.shypl.common.lang.IllegalStateException;
 	import org.shypl.common.logging.LogManager;
 	import org.shypl.common.logging.Logger;
 	import org.shypl.common.logging.PrefixedLoggerProxy;
+	import org.shypl.common.util.HexUtils;
 
-	[Event(type="org.shypl.biser.csi.client.ConnectionEvent", name="CONNECTION_ACTIVE")]
-	[Event(type="org.shypl.biser.csi.client.ConnectionEvent", name="CONNECTION_INACTIVE")]
-	[Event(type="org.shypl.biser.csi.client.ConnectionCloseEvent", name="CONNECTION_CLOSE")]
-	public class Connection extends EventDispatcher {
-		private static const RECONNECT_MESSAGE_LENGTH:int = 8 + 16;
+	internal class Connection implements ChannelHandler, ChannelAcceptor {
+		private static const LOGGER:Logger = LogManager.getLogger(Connection);
 
-		private var _connected:Boolean;
-		private var _closed:Boolean;
-
-		private var _messages:LinkedList = new LinkedList();
-		private var _sendMessageEven:Boolean;
-		private var _sendMessageReady:Boolean = true;
-		private var _receiveMessageEven:Boolean;
-
-		private var _channelProvider:ChannelProvider;
-		private var _address:ServerEntryAddress;
-		private var _gate:AbstractCsiGate;
+		private var _client:Client;
+		private var _address:Address;
 		private var _logger:Logger;
 
+		private var _opened:Boolean;
+		private var _alive:Boolean;
+
+		private var _processor:ConnectionProcessor;
 		private var _channel:Channel;
-		private var _channelHandler:ChannelHandlerNormal;
-		private var _reconnectMessage:ByteArray;
-		private var _reconnectTimeout:int;
-		private var _reducer:ConnectionReducer;
 
-		public function Connection(channelProvider:ChannelProvider, gate:AbstractCsiGate, address:ServerEntryAddress, authKey:String,
-			connectHandler:ConnectHandler
-		) {
-			_channelProvider = channelProvider;
+		private var _closeReason:ConnectionCloseReason;
+		private var _data:IDataInput;
+
+		private var _sid:ByteArray;
+		private var _activityTimeout:int;
+		private var _recoveryTimeout:int;
+
+		private var _inputMessageEven:Boolean;
+		private var _outputMessageEven:Boolean;
+		private var _outputMessageSendAvailable:Boolean;
+		private var _outputMessages:LinkedList = new LinkedList();
+		private var _outputMessageBuffer:ByteArray = new ByteArray();
+
+		public function Connection(client:Client, address:Address, authorizationKey:String) {
+			_client = client;
 			_address = address;
-			_gate = gate;
+			_logger = new PrefixedLoggerProxy(LOGGER, "<" + client.api.name + "> ");
 
-			_logger = new PrefixedLoggerProxy(LogManager.getLoggerByClass(Connection), "<" + _address + "> ");
+			_opened = true;
+			_alive = false;
 
-			_logger.info("Connect");
-
-			_gate.setConnection(this);
-
-			openChannel(new ConnectionConnector(this, authKey, connectHandler));
+			setProcessor(new ConnectionProcessorAuthorization(authorizationKey));
+			connect();
 		}
 
-		public function close():void {
-			doClose(ConnectionCloseReason.CLOSE);
+		internal function get opened():Boolean {
+			return _opened;
 		}
 
-		public function getLogger():Logger {
+		internal function get data():IDataInput {
+			return _data;
+		}
+
+		internal function get logger():Logger {
 			return _logger;
 		}
 
-		internal function openChannel(handler:ChannelOpenHandler):void {
-			_channelProvider.open(_address, handler);
+		internal function get sid():ByteArray {
+			return _sid;
 		}
 
-		internal function doClose(reason:ConnectionCloseReason):void {
-			if (!_closed) {
-				var connected:Boolean = false;
-				_logger.info("Close by reason {}", reason);
-				_closed = true;
-				if (_connected) {
-					connected = true;
-					_connected = false;
-					_channelHandler.destroy();
-					_channel.writeByte(Protocol.CLOSE);
+		internal function get activityTimeout():int {
+			return _activityTimeout;
+		}
+
+		internal function get recoveryTimeout():int {
+			return _recoveryTimeout;
+		}
+
+		public function acceptChannel(channel:Channel):ChannelHandler {
+			if (_opened) {
+				_logger.debug("Channel accepted");
+
+				_channel = channel;
+				_processor.processAccept();
+				return this;
+			}
+
+			_logger.debug("Channel accepted on closed connection");
+
+			channel.close();
+			return null;
+		}
+
+		public function handleChannelClose():void {
+			_logger.debug("Channel closed (alive: {})", _alive);
+
+			_alive = false;
+			_channel = null;
+			if (_opened) {
+				_client.handleConnectionInterrupted();
+				_processor.processClose();
+			}
+			else {
+				_processor.destroy();
+				_client.handleConnectionClosed(_closeReason);
+				free();
+			}
+		}
+
+		public function handleChannelData(data:IDataInput):void {
+			_logger.trace("Receive: {}", data);
+
+			_data = data;
+			while (_opened && _data.bytesAvailable > 0) {
+				_processor.processData();
+			}
+			_data = null;
+		}
+
+		public function close(reason:ConnectionCloseReason):void {
+			if (_opened) {
+				_logger.debug("Close by reason {} (alive: {})", reason, _alive);
+
+				_opened = false;
+				_closeReason = reason;
+
+				if (_alive) {
 					_channel.close();
-					_channel = null;
-					_channelHandler = null;
 				}
-				_gate.removeConnection();
-
-				_channelProvider = null;
-				_address = null;
-				_gate = null;
-				_logger = null;
-
-				stopReducer();
-
-				if (connected) {
-					dispatchEvent(new ConnectionCloseEvent(reason));
+				else {
+					handleChannelClose();
 				}
 			}
 		}
 
-		internal function connect(channel:Channel, authKey:String, connectHandler:ConnectHandler):ChannelHandler {
-			if (_closed) {
-				_logger.warn("Connect fail, connection closed");
-				doClose(ConnectionCloseReason.CLIENT_ERROR);
-				connectHandler.handleConnectFail(ConnectionCloseReason.CLOSE);
-				return new ChannelHandlerEmpty();
+		internal function setProcessor(processor:ConnectionProcessor):void {
+			if (_processor != null) {
+				_processor.destroy();
 			}
-
-			if (_connected) {
-				doClose(ConnectionCloseReason.CLIENT_ERROR);
-				throw new IllegalStateException();
-			}
-			_connected = true;
-
-			_logger.debug("Channel opened, authorize by key {}", authKey);
-
-			_channel = channel;
-			_channelHandler = new ChannelHandlerNormal(this);
-			_channelHandler.setStrategy(new ConnectionStrategyConnect(connectHandler));
-
-			const key:ByteArray = new ByteArray();
-			key.writeUTFBytes(authKey);
-
-			channel.writeByte(Protocol.CONNECT);
-			channel.writeByte(key.length);
-			channel.writeBytes(key);
-
-			return _channelHandler;
+			_processor = processor;
+			_processor.init(this);
 		}
 
-		internal function reconnect(channel:Channel):ChannelHandler {
-			if (_closed) {
-				_logger.warn("Reconnect fail, connection closed");
-				doClose(ConnectionCloseReason.CLIENT_ERROR);
-				return new ChannelHandlerEmpty();
-			}
-
-			if (_connected) {
-				doClose(ConnectionCloseReason.CLIENT_ERROR);
-				throw new IllegalStateException();
-			}
-			_connected = true;
-
-			_logger.debug("Channel opened for reconnect");
-
-			_channel = channel;
-			_channelHandler = new ChannelHandlerNormal(this);
-
-			_channelHandler.setStrategy(new ConnectionStrategyConnect());
-
-			channel.writeByte(Protocol.RECONNECT);
-			channel.writeBytes(_reconnectMessage);
-
-			return _channelHandler;
+		internal function connect():void {
+			_logger.debug("Request channel");
+			_client.channelProvider.provide(_address, this);
 		}
 
-		internal function processChannelBroken():void {
-			if (_connected) {
-				_connected = false;
-
-				_channelHandler.destroy();
+		internal function interrupt():void {
+			if (_alive) {
 				_channel.close();
-
-				_channelHandler = null;
-				_channel = null;
-
-				_reducer = new ConnectionReducer(this, _reconnectTimeout);
-
-				dispatchEvent(new ConnectionEvent(ConnectionEvent.CONNECTION_INACTIVE));
 			}
+			else {
+				handleChannelClose();
+			}
+		}
+
+		internal function beginSession(sid:ByteArray, activityTimeout:int, recoveryTimeout:int):void {
+			_logger.debug("Begin session (sid: {}, activityTimeout: {}, recoveryTimeout: {})", sid, activityTimeout, recoveryTimeout);
+
+			_alive = true;
+
+			_sid = sid;
+			_activityTimeout = activityTimeout;
+			_recoveryTimeout = recoveryTimeout;
+
+			_client.handleConnectionEstablished();
+		}
+
+		internal function recoverSession():void {
+			_logger.debug("Recover session");
+
+			_channel.writeByte(_inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
+			_alive = true;
 		}
 
 		internal function sendByte(byte:int):void {
-			if (_connected) {
+			if (_logger.trace) {
+				_logger.trace("Send: {}", HexUtils.encodeByte(byte));
+			}
+			if (_alive) {
 				_channel.writeByte(byte);
+			}
+			else {
+				_logger.error("Can't send data on interrupted connection");
+			}
+		}
+
+		internal function sendBytes(data:ByteArray):void {
+			_logger.trace("Send: {}", data);
+			if (_alive) {
+				_channel.writeBytes(data);
+			}
+			else {
+				_logger.error("Can't send data on interrupted connection");
 			}
 		}
 
 		internal function sendMessage(message:ByteArray):void {
-			_messages.addLast(message);
-			if (_connected && _sendMessageReady) {
-				sendMessage0(message);
+			if (_opened) {
+				_outputMessages.addLast(message);
+				if (_alive && _outputMessageSendAvailable) {
+					sendMessage0(message);
+				}
+			}
+			else {
+				logger.warn("Fail send message on closed connection");
 			}
 		}
 
-		internal function completeMessageSend(even:Boolean):void {
-			_sendMessageReady = true;
-			if (_connected) {
-				if (_sendMessageEven != even) {
-					sendMessage0(ByteArray(_messages.getFirst()));
+		internal function receiveMessage(even:Boolean, message:IDataInput):void {
+			if (_inputMessageEven == even) {
+				logger.error("Violation of the Message Queuing in receiveMessage()");
+			}
+
+			_inputMessageEven = even;
+			_channel.writeByte(_inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
+
+			_client.api.processIncomingMessage(message);
+		}
+
+		internal function processMessageReceived(even:Boolean):void {
+			_outputMessageSendAvailable = true;
+			if (_alive) {
+				if (_outputMessageEven != even) {
+					sendMessage0(ByteArray(_outputMessages.getFirst()));
 				}
 				else {
-					if (!_messages.isEmpty()) {
-						_messages.removeFirst();
-						if (!_messages.isEmpty()) {
-							sendMessage0(ByteArray(_messages.getFirst()));
+					if (_outputMessages.isEmpty()) {
+						logger.error("Violation of the Message Queuing in processMessageReceived()");
+					}
+					else {
+						_outputMessages.removeFirst();
+						if (!_outputMessages.isEmpty()) {
+							sendMessage0(ByteArray(_outputMessages.getFirst()));
 						}
 					}
 				}
 			}
 		}
 
-		internal function receiveMessage(even:Boolean, data:IDataInput):void {
-			if (_connected) {
-				_receiveMessageEven = even;
-				_channel.writeByte(_receiveMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
-				_gate.processMessage(data);
-			}
-		}
-
-		internal function authorize(message:ByteArray):void {
-			getLogger().info("Authorization success");
-			_reconnectMessage = new ByteArray();
-			message.readBytes(_reconnectMessage, 0, RECONNECT_MESSAGE_LENGTH);
-			_reconnectTimeout = message.readInt();
-
-			_channelHandler.setStrategy(new ConnectionStrategyMessaging());
-
-			dispatchEvent(new ConnectionEvent(ConnectionEvent.CONNECTION_ACTIVE));
-
-			if (stopReducer()) {
-				_channel.writeByte(_receiveMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
-			}
-		}
-
-		private function stopReducer():Boolean {
-			if (_reducer) {
-				_reducer.stop();
-				_reducer = null;
-				return true;
-			}
-			return false;
-		}
-
 		private function sendMessage0(message:ByteArray):void {
-			_sendMessageReady = false;
-			_sendMessageEven = !_sendMessageEven;
+			_outputMessageSendAvailable = false;
+			_outputMessageEven = !_outputMessageEven;
 
-			var data:ByteArray = new ByteArray();
-			data.writeByte(_sendMessageEven ? Protocol.MESSAGE_EVEN : Protocol.MESSAGE_ODD);
-			data.writeInt(message.length);
-			data.writeBytes(message);
+			_outputMessageBuffer.writeByte(_outputMessageEven ? Protocol.MESSAGE_EVEN : Protocol.MESSAGE_ODD);
+			_outputMessageBuffer.writeInt(message.length);
+			_outputMessageBuffer.writeBytes(message);
 
-			_channel.writeBytes(data);
+			_channel.writeBytes(_outputMessageBuffer);
+
+			_outputMessageBuffer.clear();
+		}
+
+		private function free():void {
+			_client = null;
+			_address = null;
+			_logger = null;
+			_processor = null;
+			_channel = null;
+			_closeReason = null;
+			_sid = null;
 		}
 	}
 }
-
-
-
 

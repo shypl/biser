@@ -9,8 +9,8 @@ import java.util.Map;
 public class ApiService {
 	private final int    id;
 	private final String name;
-	private final Map<String, ApiAction> serverActions = new LinkedHashMap<>();
-	private final Map<String, ApiAction> clientActions = new LinkedHashMap<>();
+	private final Map<String, ApiServiceMethod> serverActions = new LinkedHashMap<>();
+	private final Map<String, ApiServiceMethod> clientActions = new LinkedHashMap<>();
 	private final String camelName;
 
 	public ApiService(int id, String name) {
@@ -31,8 +31,8 @@ public class ApiService {
 		return camelName;
 	}
 
-	public void addAction(ApiAction action) throws ModelException {
-		final Map<String, ApiAction> map = action.getSide() == CsiSide.SERVER ? serverActions : clientActions;
+	public void addAction(ApiServiceMethod action) throws ModelException {
+		final Map<String, ApiServiceMethod> map = action.getSide() == ApiSide.SERVER ? serverActions : clientActions;
 
 		if (map.containsKey(action.getName())) {
 			throw new ModelException("Action " + action.getName() + " already exists in " + action.getSide().name() + " service " + getName());
@@ -50,11 +50,11 @@ public class ApiService {
 		return !clientActions.isEmpty();
 	}
 
-	public Collection<ApiAction> getServerActions() {
+	public Collection<ApiServiceMethod> getServerActions() {
 		return serverActions.values();
 	}
 
-	public Collection<ApiAction> getClientActions() {
+	public Collection<ApiServiceMethod> getClientActions() {
 		return clientActions.values();
 	}
 }

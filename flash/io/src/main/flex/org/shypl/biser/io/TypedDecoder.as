@@ -15,7 +15,7 @@ package org.shypl.biser.io {
 		}
 
 		[Abstract]
-		public function decode(reader:BiserReader):Object {
+		public function decode(reader:DataReader):Object {
 			throw new AbstractMethodException();
 		}
 	}

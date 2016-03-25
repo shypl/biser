@@ -7,6 +7,7 @@ import org.shypl.biser.compiler.code.CodeClass;
 import org.shypl.biser.compiler.code.CodeExpressionAssign;
 import org.shypl.biser.compiler.code.CodeExpressionBinaryOperator;
 import org.shypl.biser.compiler.code.CodeExpressionField;
+import org.shypl.biser.compiler.code.CodeExpressionLambda;
 import org.shypl.biser.compiler.code.CodeExpressionMethod;
 import org.shypl.biser.compiler.code.CodeExpressionNew;
 import org.shypl.biser.compiler.code.CodeExpressionNewArray;
@@ -33,12 +34,16 @@ import org.shypl.biser.compiler.code.CodeStatementSwitchCase;
 import org.shypl.biser.compiler.code.CodeStatementThrow;
 import org.shypl.biser.compiler.code.CodeType;
 import org.shypl.biser.compiler.code.CodeVisitor;
+import org.shypl.biser.compiler.code.CodeVisitorProxy;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 
+@SuppressWarnings("Duplicates")
 public class JavaCodeFile extends OopCodeFile implements CodeVisitor {
 	private UsedClasses usedClasses;
+	private CodeVisitor inlineLambdaStatementVisitor = new LambdaVisitor(this);
 
 	@Override
 	public void writeMainClass(CodeClass cls) {
@@ -314,6 +319,39 @@ public class JavaCodeFile extends OopCodeFile implements CodeVisitor {
 		expression.getFalseExp().visit(this);
 	}
 
+	@Override
+	public void visitExpressionLambda(CodeExpressionLambda expression) {
+		List<String> arguments = expression.getArguments();
+		if (arguments.isEmpty()) {
+			write("() -> ");
+		}
+		else if (arguments.size() == 1) {
+			write(arguments.get(0), " -> ");
+		}
+		else {
+			write("(");
+			writeSeparated(arguments, this::write);
+			write(") - >");
+		}
+
+		CodeStatementBlock block = expression.getBody();
+		if (block.isEmpty()) {
+			write("{}");
+		}
+		else if (block.countStatements() == 1) {
+			block.getStatements().get(0).visit(inlineLambdaStatementVisitor);
+		}
+		else {
+			writeLine("{");
+			addTab();
+			for (CodeStatement statement : block.getStatements()) {
+				statement.visit(this);
+			}
+			removeTab();
+			write("}");
+		}
+	}
+
 	private void writeClass(CodeClass cls) {
 		writeModifier(cls.getModifier());
 
@@ -442,6 +480,23 @@ public class JavaCodeFile extends OopCodeFile implements CodeVisitor {
 		}
 		if (modifier.is(CodeModifier.STATIC)) {
 			write("static ");
+		}
+	}
+
+
+	private class LambdaVisitor extends CodeVisitorProxy {
+		public LambdaVisitor(CodeVisitor target) {
+			super(target);
+		}
+
+		@Override
+		public void visitStatementExpression(CodeStatementExpression statement) {
+			statement.getExpression().visit(JavaCodeFile.this);
+		}
+
+		@Override
+		public void visitStatementReturn(CodeStatementReturn statement) {
+			visitStatementExpression(statement);
 		}
 	}
 }

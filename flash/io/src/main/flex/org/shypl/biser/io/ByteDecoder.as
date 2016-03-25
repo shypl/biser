@@ -6,7 +6,7 @@ package org.shypl.biser.io {
 			return new Vector.<int>(size, true);
 		}
 
-		public function decode(reader:BiserReader):Object {
+		public function decode(reader:DataReader):Object {
 			return reader.readByte();
 		}
 	}

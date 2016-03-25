@@ -7,7 +7,7 @@ package org.shypl.biser.io {
 			super(type);
 		}
 
-		override final public function decode(reader:BiserReader):Object {
+		override final public function decode(reader:DataReader):Object {
 			var ordinal:int = reader.readInt();
 			return ordinal == -1 ? null : Enum.valueOfOrdinal(_type, ordinal);
 		}

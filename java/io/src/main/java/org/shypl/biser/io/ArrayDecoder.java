@@ -1,7 +1,5 @@
 package org.shypl.biser.io;
 
-import java.io.IOException;
-
 class ArrayDecoder<T> extends TypedDecoder<T[]> {
 
 	@SuppressWarnings("unchecked")
@@ -17,7 +15,7 @@ class ArrayDecoder<T> extends TypedDecoder<T[]> {
 	}
 
 	@Override
-	public T[] decode(BiserReader reader) throws IOException {
+	public T[] decode(DataReader reader) {
 		return reader.readArray(elementDecoder);
 	}
 }

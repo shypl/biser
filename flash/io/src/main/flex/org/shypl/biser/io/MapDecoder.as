@@ -18,7 +18,7 @@ package org.shypl.biser.io {
 			return new Vector.<Map>(size, true);
 		}
 
-		public function decode(reader:BiserReader):Object {
+		public function decode(reader:DataReader):Object {
 			return reader.readMap(_keyDecoder, _valueDecoder);
 		}
 	}

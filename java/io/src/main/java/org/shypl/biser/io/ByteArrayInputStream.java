@@ -1,65 +1,42 @@
 package org.shypl.biser.io;
 
-import java.io.InputStream;
 
-public class ByteArrayInputStream extends InputStream {
+public class ByteArrayInputStream implements InputStream {
 
-	protected byte[] buffer;
+	protected byte[] array;
+	protected int    cursor;
 
-	protected int position;
-
-	public ByteArrayInputStream(byte buffer[]) {
-		this.buffer = buffer;
-		this.position = 0;
+	public ByteArrayInputStream(byte array[]) {
+		this.array = array;
 	}
 
 	@Override
-	public int read() {
-		return (position < buffer.length) ? (buffer[position++] & 0xff) : -1;
+	public int getReadableBytes() {
+		return array.length - cursor;
 	}
 
 	@Override
-	public synchronized int read(byte b[], int off, int len) {
-		if (b == null) {
-			throw new NullPointerException();
-		}
-		else if (off < 0 || len < 0 || len > b.length - off) {
-			throw new IndexOutOfBoundsException();
-		}
-
-		if (position >= buffer.length) {
-			return -1;
-		}
-
-		int avail = buffer.length - position;
-		if (len > avail) {
-			len = avail;
-		}
-		if (len <= 0) {
-			return 0;
-		}
-		System.arraycopy(buffer, position, b, off, len);
-		position += len;
-		return len;
+	public boolean isReadable() {
+		return cursor < array.length;
 	}
 
 	@Override
-	public long skip(long n) {
-		long k = buffer.length - position;
-		if (n < k) {
-			k = n < 0 ? 0 : n;
-		}
-
-		position += k;
-		return k;
+	public byte read() {
+		return array[cursor++];
 	}
 
 	@Override
-	public int available() {
-		return buffer.length - position;
+	public void read(byte[] target, int targetOffset, int len) {
+		System.arraycopy(array, cursor, target, targetOffset, len);
+		cursor += len;
 	}
 
-	@Override
-	public void close() {
+	public void reset() {
+		cursor = 0;
+	}
+
+	public void reset(byte array[]) {
+		this.array = array;
+		cursor = 0;
 	}
 }

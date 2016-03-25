@@ -1,10 +1,10 @@
 package org.shypl.biser.compiler.parser;
 
 import org.shypl.biser.compiler.Utils;
-import org.shypl.biser.compiler.model.ApiAction;
-import org.shypl.biser.compiler.model.CsiGate;
+import org.shypl.biser.compiler.model.Api;
+import org.shypl.biser.compiler.model.ApiServiceMethod;
 import org.shypl.biser.compiler.model.ApiService;
-import org.shypl.biser.compiler.model.CsiSide;
+import org.shypl.biser.compiler.model.ApiSide;
 import org.shypl.biser.compiler.model.ArrayType;
 import org.shypl.biser.compiler.model.DataType;
 import org.shypl.biser.compiler.model.EntityType;
@@ -211,7 +211,7 @@ public class Parser {
 	}
 
 	private void parseApiGate(TokenStream stream) throws ParserException {
-		CsiGate gate = modelBuilder.getCsiGate(stream.next(Token.WORD).getValue());
+		Api gate = modelBuilder.getCsiGate(stream.next(Token.WORD).getValue());
 		TokenEntry entry = stream.next();
 
 		if (entry.isToken(Token.DOT)) {
@@ -236,12 +236,12 @@ public class Parser {
 		}
 	}
 
-	private void parseApiService(TokenStream stream, CsiGate gate, String name) throws ParserException {
-		ApiService service = gate.getService(name);
+	private void parseApiService(TokenStream stream, Api api, String name) throws ParserException {
+		ApiService service = api.getService(name);
 
 		stream.next(Token.BRACKET_CURLY_OPEN);
 
-		String namePrefix = gate.getName() + '.' + service.getCamelName();
+		String namePrefix = api.getName() + '.' + service.getCamelName();
 
 		while (true) {
 			final TokenEntry entry = stream.next();
@@ -251,25 +251,25 @@ public class Parser {
 			try {
 				if (entry.isToken(Token.BRACKET_ANGLE_CLOSE)) {
 					String actionName = stream.next(Token.WORD).getValue();
-					service.addAction(parseApiAction(stream, actionName, CsiSide.SERVER, false, namePrefix + Utils.convertToCamel(actionName)));
+					service.addAction(parseApiAction(stream, actionName, ApiSide.SERVER, false, namePrefix + Utils.convertToCamel(actionName)));
 				}
 				else if (entry.isToken(Token.BRACKET_ANGLE_OPEN)) {
 					boolean global = stream.skip(Token.BRACKET_ANGLE_OPEN);
 					String actionName = stream.next(Token.WORD).getValue();
-					service.addAction(parseApiAction(stream, actionName, CsiSide.CLIENT, global, namePrefix + Utils.convertToCamel(actionName)));
+					service.addAction(parseApiAction(stream, actionName, ApiSide.CLIENT, global, namePrefix + Utils.convertToCamel(actionName)));
 				}
 				else {
 					throw new UnexpectedTokenException(entry);
 				}
 			}
 			catch (ModelException e) {
-				throw new ParserException("Error on parse csi service " + gate.getName() + "." + name, e);
+				throw new ParserException("Error on parse api service " + api.getName() + "." + name, e);
 			}
 		}
 	}
 
-	private ApiAction parseApiAction(TokenStream stream, String name, CsiSide side, boolean global, String namePrefix) throws ParserException {
-		final ApiAction action = new ApiAction(name, side, global);
+	private ApiServiceMethod parseApiAction(TokenStream stream, String name, ApiSide side, boolean global, String namePrefix) throws ParserException {
+		final ApiServiceMethod action = new ApiServiceMethod(name, side, global);
 
 		if (stream.skip(Token.BRACKET_ROUND_OPEN)) {
 			for (Parameter parameter : parseParameters(stream, namePrefix)) {
@@ -277,7 +277,7 @@ public class Parser {
 					action.addArgument(parameter);
 				}
 				catch (ModelException e) {
-					throw new ParserException("Error on parse csi service " + name, e);
+					throw new ParserException("Error on parse api service " + name, e);
 				}
 			}
 			stream.next(Token.BRACKET_ROUND_CLOSE);

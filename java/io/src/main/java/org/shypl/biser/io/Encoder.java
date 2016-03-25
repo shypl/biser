@@ -1,7 +1,5 @@
 package org.shypl.biser.io;
 
-import java.io.IOException;
-import java.util.Date;
 import java.util.Map;
 
 public interface Encoder<T> {
@@ -14,7 +12,6 @@ public interface Encoder<T> {
 	Encoder<Double>  DOUBLE = (value, writer) -> writer.writeDouble(value);
 	Encoder<byte[]>  BYTES  = (value, writer) -> writer.writeBytes(value);
 	Encoder<String>  STRING = (value, writer) -> writer.writeString(value);
-	Encoder<Date>    DATE   = (value, writer) -> writer.writeDate(value);
 	Encoder<Enum<?>> ENUM   = (value, writer) -> writer.writeEnum(value);
 	Encoder<Entity>  ENTITY = (value, writer) -> writer.writeEntity(value);
 
@@ -34,5 +31,5 @@ public interface Encoder<T> {
 		return new MapEncoder<>(keyEncoder, valueEncoder);
 	}
 
-	void encode(T value, BiserWriter writer) throws IOException;
+	void encode(T value, DataWriter writer);
 }

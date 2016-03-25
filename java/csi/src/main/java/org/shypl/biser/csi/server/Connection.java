@@ -1,194 +1,202 @@
 package org.shypl.biser.csi.server;
 
-import org.shypl.biser.csi.Protocol;
+import org.shypl.biser.csi.ByteBuffer;
+import org.shypl.biser.csi.ConnectionCloseReason;
 import org.shypl.biser.csi.ProtocolException;
-import org.shypl.common.concurrent.TaskQueue;
+import org.shypl.common.concurrent.Worker;
+import org.shypl.common.concurrent.WrappedTaskWorker;
 import org.shypl.common.slf4j.PrefixedLoggerProxy;
+import org.shypl.common.util.Cancelable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.SocketAddress;
+import java.util.concurrent.TimeUnit;
 
-class Connection implements ConnectionChannelHandler {
-	private static int ID_COUNTER;
+class Connection implements ChannelHandler {
+	private static long ID_COUNTER;
 
 	private synchronized static long nextId() {
 		return ++ID_COUNTER;
 	}
 
-	private final long              id;
-	private final Logger            logger;
-	private final CsiServer         server;
-	private final ConnectionChannel channel;
+	private final long       id;
+	private final Server     server;
+	private final Channel    channel;
+	private final Logger     logger;
+	private final Worker     worker;
+	private final Cancelable activityTimeout;
 
-	private final TaskQueue          taskQueue;
-	private       ConnectionStrategy strategy;
-	private volatile boolean opened = true;
+	private volatile boolean             opened;
+	private          boolean             closed;
+	private          boolean             activity;
+	private          ConnectionProcessor processor;
+
 	private byte[] readerData;
+	private int    readerCursor;
 
-	private int readerIndex;
-
-	public Connection(CsiServer server, ConnectionChannel channel) {
+	public Connection(Server server, Channel channel) {
 		id = nextId();
-		logger = new PrefixedLoggerProxy(LoggerFactory.getLogger(Connection.class), "<" + channel.getRemoteAddress() + "> ");
-		logger.debug("Accept connection");
 
 		this.server = server;
 		this.channel = channel;
+		logger = new PrefixedLoggerProxy(LoggerFactory.getLogger(Connection.class), "<" + server.getApi().getName() + '#' + channel.getRemoteAddress() + "> ");
+		worker = new WrappedTaskWorker(server.getExecutor(), this::wrapWorkerTask);
 
-		taskQueue = new TaskQueue(server.getExecutor());
-	}
+		logger.debug("Open");
 
-	public long getId() {
-		return id;
+		opened = true;
+		processor = new ConnectionProcessorReception();
+		activityTimeout = worker.scheduleTaskPeriodic(this::checkActivity, server.getSettings().getConnectionActivityTimeout(), TimeUnit.SECONDS);
 	}
 
 	public boolean isOpened() {
 		return opened;
 	}
 
+	public long getId() {
+		return id;
+	}
+
+	public Server getServer() {
+		return server;
+	}
+
 	public Logger getLogger() {
 		return logger;
 	}
 
-	public CsiServer getServer() {
-		return server;
-	}
-
-	public TaskQueue getTaskQueue() {
-		return taskQueue;
-	}
-
-	public void close() {
-		if (opened) {
-			taskQueue.add(this::closeSync);
-		}
-	}
-
-	public void close(byte reason) {
-		if (opened) {
-			taskQueue.add(() -> closeSync(reason));
-		}
-	}
-
-	public void write(byte b) {
-		if (opened) {
-			taskQueue.add(() -> writeSync(b));
-		}
-	}
-
-	public void write(byte[] bytes) {
-		if (opened) {
-			taskQueue.add(() -> writeSync(bytes));
-		}
+	public void setProcessor(ConnectionProcessor processor) {
+		this.processor = processor;
+		processor.init(this);
 	}
 
 	@Override
-	public void handleData(byte[] data) {
-		taskQueue.add(() -> handleDataSync(data));
+	public void handleChannelData(byte[] bytes) {
+		worker.addTask(() -> {
+			readerData = bytes;
+			readerCursor = 0;
+			while (isReadable()) {
+				try {
+					processor.processData();
+				}
+				catch (ProtocolException e) {
+					logger.error("Protocol broken", e);
+					syncClose(ConnectionCloseReason.PROTOCOL_BROKEN);
+				}
+				catch (Throwable e) {
+					logger.error("Error on process data", e);
+					syncClose(ConnectionCloseReason.SERVER_ERROR);
+				}
+			}
+			readerData = null;
+		});
 	}
 
 	@Override
-	public void handleClose() {
-		if (opened) {
-			taskQueue.add(() -> releaseSync(true));
-		}
+	public void handleChannelClose() {
+		worker.addTask(() -> {
+			activityTimeout.cancel();
+
+			logger.debug("Close");
+
+			boolean breaking = opened;
+
+			opened = false;
+			closed = true;
+
+			processor.processClose(breaking);
+			server.releaseConnection();
+			processor.destroy();
+			processor = null;
+		});
 	}
 
-	public SocketAddress getRemoteAddress() {
-		return channel.getRemoteAddress();
+	public void send(byte b) {
+		worker.addTask(() -> channel.write(b));
 	}
 
-	void setStrategy(ConnectionStrategy strategy) {
-		if (opened) {
-			this.strategy = strategy;
-			strategy.setConnection(this);
-		}
+	public void send(byte[] bytes) {
+		worker.addTask(() -> channel.write(bytes));
 	}
 
-	void closeBrokenSync() {
+	public void close(ConnectionCloseReason reason) {
+		worker.addTask(() -> syncClose(reason));
+	}
+
+	void syncSend(byte[] bytes) {
+		channel.write(bytes);
+	}
+
+	void syncSend(byte b) {
+		channel.write(b);
+	}
+
+	void syncClose() {
 		if (opened) {
-			releaseSync(true);
+			opened = false;
 			channel.close();
 		}
 	}
 
-	void closeSync() {
+	void syncClose(ConnectionCloseReason reason) {
 		if (opened) {
-			releaseSync(false);
+			opened = false;
+			channel.write(ConnectionCloseReason.getProtocolFlag(reason));
 			channel.close();
 		}
 	}
 
-	void closeSync(byte reason) {
-		if (opened) {
-			releaseSync(false);
-			channel.write(reason);
-			channel.close();
-		}
+	byte read() {
+		return readerData[readerCursor++];
 	}
 
-	void writeSync(byte b) {
-		if (opened) {
-			channel.write(b);
-		}
-	}
+	int read(ByteBuffer target, int length) {
+		length = Math.min(readerData.length - readerCursor, length);
 
-	void writeSync(byte[] bytes) {
-		if (opened) {
-			channel.write(bytes);
-		}
-	}
-
-	byte readSync() {
-		return readerData[readerIndex++];
-	}
-
-	int readSync(byte[] dst, int dstIndex) {
-		return readSync(dst, dstIndex, dst.length - dstIndex);
-	}
-
-	int readSync(byte[] dst, int dstIndex, int length) {
-		int remain = readerData.length - readerIndex;
-		if (length > remain) {
-			length = remain;
-		}
 		if (length > 0) {
-			System.arraycopy(readerData, readerIndex, dst, dstIndex, length);
-			readerIndex += length;
+			target.writeBytes(readerData, readerCursor, length);
+			readerCursor += length;
 		}
 		return length;
 	}
 
-	boolean isReadableSync() {
-		return opened && readerData.length > readerIndex;
+	int read(byte[] target, int offset) {
+		return read(target, offset, target.length - offset);
 	}
 
-	private void handleDataSync(byte[] data) {
-		readerData = data;
-		readerIndex = 0;
-		while (isReadableSync()) {
-			try {
-				strategy.handleData();
-			}
-			catch (ProtocolException e) {
-				logger.error("Protocol broken", e);
-				closeSync(Protocol.CLOSE_PROTOCOL_BROKEN);
-			}
-			catch (Throwable e) {
-				logger.error("Unexpected error", e);
-				closeSync(Protocol.CLOSE_SERVER_ERROR);
-			}
+	int read(byte[] target, int offset, int length) {
+		length = Math.min(readerData.length - readerCursor, length);
+		if (length > 0) {
+			System.arraycopy(readerData, readerCursor, target, offset, length);
+			readerCursor += length;
 		}
-		readerData = null;
+		return length;
 	}
 
-	private void releaseSync(boolean broken) {
-		opened = false;
-		logger.debug("Release connection (broken: {})", broken);
-		server.releaseConnection(this);
-		strategy.handleClose(broken);
-		strategy = null;
-		readerData = null;
+	boolean isReadable() {
+		return opened && readerData.length > readerCursor;
+	}
+
+	private void checkActivity() {
+		if (activity) {
+			activity = false;
+		}
+		else {
+			logger.warn("Activity timeout expired");
+			activityTimeout.cancel();
+			channel.write(ConnectionCloseReason.getProtocolFlag(ConnectionCloseReason.ACTIVITY_TIMEOUT_EXPIRED));
+			channel.close();
+		}
+	}
+
+	private Runnable wrapWorkerTask(Runnable task) {
+		return () -> {
+			if (closed) {
+				logger.warn("Can't run task on closed connection");
+			}
+			else {
+				task.run();
+			}
+		};
 	}
 }

@@ -1,7 +1,7 @@
 package org.shypl.biser.csi.client {
-	import org.shypl.biser.csi.ServerEntryAddress;
+	import org.shypl.biser.csi.Address;
 
 	public interface ChannelProvider {
-		function open(address:ServerEntryAddress, handler:ChannelOpenHandler):void;
+		function provide(address:Address, acceptor:ChannelAcceptor):void;
 	}
 }

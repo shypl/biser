@@ -1,6 +1,5 @@
 package org.shypl.biser.io;
 
-import java.io.IOException;
 import java.util.Map;
 
 class MapDecoder<K, V> implements Decoder<Map<K, V>> {
@@ -13,7 +12,7 @@ class MapDecoder<K, V> implements Decoder<Map<K, V>> {
 	}
 
 	@Override
-	public Map<K, V> decode(BiserReader reader) throws IOException {
+	public Map<K, V> decode(DataReader reader) {
 		return reader.readMap(keyDecoder, valueDecoder);
 	}
 

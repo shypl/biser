@@ -1,84 +1,78 @@
 package org.shypl.biser.io;
 
-import java.io.OutputStream;
-import java.util.Arrays;
+import org.apache.commons.lang3.ArrayUtils;
 
-public class ByteArrayOutputStream extends OutputStream {
+public class ByteArrayOutputStream implements OutputStream {
 
-	protected byte[] buffer;
-
-	protected int size;
+	protected byte[] array;
+	protected int    cursor;
 
 	public ByteArrayOutputStream() {
 		this(32);
 	}
 
 	public ByteArrayOutputStream(int capacity) {
-		buffer = new byte[capacity];
-	}
-
-	@Override
-	public void write(int b) {
-		increaseCapacity(1);
-		buffer[size++] = (byte)b;
-	}
-
-	@Override
-	public void write(byte b[], int off, int len) {
-		if (len == 0) {
-			return;
-		}
-
-		int bLen = b.length;
-		int offAndLen = off + len;
-
-		if ((off < 0) || (off > bLen) || (len < 0) || (offAndLen > bLen) || (offAndLen < 0)) {
-			throw new IndexOutOfBoundsException();
-		}
-
-		increaseCapacity(len);
-		System.arraycopy(b, off, buffer, size, len);
-
-		size += len;
-	}
-
-	public byte[] toByteArray() {
-		return Arrays.copyOf(buffer, size);
+		array = new byte[capacity];
 	}
 
 	public int size() {
-		return size;
-	}
-
-	public void clear() {
-		size = 0;
+		return cursor;
 	}
 
 	public boolean isEmpty() {
-		return size == 0;
+		return cursor == 0;
 	}
 
 	public boolean isNotEmpty() {
-		return size != 0;
+		return cursor != 0;
 	}
 
-	private void increaseCapacity(int v) {
-		int newCapacity = size + v;
-		int oldCapacity = buffer.length;
+	@Override
+	public void write(byte b) {
+		increaseCapacity(1);
+		array[cursor++] = b;
+	}
+
+	@Override
+	public void write(byte bytes[], int offset, int len) {
+		increaseCapacity(len);
+		System.arraycopy(bytes, offset, array, cursor, len);
+		cursor += len;
+	}
+
+	public void clear() {
+		cursor = 0;
+	}
+
+	public byte[] toArray() {
+		if (cursor == 0) {
+			return ArrayUtils.EMPTY_BYTE_ARRAY;
+		}
+		byte[] result = new byte[cursor];
+		System.arraycopy(array, 0, result, 0, cursor);
+		return result;
+	}
+
+	protected void increaseCapacity(int v) {
+		int newCapacity = cursor + v;
+		int capacity = array.length;
 
 		if (newCapacity < 0) {
 			throw new OutOfMemoryError();
 		}
 
-		if (oldCapacity < newCapacity) {
-			oldCapacity += oldCapacity >> 1;
-			if (oldCapacity < newCapacity) {
-				oldCapacity = newCapacity;
+		//noinspection Duplicates
+		if (capacity < newCapacity) {
+			capacity += capacity >> 1;
+			if (capacity < newCapacity) {
+				capacity = newCapacity;
 			}
-			if (oldCapacity < 0) {
-				throw new OutOfMemoryError();
+			else if (capacity < 0) {
+				capacity = Integer.MAX_VALUE;
 			}
-			buffer = Arrays.copyOf(buffer, oldCapacity);
+			byte[] newArray = new byte[capacity];
+			System.arraycopy(array, 0, newArray, 0, cursor);
+			array = newArray;
 		}
 	}
 }

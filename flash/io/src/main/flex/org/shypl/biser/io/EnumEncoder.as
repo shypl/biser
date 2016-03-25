@@ -4,7 +4,7 @@ package org.shypl.biser.io {
 	public final class EnumEncoder implements Encoder {
 		public static const INSTANCE:Encoder = new EnumEncoder();
 
-		public function encode(value:Object, writer:BiserWriter):void {
+		public function encode(value:Object, writer:DataWriter):void {
 			writer.writeEnum(Enum(value));
 		}
 	}

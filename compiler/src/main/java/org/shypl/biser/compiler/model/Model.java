@@ -5,10 +5,10 @@ import java.util.Collection;
 
 public class Model {
 	private final Collection<StructureType> structures;
-	private final Collection<CsiGate>       csiGates;
+	private final Collection<Api>           apis;
 
-	public Model(Collection<StructureType> structures, Collection<CsiGate> csiGates) {
-		this.csiGates = csiGates;
+	public Model(Collection<StructureType> structures, Collection<Api> apis) {
+		this.apis = apis;
 		this.structures = new ArrayList<>(structures);
 	}
 
@@ -16,7 +16,7 @@ public class Model {
 		return new ArrayList<>(structures);
 	}
 
-	public Collection<CsiGate> getCsiGates() {
-		return new ArrayList<>(csiGates);
+	public Collection<Api> getApis() {
+		return new ArrayList<>(apis);
 	}
 }

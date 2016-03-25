@@ -5,6 +5,7 @@ import org.shypl.biser.compiler.builder.OopCodeBuilder;
 import org.shypl.biser.compiler.code.CodeClass;
 import org.shypl.biser.compiler.code.CodeEngine;
 import org.shypl.biser.compiler.code.CodeExpression;
+import org.shypl.biser.compiler.code.CodeExpressionLambda;
 import org.shypl.biser.compiler.code.CodeExpressionMethod;
 import org.shypl.biser.compiler.code.CodeExpressionNew;
 import org.shypl.biser.compiler.code.CodeExpressionString;
@@ -24,10 +25,9 @@ import org.shypl.biser.compiler.code.CodeStatementSwitch;
 import org.shypl.biser.compiler.code.CodeStatementSwitchCase;
 import org.shypl.biser.compiler.code.CodeStatementThrow;
 import org.shypl.biser.compiler.code.CodeType;
-import org.shypl.biser.compiler.code.CodeVisitor;
-import org.shypl.biser.compiler.model.ApiAction;
-import org.shypl.biser.compiler.model.CsiGate;
+import org.shypl.biser.compiler.model.Api;
 import org.shypl.biser.compiler.model.ApiService;
+import org.shypl.biser.compiler.model.ApiServiceMethod;
 import org.shypl.biser.compiler.model.ArrayType;
 import org.shypl.biser.compiler.model.DataType;
 import org.shypl.biser.compiler.model.EntityType;
@@ -37,12 +37,11 @@ import org.shypl.biser.compiler.model.Parameter;
 import org.shypl.biser.compiler.model.PrimitiveType;
 import org.shypl.biser.compiler.model.TypeRepresenter;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("Duplicates")
 public class JavaCodeBuilder extends OopCodeBuilder {
 
 	private final Map<PrimitiveType, CodeType> primitives           = new HashMap<>();
@@ -166,7 +165,6 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			}
 			methodBody = method.getBody();
 
-			//noinspection Duplicates
 			if (type.hasParent()) {
 				CodeExpressionMethod superCall = new CodeExpressionMethod("super");
 				methodBody.addStatement(superCall);
@@ -202,7 +200,6 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 
 		// biser id
-		//noinspection Duplicates
 		if (type.getId() != 0) {
 			method = cls.addMethod("_id");
 			method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
@@ -213,17 +210,15 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		// biser encode decode
 		if (type.hasFields()) {
 			method = cls.addMethod("_encode");
-			method.addThrows(engine.getClass("java.io.IOException"));
 			method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
 			method.setReturnType(primitiveVoid);
-			method.getArgument("writer").setType(engine.getClass("org.shypl.biser.io.BiserWriter"));
+			method.getArgument("writer").setType(engine.getClass("org.shypl.biser.io.DataWriter"));
 			CodeStatementBlock bodyEncode = method.getBody();
 
 			method = cls.addMethod("_decode");
-			method.addThrows(engine.getClass("java.io.IOException"));
 			method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
 			method.setReturnType(primitiveVoid);
-			method.getArgument("reader").setType(engine.getClass("org.shypl.biser.io.BiserReader"));
+			method.getArgument("reader").setType(engine.getClass("org.shypl.biser.io.DataReader"));
 			CodeStatementBlock bodyDecode = method.getBody();
 
 			CodeExpressionWord writer = new CodeExpressionWord("writer");
@@ -273,14 +268,14 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 	}
 
 	@Override
-	public void buildServerCsi(CsiGate gate) {
-		ServerCsiBuilder builder = new ServerCsiBuilder(gate.getName());
-		builder.buildClient(gate.getClientServices());
-		builder.buildServer(gate.getServerServices());
+	public void buildServerApi(Api api) {
+		ServerApiBuilder builder = new ServerApiBuilder(api.getName());
+		builder.buildClient(api.getClientServices());
+		builder.buildServer(api.getServerServices());
 	}
 
 	@Override
-	public void buildClientCsi(CsiGate gate) {
+	public void buildClientApi(Api api) {
 		throw new IllegalStateException("Not supported");
 	}
 
@@ -481,16 +476,19 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		}
 	}
 
-	private class ServerCsiBuilder extends SubPackageBuilder {
+	private class ServerApiBuilder extends SubPackageBuilder {
 
-		public ServerCsiBuilder(String gateName) {
-			super(gateName);
+		private final CodeClass clientClass;
+
+		public ServerApiBuilder(String apiName) {
+			super(apiName);
+			clientClass = pack.getClass(Utils.convertToCamel(name) + "Client");
 		}
 
 		public void buildClient(List<ApiService> services) {
-			CodeClass cls = pack.getClass("Client");
+			CodeClass cls = clientClass;
 			cls.getModifier().set(CodeModifier.PUBLIC);
-			cls.setParent(engine.getClass("org.shypl.biser.csi.server.AbstractClient"));
+			cls.setParent(engine.getClass("org.shypl.biser.csi.server.Client"));
 
 			// constructor
 			CodeMethod method = cls.addMethod(cls.getName());
@@ -501,32 +499,37 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			body.addStatement(new CodeExpressionMethod("super", new CodeExpressionWord("id")));
 
 			if (!services.isEmpty()) {
-				buildClientApi(services);
+				buildClientServices(services);
 				CodeParameter api = cls.getField("api");
-				api.setType(pack.getClass("ClientApi"));
+				api.setType(pack.getClass("ClientServices"));
 				api.getModifier().add(CodeModifier.PUBLIC | CodeModifier.FINAL);
-				body.addStatement(new CodeExpressionWord("api").assign(new CodeExpressionNew(pack.getClass("ClientApi"), CodeExpressionWord.THIS)));
+				body.addStatement(new CodeExpressionWord("api").assign(new CodeExpressionNew(pack.getClass("ClientServices"), CodeExpressionWord.THIS)));
 			}
 		}
 
 		public void buildServer(List<ApiService> services) {
-			CodeClass cls = pack.getClass("AbstractCsiGate");
+			CodeClass cls = pack.getClass(Utils.convertToCamel(name) + "Api");
 			CodeGeneric c = cls.getGeneric("C");
-			c.setDependence(CodeGeneric.Dependence.EXTENDS, pack.getClass("Client"));
-			cls.setParent(engine.getClass("org.shypl.biser.csi.server.CsiGateBase").parametrize(c));
+			c.setDependence(CodeGeneric.Dependence.EXTENDS, clientClass);
+			cls.setParent(engine.getClass("org.shypl.biser.csi.server.Api").parametrize(c));
 			cls.getModifier().add(CodeModifier.ABSTRACT | CodeModifier.PUBLIC);
 
+			// constructor
+			CodeMethod method = cls.addMethod(cls.getName());
+			method.getModifier().set(CodeModifier.PUBLIC);
+			method.getBody().addStatement(new CodeExpressionMethod("super", new CodeExpressionString(name)));
 
-			CodeMethod method = cls.addMethod("execute");
+			// callService
+			method = cls.addMethod("callService");
 			method.getModifier().add(CodeModifier.PROTECTED | CodeModifier.FINAL | CodeModifier.OVERRIDE);
-			method.addThrows(engine.getClass("java.lang.Exception"));
+			method.addThrows(engine.getClass("java.lang.Throwable"));
 			method.setReturnType(primitiveVoid);
 
 			method.getArgument("client").setType(c);
 			CodeExpression serviceId = method.getArgument("serviceId").setType(primitiveInt).getVariable();
 			CodeExpression actionId = method.getArgument("actionId").setType(primitiveInt).getVariable();
-			method.getArgument("reader").setType(engine.getClass("org.shypl.biser.io.ByteArrayReader"));
-			method.getArgument("writer").setType(engine.getClass("org.shypl.biser.io.ByteArrayWriter"));
+			method.getArgument("reader").setType(engine.getClass("org.shypl.biser.io.DataReader"));
+			method.getArgument("writer").setType(engine.getClass("org.shypl.biser.io.DataWriter"));
 
 
 			CodeStatementSwitch serviceSwitch = new CodeStatementSwitch(serviceId);
@@ -562,11 +565,11 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			}
 		}
 
-		private void buildClientApi(List<ApiService> services) {
-			CodeClass cls = pack.getClass("ClientApi");
+		private void buildClientServices(List<ApiService> services) {
+			CodeClass cls = pack.getClass("ClientServices");
 			cls.getModifier().set(CodeModifier.FINAL | CodeModifier.PUBLIC);
 			CodeMethod method = cls.addMethod(cls.getName());
-			method.getArgument("client").setType(pack.getClass("Client"));
+			method.getArgument("client").setType(clientClass);
 			CodeStatementBlock body = method.getBody();
 
 			CodeExpressionWord client = new CodeExpressionWord("client");
@@ -585,11 +588,13 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			cls.setParent(engine.getClass("org.shypl.biser.csi.server.ClientService"));
 
 			CodeMethod method = cls.addMethod(cls.getName());
-			method.getArgument("client").setType(pack.getClass("Client"));
-			method.getBody()
-				.addStatement(new CodeExpressionMethod("super", new CodeExpressionWord(String.valueOf(service.getId())), new CodeExpressionWord("client")));
+			method.getArgument("client").setType(clientClass);
+			method.getBody().addStatement(new CodeExpressionMethod("super",
+				new CodeExpressionWord(service.getId()),
+				new CodeExpressionString(service.getName()),
+				new CodeExpressionWord("client")));
 
-			for (ApiAction action : service.getClientActions()) {
+			for (ApiServiceMethod action : service.getClientActions()) {
 				if (action.hasResult()) {
 					throw new IllegalStateException("Not supported");
 				}
@@ -598,20 +603,20 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				method.setReturnType(primitiveVoid);
 				CodeStatementBlock body = method.getBody();
 
-				LogMethod log = new LogMethod("_log", ACTION_LOG_CLIENT, service, action, action.getArgumentsSize());
+				CodeExpressionMethod log = new CodeExpressionMethod("_log", new CodeExpressionString(action.getName()));
 				body.addStatement(log);
+
 				CodeExpressionWord writer = new CodeExpressionWord("_writer");
-				body.addStatement(new CodeExpressionVar(writer.getWord(), engine.getClass("org.shypl.biser.io.ByteArrayWriter")).assign(
-					new CodeExpressionMethod("_createWriter", new CodeExpressionWord(String.valueOf(action.getId())))
-				));
+				CodeExpressionLambda lambda = new CodeExpressionLambda(writer.getWord());
+				CodeStatementBlock lambdaBody = lambda.getBody();
+
+				body.addStatement(new CodeExpressionMethod("_send", new CodeExpressionWord(action.getId()), lambda));
 
 				for (Parameter arg : action.getArguments()) {
 					method.getArgument(arg.getName()).setType(getType(arg.getType()));
-					log.addArgument(arg.getName(), arg.getType());
-					body.addStatement(defineEncode(new CodeExpressionWord(arg.getName()), writer, arg.getType()));
+					log.addArgument(arg.getName());
+					lambdaBody.addStatement(defineEncode(new CodeExpressionWord(arg.getName()), writer, arg.getType()));
 				}
-
-				body.addStatement(new CodeExpressionMethod("_send", writer));
 
 				if (action.isGlobal()) {
 					CodeClass messageClass = pack.getClass("Message" + service.getCamelName() + action.getCamelName());
@@ -621,9 +626,12 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 					method = messageClass.addMethod(messageClass.getName());
 					method.getModifier().add(CodeModifier.PUBLIC);
 					body = method.getBody();
-					body.addStatement(
-						new CodeExpressionMethod("super", new CodeExpressionWord(String.valueOf(service.getId())), new CodeExpressionWord(String.valueOf(
-							action.getId()))));
+					body.addStatement(new CodeExpressionMethod("super",
+						new CodeExpressionWord(service.getId()),
+						new CodeExpressionString(service.getName()),
+						new CodeExpressionWord(action.getId()),
+						new CodeExpressionString(action.getName())
+					));
 
 					for (Parameter arg : action.getArguments()) {
 						method.getArgument(arg.getName()).setType(getType(arg.getType()));
@@ -635,17 +643,16 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 					method = messageClass.addMethod("make");
 					method.getModifier().add(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
-					method.getArgument("writer").setType(engine.getClass("org.shypl.biser.io.ByteArrayWriter"));
-					method.getArgument("logger").setType(engine.getClass("org.slf4j.Logger"));
+					method.getArgument("_writer").setType(engine.getClass("org.shypl.biser.io.DataWriter"));
 					method.setReturnType(primitiveVoid);
 					body = method.getBody();
 
-					log = new LogMethod(new CodeExpressionWord("logger"), "trace", ACTION_LOG_CLIENT_GLOBAL, service, action, action.getArgumentsSize());
+					log = new CodeExpressionMethod("log");
 					body.addStatement(log);
-					writer = new CodeExpressionWord("writer");
+					writer = new CodeExpressionWord("_writer");
 
 					for (Parameter arg : action.getArguments()) {
-						log.addArgument(arg.getName(), arg.getType());
+						log.addArgument(arg.getName());
 						body.addStatement(defineEncode(new CodeExpressionWord(arg.getName()), writer, arg.getType()));
 					}
 				}
@@ -657,32 +664,31 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		private CodeClass buildServerService(CodeClass gate, ApiService service, CodeStatementSwitchCase serviceCase) {
 			CodeClass cls = pack.getClass("Service" + service.getCamelName());
 			CodeGeneric c = cls.getGeneric("C");
-			c.setDependence(CodeGeneric.Dependence.EXTENDS, pack.getClass("Client"));
+			c.setDependence(CodeGeneric.Dependence.EXTENDS, clientClass);
 			cls.setInterface(true);
 			cls.getModifier().add(CodeModifier.PUBLIC);
 
 			CodeExpressionWord reader = new CodeExpressionWord("reader");
 			CodeExpressionWord writer = new CodeExpressionWord("writer");
-			CodeExpressionVar logger = new CodeExpressionVar("logger", engine.getClass("org.slf4j.Logger"));
 
 			CodeStatementSwitch actionSwitch = new CodeStatementSwitch("actionId");
 			serviceCase.addStatement(actionSwitch);
 
-			for (ApiAction action : service.getServerActions()) {
+			for (ApiServiceMethod action : service.getServerActions()) {
 				CodeMethod actionMethod = cls.addMethod(action.getName());
 				actionMethod.getModifier().add(CodeModifier.INTERFACE);
 				actionMethod.addThrows(engine.getClass("java.lang.Exception"));
 				actionMethod.getArgument(action.hasArgumentName("client") ? "_client" : "client").setType(c);
 
-				CodeMethod executeMethod = gate.addMethod("execute_" + service.getName() + '_' + action.getName());
+				CodeMethod executeMethod = gate.addMethod("call_" + service.getName() + '_' + action.getName());
 				CodeExpressionMethod executeCall = new CodeExpressionMethod(executeMethod.getName());
 				executeMethod.getModifier().add(CodeModifier.PRIVATE);
 				executeMethod.getArgument("client").setType(c);
 				executeCall.addArgument("client");
-				executeMethod.getArgument(reader.getWord()).setType(engine.getClass("org.shypl.biser.io.ByteArrayReader"));
+				executeMethod.getArgument(reader.getWord()).setType(engine.getClass("org.shypl.biser.io.DataReader"));
 				executeCall.addArgument(reader);
 				if (action.hasResult() && !action.isResultDeferred()) {
-					executeMethod.getArgument(writer.getWord()).setType(engine.getClass("org.shypl.biser.io.ByteArrayWriter"));
+					executeMethod.getArgument(writer.getWord()).setType(engine.getClass("org.shypl.biser.io.DataWriter"));
 					executeCall.addArgument(writer);
 				}
 				executeMethod.setReturnType(primitiveVoid);
@@ -692,10 +698,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				actionCase.addStatement(executeCall)
 					.addStatement(CodeStatementReturn.EMPTY);
 
-
 				CodeStatementBlock executeBody = executeMethod.getBody();
-				executeBody.addStatement(logger.assign("client.getLogger()"));
-				LogMethod logRequest = new LogMethod(logger.getVariable(), "trace", ACTION_LOG_SERVER, service, action, action.getArgumentsSize());
 
 				CodeExpressionMethod actionCall = new CodeExpressionMethod(new CodeExpressionWord("service" + service.getCamelName()), actionMethod.getName());
 				actionCall.addArgument("client");
@@ -706,15 +709,19 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 					if (action.isResultDeferred()) {
 						actionMethod.setReturnType(primitiveVoid);
 
-						responseClass = pack.getClass("Response" + service.getCamelName() + "" + Utils.convertToCamel(actionMethod.getName()));
-						responseClass.setParent(engine.getClass("org.shypl.biser.csi.server.ActionDeferredResponse"));
-						responseClass.getModifier().add(CodeModifier.FINAL);
+						responseClass = pack.getClass(service.getCamelName() + Utils.convertToCamel(actionMethod.getName()) + "Response");
+						responseClass.setParent(engine.getClass("org.shypl.biser.csi.server.DeferredResponse"));
+						responseClass.getModifier().add(CodeModifier.FINAL | CodeModifier.PUBLIC);
 
 						CodeMethod method = responseClass.addMethod(responseClass.getName());
-						method.getArgument("client").setType(pack.getClass("Client"));
+						method.getArgument("client").setType(clientClass);
 						method.getArgument("responseId").setType(primitiveInt);
-						method.getBody()
-							.addStatement(new CodeExpressionMethod("super", new CodeExpressionWord("client"), new CodeExpressionWord("responseId")));
+						method.getBody().addStatement(new CodeExpressionMethod("super",
+							new CodeExpressionWord("client"),
+							new CodeExpressionWord("responseId"),
+							new CodeExpressionString(service.getName()),
+							new CodeExpressionString(action.getName())
+						));
 
 						method = responseClass.addMethod("send");
 						method.getModifier().add(CodeModifier.PUBLIC);
@@ -722,8 +729,8 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 						method.getArgument("result").setType(getType(resultType));
 
 						method.getBody()
-							.addStatement(new LogMethod("_log", ACTION_LOG_SERVER_RESPONSE, service, action, 1, new Arg("result", resultType)))
-							.addStatement(defineEncode(new CodeExpressionWord("result"), writer, resultType))
+							.addStatement(new CodeExpressionMethod("_log", new CodeExpressionWord("result")))
+							.addStatement(defineEncode(new CodeExpressionWord("result"), new CodeExpressionWord("_writer"), resultType))
 							.addStatement(new CodeExpressionMethod("_send"));
 
 						executeBody.addStatement(new CodeExpressionVar("response", responseClass).assign(new CodeExpressionNew(responseClass,
@@ -740,19 +747,26 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 					actionMethod.setReturnType(primitiveVoid);
 				}
 
+				CodeExpressionMethod log = new CodeExpressionMethod("logCall",
+					new CodeExpressionWord("client"),
+					new CodeExpressionString(service.getName()),
+					new CodeExpressionString(action.getName())
+				);
+
+
 				if (action.hasArguments()) {
 					int i = 0;
 					for (Parameter arg : action.getArguments()) {
 						DataType type = arg.getType();
 						CodeExpressionWord var = new CodeExpressionWord("arg" + (++i));
 						executeBody.addStatement(defineDecode(new CodeExpressionVar(var.getWord(), getType(type)), reader, type));
-						logRequest.addArgument(var, arg.getType());
+						log.addArgument(var);
 						actionMethod.getArgument(arg.getName()).setType(getType(type));
 						actionCall.addArgument(var);
 					}
 				}
 
-				executeBody.addStatement(logRequest);
+				executeBody.addStatement(log);
 
 				if (action.hasResult()) {
 					if (action.isResultDeferred()) {
@@ -762,9 +776,12 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 					}
 					else {
 						executeBody.addStatement(new CodeExpressionVar("result", getType(resultType)).assign(actionCall));
-						executeBody.addStatement(
-							new LogMethod(logger.getVariable(), "trace", ACTION_LOG_SERVER_RESPONSE, service, action, 1, new Arg("result", resultType))
-						);
+						executeBody.addStatement(new CodeExpressionMethod("logResponse",
+							new CodeExpressionWord("client"),
+							new CodeExpressionString(service.getName()),
+							new CodeExpressionString(action.getName()),
+							new CodeExpressionWord("result")
+						));
 						executeBody.addStatement(defineEncode(new CodeExpressionWord("result"), writer, resultType));
 					}
 				}
@@ -776,16 +793,17 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			return cls;
 		}
 
+		/*
 		private class LogMethod extends CodeExpressionMethod {
 			private final List<Arg> args = new ArrayList<>();
 			private       boolean   raw  = true;
 
-			public LogMethod(CodeExpression target, String method, int type, ApiService service, ApiAction action, int argumentsSize, Arg... args) {
+			public LogMethod(CodeExpression target, String method, int type, ApiService service, ApiServiceMethod action, int argumentsSize, Arg... args) {
 				super(target, method, createActionLogMessage(type, service, action, argumentsSize));
 				Collections.addAll(this.args, args);
 			}
 
-			public LogMethod(String method, int type, ApiService service, ApiAction action, int argumentsSize, Arg... args) {
+			public LogMethod(String method, int type, ApiService service, ApiServiceMethod action, int argumentsSize, Arg... args) {
 				super(method, createActionLogMessage(type, service, action, argumentsSize));
 				Collections.addAll(this.args, args);
 			}
@@ -817,18 +835,6 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			}
 		}
 
-		public class Arg {
-			public CodeExpression argument;
-			public DataType       type;
-
-			public Arg(String argument, DataType type) {
-				this(new CodeExpressionWord(argument), type);
-			}
-
-			public Arg(CodeExpression argument, DataType type) {
-				this.argument = argument;
-				this.type = type;
-			}
-		}
+		*/
 	}
 }
