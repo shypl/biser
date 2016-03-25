@@ -55,6 +55,7 @@ package org.shypl.biser.csi.client {
 		protected final function setDataExpectBody(size:int):void {
 			_dataExpectFlag = false;
 			_dataExpectedSize = size;
+			_dataBuffer.clear();
 		}
 
 		protected function processDataFlag(flag:uint):void {
@@ -78,7 +79,6 @@ package org.shypl.biser.csi.client {
 			if (_dataExpectedSize == _dataBuffer.bytesAvailable) {
 				setDataExpectFlag();
 				processDataBodyInternal(_dataBuffer);
-				_dataBuffer.clear();
 			}
 		}
 
