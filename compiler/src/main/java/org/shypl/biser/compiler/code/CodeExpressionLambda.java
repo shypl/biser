@@ -8,7 +8,7 @@ import java.util.List;
 public class CodeExpressionLambda implements CodeExpression {
 
 	private final Collection<String> arguments = new ArrayList<>();
-	private final CodeStatementBlock         body      = new CodeStatementBlock();
+	private final CodeStatementBlock body      = new CodeStatementBlock();
 
 	public CodeExpressionLambda(String... arguments) {
 		Collections.addAll(this.arguments, arguments);

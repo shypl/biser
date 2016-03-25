@@ -11,6 +11,7 @@ package org.shypl.biser.csi.client {
 	[Event(type="org.shypl.biser.csi.client.ClientEvent", name="connectionEstablished")]
 	[Event(type="org.shypl.biser.csi.client.ClientEvent", name="connectionInterrupted")]
 	[Event(type="org.shypl.biser.csi.client.ClientDisconnectedEvent", name="disconnected")]
+	[Event(type="org.shypl.biser.csi.client.ServerShutdownTimeoutEvent", name="serverShutdownTimeout")]
 	public class Client extends EventDispatcher {
 		private static const LOGGER:Logger = LogManager.getLogger(Client);
 
@@ -30,10 +31,6 @@ package org.shypl.biser.csi.client {
 
 		internal function get channelProvider():ChannelProvider {
 			return _channelProvider;
-		}
-
-		internal function get logger():PrefixedLoggerProxy {
-			return _logger;
 		}
 
 		internal function get api():Api {
@@ -74,6 +71,11 @@ package org.shypl.biser.csi.client {
 			_logger.info("Disconnected");
 			_connected = false;
 			dispatchEvent(new ClientDisconnectedEvent(reason));
+		}
+
+		internal function handleServerShutdownTimeout(seconds:int):void {
+			_logger.info("Server shutdown after {} seconds", seconds);
+			dispatchEvent(new ServerShutdownTimeoutEvent(seconds));
 		}
 	}
 }

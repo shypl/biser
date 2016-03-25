@@ -25,7 +25,6 @@ package org.shypl.biser.csi.client {
 		private var _channel:Channel;
 
 		private var _closeReason:ConnectionCloseReason;
-		private var _data:IDataInput;
 
 		private var _sid:ByteArray;
 		private var _activityTimeout:int;
@@ -49,12 +48,12 @@ package org.shypl.biser.csi.client {
 			connect();
 		}
 
-		internal function get opened():Boolean {
-			return _opened;
+		internal function get client():Client {
+			return _client;
 		}
 
-		internal function get data():IDataInput {
-			return _data;
+		internal function get opened():Boolean {
+			return _opened;
 		}
 
 		internal function get logger():Logger {
@@ -107,11 +106,9 @@ package org.shypl.biser.csi.client {
 		public function handleChannelData(data:IDataInput):void {
 			_logger.trace("Receive: {}", data);
 
-			_data = data;
-			while (_opened && _data.bytesAvailable > 0) {
-				_processor.processData();
+			while (_opened && data.bytesAvailable > 0) {
+				_processor.processData(data);
 			}
-			_data = null;
 		}
 
 		public function close(reason:ConnectionCloseReason):void {

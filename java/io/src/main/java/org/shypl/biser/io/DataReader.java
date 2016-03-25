@@ -49,7 +49,7 @@ public class DataReader {
 	}
 
 	public long readLong() {
-		int b = readByte()& 0xFF;
+		int b = readByte() & 0xFF;
 
 		switch (b) {
 			case 0xFF:

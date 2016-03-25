@@ -116,7 +116,7 @@ package org.shypl.biser.io {
 				_stream.writeBytes(utfBytes);
 			}
 		}
-		
+
 		public function writeEnum(value:Enum):void {
 			writeInt(value === null ? -1 : value.ordinal);
 		}

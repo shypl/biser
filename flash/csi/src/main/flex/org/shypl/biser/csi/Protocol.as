@@ -7,7 +7,7 @@ package org.shypl.biser.csi {
 		public static const MESSAGE_EVEN:int = 0x05;
 		public static const MESSAGE_ODD_RECEIVED:int = 0x06;
 		public static const MESSAGE_EVEN_RECEIVED:int = 0x07;
-		public static const SERVER_DOWN_TIMEOUT:int = 0x08;
+		public static const SERVER_SHUTDOWN_TIMEOUT:int = 0x08;
 
 		public static const CLOSE:int = 0x10;
 		public static const CLOSE_SERVER_SHUTDOWN:int = 0x11;

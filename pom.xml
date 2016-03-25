@@ -72,4 +72,15 @@
 			</snapshots>
 		</repository>
 	</repositories>
+
+	<profiles>
+		<profile>
+			<id>all</id>
+			<modules>
+				<module>java</module>
+				<module>flash</module>
+				<module>compiler</module>
+			</modules>
+		</profile>
+	</profiles>
 </project>

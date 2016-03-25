@@ -9,6 +9,7 @@ public class EnumDecoder<T extends Enum<T>> extends TypedDecoder<T> {
 		this.values = type.getEnumConstants();
 	}
 
+	@Override
 	public T decode(DataReader reader) {
 		int ordinal = reader.readInt();
 		return ordinal == -1 ? null : values[ordinal];

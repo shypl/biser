@@ -2,8 +2,6 @@ package org.shypl.biser.io {
 	import flash.utils.ByteArray;
 
 	public class Utils {
-		private static const hexArray:Array = "0123456789ABCDEF".split("");
-
 		public static function extractBytes(byteArray:ByteArray):Array {
 			if (byteArray == null) {
 				return null;
@@ -34,20 +32,6 @@ package org.shypl.biser.io {
 				}
 			}
 			return ints;
-		}
-
-		public static function getHexString(bytes:Array):String {
-			var hexChars:String = "";
-			for (var j:int = 0; j < bytes.length; j++) {
-				var v:int = bytes[j] & 0xFF;
-				hexChars += '0';
-				hexChars += 'x';
-				hexChars += hexArray[v >>> 4];
-				hexChars += hexArray[v & 0x0F];
-				hexChars += ',';
-				hexChars += ' ';
-			}
-			return hexChars;
 		}
 	}
 }

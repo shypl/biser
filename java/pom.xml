@@ -58,4 +58,14 @@
 		</plugins>
 	</build>
 
+	<profiles>
+		<profile>
+			<id>all</id>
+			<modules>
+				<module>io</module>
+				<module>csi</module>
+				<module>csi-netty</module>
+			</modules>
+		</profile>
+	</profiles>
 </project>

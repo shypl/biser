@@ -500,7 +500,8 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 				method.getModifier().add(CodeModifier.PUBLIC);
 				method.getBody()
 					.addStatement(new CodeExpressionMethod("super", new CodeExpressionString(name)))
-					.addStatement(new CodeExpressionWord(server.getName()).assign(new CodeExpressionNew(pack.getClass("ServerServices"), CodeExpressionWord.THIS)));
+					.addStatement(
+						new CodeExpressionWord(server.getName()).assign(new CodeExpressionNew(pack.getClass("ServerServices"), CodeExpressionWord.THIS)));
 
 				method = cls.addMethod("server");
 				method.getModifier().add(CodeModifier.PUBLIC | CodeModifier.GETTER | CodeModifier.FINAL);

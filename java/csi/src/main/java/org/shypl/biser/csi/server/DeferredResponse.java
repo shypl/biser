@@ -5,11 +5,11 @@ import org.shypl.biser.io.ByteArrayOutputData;
 import org.shypl.biser.io.DataWriter;
 
 public abstract class DeferredResponse {
-	private String              serviceName;
-	private String              methodName;
-	private Client              client;
-	private ByteArrayOutputData data;
-	protected DataWriter _writer;
+	protected DataWriter          _writer;
+	private   String              serviceName;
+	private   String              methodName;
+	private   Client              client;
+	private   ByteArrayOutputData data;
 
 	protected DeferredResponse(Client client, int responseId, String serviceName, String methodName) {
 		this.client = client;

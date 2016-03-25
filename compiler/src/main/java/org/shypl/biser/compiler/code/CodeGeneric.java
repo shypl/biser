@@ -3,6 +3,7 @@ package org.shypl.biser.compiler.code;
 public class CodeGeneric extends CodeType {
 	private Dependence dependence;
 	private CodeType   dependenceType;
+
 	public CodeGeneric(String name) {
 		super(name);
 	}

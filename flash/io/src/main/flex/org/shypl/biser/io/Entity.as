@@ -19,7 +19,7 @@ package org.shypl.biser.io {
 
 		protected function _decode(reader:DataReader):void {
 		}
-
+		
 		protected function _toString(fields:Map):void {
 		}
 

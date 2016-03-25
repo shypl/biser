@@ -106,7 +106,7 @@ package org.shypl.biser.io {
 
 			return _stream.readUTFBytes(size);
 		}
-		
+
 		public function readEnum(type:Class):Enum {
 			const ordinal:int = readInt();
 

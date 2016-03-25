@@ -125,4 +125,14 @@
 			</snapshots>
 		</pluginRepository>
 	</pluginRepositories>
+
+	<profiles>
+		<profile>
+			<id>all</id>
+			<modules>
+				<module>io</module>
+				<module>csi</module>
+			</modules>
+		</profile>
+	</profiles>
 </project>

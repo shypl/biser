@@ -95,8 +95,6 @@ class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel,
 
 	@Override
 	public void operationComplete(ChannelFuture future) throws Exception {
-		boolean close = false;
-
 		--writeCounter;
 		if (closeAfterWrites && writeCounter == 0) {
 			channel.close();

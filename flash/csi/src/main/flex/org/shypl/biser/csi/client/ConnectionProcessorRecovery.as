@@ -4,8 +4,8 @@ package org.shypl.biser.csi.client {
 	import org.shypl.biser.csi.ConnectionCloseReason;
 	import org.shypl.biser.csi.Protocol;
 	import org.shypl.common.timeline.GlobalTimeline;
-	import org.shypl.common.timeline.TimeMeter;
 	import org.shypl.common.util.Cancelable;
+	import org.shypl.common.util.TimeMeter;
 
 	internal class ConnectionProcessorRecovery extends ConnectionProcessor {
 		private var _timer:TimeMeter = new TimeMeter();
@@ -41,21 +41,6 @@ package org.shypl.biser.csi.client {
 
 			connection.sendBytes(data);
 		}
-		
-		override public function processData():void {
-			var flag:int = connection.data.readUnsignedByte();
-			if (flag == Protocol.RECOVERY) {
-				connection.logger.debug("Recovery: Success");
-				connection.recoverSession();
-
-				connection.logger.debug("Recovery: Switch to Messaging");
-				connection.setProcessor(new ConnectionProcessorMessaging());
-			}
-			else {
-				connection.logger.debug("Recovery: Fail");
-				closeConnection(flag);
-			}
-		}
 
 		override public function processClose():void {
 			if (_timer.seconds >= _timeout) {
@@ -65,6 +50,20 @@ package org.shypl.biser.csi.client {
 			}
 			else {
 				scheduleConnect();
+			}
+		}
+
+		override protected function processDataFlag(flag:uint):void {
+			if (flag == Protocol.RECOVERY) {
+				connection.logger.debug("Recovery: Success");
+				connection.recoverSession();
+
+				connection.logger.debug("Recovery: Switch to Messaging");
+				connection.setProcessor(new ConnectionProcessorMessaging());
+			}
+			else {
+				connection.logger.debug("Recovery: Fail");
+				super.processDataFlag(flag);
 			}
 		}
 

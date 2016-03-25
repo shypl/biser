@@ -13,14 +13,14 @@ package org.shypl.biser.csi.client {
 			throw new AbstractMethodException();
 		}
 
+		protected final function log(serviceName:String, methodName:String, result:Object):void {
+			CommunicationLoggingUtils.logServerResponse(_logger, serviceName, methodName, result);
+		}
+
 		internal function process0(reader:DataReader, logger:Logger):void {
 			_logger = logger;
 			process(reader);
 			_logger = null;
-		}
-
-		protected final function log(serviceName:String, methodName:String, result:Object):void {
-			CommunicationLoggingUtils.logServerResponse(_logger, serviceName, methodName, result);
 		}
 	}
 }

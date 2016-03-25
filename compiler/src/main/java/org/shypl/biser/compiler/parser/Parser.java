@@ -2,8 +2,8 @@ package org.shypl.biser.compiler.parser;
 
 import org.shypl.biser.compiler.Utils;
 import org.shypl.biser.compiler.model.Api;
-import org.shypl.biser.compiler.model.ApiServiceMethod;
 import org.shypl.biser.compiler.model.ApiService;
+import org.shypl.biser.compiler.model.ApiServiceMethod;
 import org.shypl.biser.compiler.model.ApiSide;
 import org.shypl.biser.compiler.model.ArrayType;
 import org.shypl.biser.compiler.model.DataType;
