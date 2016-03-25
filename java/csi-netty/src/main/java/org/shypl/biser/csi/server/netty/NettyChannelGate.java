@@ -4,7 +4,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.MultithreadEventLoopGroup;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -17,14 +17,18 @@ import org.shypl.biser.csi.server.ChannelGate;
 import org.slf4j.LoggerFactory;
 
 public class NettyChannelGate implements ChannelGate {
-	private final MultithreadEventLoopGroup bossGroup;
-	private final MultithreadEventLoopGroup workerGroup;
-	private final LogLevel                  logLevel;
+	private final EventLoopGroup bossGroup;
+	private final EventLoopGroup workerGroup;
+	private final LogLevel       logLevel;
 
 	private volatile boolean opened;
 	private          Channel channel;
 
-	public NettyChannelGate(MultithreadEventLoopGroup bossGroup, MultithreadEventLoopGroup workerGroup, LogLevel logLevel) {
+	public NettyChannelGate(EventLoopGroup bossGroup, EventLoopGroup workerGroup) {
+		this(bossGroup, workerGroup, null);
+	}
+
+	public NettyChannelGate(EventLoopGroup bossGroup, EventLoopGroup workerGroup, LogLevel logLevel) {
 		this.bossGroup = bossGroup;
 		this.workerGroup = workerGroup;
 		this.logLevel = logLevel;

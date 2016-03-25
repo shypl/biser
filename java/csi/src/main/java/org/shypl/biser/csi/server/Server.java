@@ -214,8 +214,10 @@ public class Server {
 			logger.debug("Wait stopping connections and clients (connections: {}, clients: {})", connections, clients);
 		}
 		else {
-			stopperChecker.cancel();
-			stopperChecker = null;
+			if (stopperChecker != null) {
+				stopperChecker.cancel();
+				stopperChecker = null;
+			}
 
 			channelGate.close();
 			running = false;

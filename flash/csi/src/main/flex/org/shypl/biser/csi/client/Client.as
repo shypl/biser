@@ -8,10 +8,10 @@ package org.shypl.biser.csi.client {
 	import org.shypl.common.logging.Logger;
 	import org.shypl.common.logging.PrefixedLoggerProxy;
 
-	[Event(type="org.shypl.biser.csi.client.ClientEvent", name="connectionEstablished")]
-	[Event(type="org.shypl.biser.csi.client.ClientEvent", name="connectionInterrupted")]
-	[Event(type="org.shypl.biser.csi.client.ClientDisconnectedEvent", name="disconnected")]
-	[Event(type="org.shypl.biser.csi.client.ServerShutdownTimeoutEvent", name="serverShutdownTimeout")]
+	[Event(type="org.shypl.biser.csi.client.ClientConnectionEvent", name="clientConnectionEstablished")]
+	[Event(type="org.shypl.biser.csi.client.ClientConnectionEvent", name="clientConnectionInterrupted")]
+	[Event(type="org.shypl.biser.csi.client.ClientDisconnectedEvent", name="clientDisconnected")]
+	[Event(type="org.shypl.biser.csi.client.ClientServerShutdownTimeoutEvent", name="clientServerShutdownTimeout")]
 	public class Client extends EventDispatcher {
 		private static const LOGGER:Logger = LogManager.getLogger(Client);
 
@@ -59,12 +59,12 @@ package org.shypl.biser.csi.client {
 
 		internal function handleConnectionEstablished():void {
 			_logger.info("Connection established");
-			dispatchEvent(new ClientEvent(ClientEvent.CONNECTION_ESTABLISHED));
+			dispatchEvent(new ClientConnectionEvent(ClientConnectionEvent.CLIENT_CONNECTION_ESTABLISHED));
 		}
 
 		internal function handleConnectionInterrupted():void {
 			_logger.info("Connection interrupted");
-			dispatchEvent(new ClientEvent(ClientEvent.CONNECTION_INTERRUPTED));
+			dispatchEvent(new ClientConnectionEvent(ClientConnectionEvent.CLIENT_CONNECTION_INTERRUPTED));
 		}
 
 		internal function handleConnectionClosed(reason:ConnectionCloseReason):void {
@@ -75,7 +75,7 @@ package org.shypl.biser.csi.client {
 
 		internal function handleServerShutdownTimeout(seconds:int):void {
 			_logger.info("Server shutdown after {} seconds", seconds);
-			dispatchEvent(new ServerShutdownTimeoutEvent(seconds));
+			dispatchEvent(new ClientServerShutdownTimeoutEvent(seconds));
 		}
 	}
 }
