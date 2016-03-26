@@ -13,6 +13,7 @@ package org.shypl.biser.csi.client.standard {
 	import org.shypl.biser.csi.client.ChannelHandler;
 	import org.shypl.common.lang.ErrorEventException;
 	import org.shypl.common.net.InetSocketAddress;
+	import org.shypl.common.util.callDelayed;
 
 	public class SocketChannel implements Channel {
 		private var _socket:Socket;
@@ -45,7 +46,7 @@ package org.shypl.biser.csi.client.standard {
 		public function close():void {
 			if (_opened) {
 				_opened = false;
-				_handler.handleChannelClose();
+				callDelayed(_handler.handleChannelClose);
 			}
 			free();
 		}

@@ -3,12 +3,12 @@ package org.shypl.biser.csi;
 public final class Protocol {
 	public static final byte CROSS_DOMAIN_POLICY     = 0x3c; // <
 	public static final byte AUTHORIZATION           = 0x01;
-	public static final byte RECOVERY                = 0x02;
-	public static final byte PING                    = 0x03;
-	public static final byte MESSAGE_ODD             = 0x04;
-	public static final byte MESSAGE_EVEN            = 0x05;
-	public static final byte MESSAGE_ODD_RECEIVED    = 0x06;
-	public static final byte MESSAGE_EVEN_RECEIVED   = 0x07;
+	public static final byte MESSAGE_ODD             = 0x02;
+	public static final byte MESSAGE_EVEN            = 0x03;
+	public static final byte MESSAGE_ODD_RECEIVED    = 0x04;
+	public static final byte MESSAGE_EVEN_RECEIVED   = 0x05;
+	public static final byte PING                    = 0x06;
+	public static final byte RECOVERY                = 0x07;
 	public static final byte SERVER_SHUTDOWN_TIMEOUT = 0x08;
 
 	public static final byte CLOSE                          = 0x10;

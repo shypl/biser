@@ -8,25 +8,30 @@ package org.shypl.biser.csi.client {
 	import org.shypl.common.util.TimeMeter;
 
 	internal class ConnectionProcessorMessaging extends ConnectionProcessor {
-		private var _active:Boolean;
-		private var _activeTimer:TimeMeter = new TimeMeter();
+		private var _activity:Boolean;
+		private var _activityTimer:TimeMeter = new TimeMeter();
+		private var _activityTimeout:int;
 		private var _activityChecker:Cancelable;
 
 		private var _messageEven:Boolean;
 		private var _messageSizeMode:Boolean;
 
+		public function ConnectionProcessorMessaging() {
+		}
+
+
 		override public function init(connection:Connection):void {
 			super.init(connection);
-			_active = true;
-			_activeTimer.start();
-			_activityChecker = GlobalTimeline.scheduleRepeatable(connection.activityTimeout * 1000, checkActivity);
+			_activity = true;
+			_activityTimer.start();
+
+			_activityTimeout = connection.activityTimeout / 2;
+			_activityChecker = GlobalTimeline.scheduleRepeatable(_activityTimeout * 1000, checkActivity);
 		}
 
 		override public function destroy():void {
 			super.destroy();
 			_activityChecker.cancel();
-
-			_activeTimer = null;
 			_activityChecker = null;
 		}
 
@@ -36,18 +41,17 @@ package org.shypl.biser.csi.client {
 		}
 
 		override public function processData(data:IDataInput):void {
-			_active = true;
-			_activeTimer.restart();
+			_activity = true;
+			_activityTimer.restart();
 			do {
 				super.processData(data);
 			}
-			while (connection.opened && data.bytesAvailable > 0);
+			while (isCanReadData(data));
 		}
 
 		override protected function processDataFlag(flag:uint):void {
 			switch (flag) {
 				case Protocol.PING:
-					connection.logger.trace("Pong");
 					break;
 
 				case Protocol.MESSAGE_ODD:
@@ -72,7 +76,7 @@ package org.shypl.biser.csi.client {
 		}
 
 		override protected function processDataBody(buffer:ByteArray):void {
-			if (_messageSizeMode = true) {
+			if (_messageSizeMode) {
 				_messageSizeMode = false;
 				setDataExpectBody(buffer.readInt());
 			}
@@ -90,10 +94,9 @@ package org.shypl.biser.csi.client {
 		}
 
 		private function checkActivity():void {
-			if (_active) {
-				if (_activeTimer.seconds >= connection.activityTimeout) {
-					_active = false;
-					connection.logger.trace("Ping");
+			if (_activity) {
+				if (_activityTimer.seconds >= _activityTimeout) {
+					_activity = false;
 					connection.sendByte(Protocol.PING);
 				}
 			}

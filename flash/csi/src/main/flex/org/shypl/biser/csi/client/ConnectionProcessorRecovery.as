@@ -13,6 +13,9 @@ package org.shypl.biser.csi.client {
 		private var _attempt:int;
 		private var _delayedConnect:Cancelable;
 
+		public function ConnectionProcessorRecovery() {
+		}
+
 		override public function init(connection:Connection):void {
 			super.init(connection);
 			_timeout = connection.activityTimeout * 2 + connection.recoveryTimeout;

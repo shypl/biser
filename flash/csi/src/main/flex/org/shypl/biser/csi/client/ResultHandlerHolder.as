@@ -7,6 +7,9 @@ package org.shypl.biser.csi.client {
 	[Abstract]
 	public class ResultHandlerHolder {
 		private var _logger:Logger;
+		
+		public function ResultHandlerHolder() {
+		}
 
 		[Abstract]
 		protected function process(reader:DataReader):void {

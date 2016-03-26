@@ -18,6 +18,9 @@ package org.shypl.biser.csi.client {
 
 		private var _waitDataForServerShutdownTimeout:Boolean;
 
+		public function ConnectionProcessor() {
+		}
+
 		protected final function get connection():Connection {
 			return _connection;
 		}
@@ -46,6 +49,10 @@ package org.shypl.biser.csi.client {
 		}
 
 		public function processClose():void {
+		}
+
+		protected function isCanReadData(data:IDataInput):Boolean {
+			return _connection.opened && data.bytesAvailable > 0;
 		}
 
 		protected final function setDataExpectFlag():void {

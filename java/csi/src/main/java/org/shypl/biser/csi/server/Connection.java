@@ -2,6 +2,7 @@ package org.shypl.biser.csi.server;
 
 import org.shypl.biser.csi.ByteBuffer;
 import org.shypl.biser.csi.ConnectionCloseReason;
+import org.shypl.biser.csi.Protocol;
 import org.shypl.biser.csi.ProtocolException;
 import org.shypl.common.concurrent.Worker;
 import org.shypl.common.concurrent.WrappedTaskWorker;
@@ -73,8 +74,10 @@ class Connection implements ChannelHandler {
 	@Override
 	public void handleChannelData(byte[] bytes) {
 		worker.addTask(() -> {
+			activity = true;
 			readerData = bytes;
 			readerCursor = 0;
+
 			while (isReadable()) {
 				try {
 					processor.processData();

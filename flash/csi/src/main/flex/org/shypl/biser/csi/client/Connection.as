@@ -35,7 +35,7 @@ package org.shypl.biser.csi.client {
 
 		private var _inputMessageEven:Boolean;
 		private var _outputMessageEven:Boolean;
-		private var _outputMessageSendAvailable:Boolean;
+		private var _outputMessageSendAvailable:Boolean = true;
 		private var _outputMessages:LinkedList = new LinkedList();
 		private var _outputMessageBuffer:ByteArray = new ByteArray();
 
@@ -86,7 +86,7 @@ package org.shypl.biser.csi.client {
 					_channel.close();
 				}
 				else {
-					handleChannelClose();
+					callDelayed(handleChannelClose);
 				}
 			}
 		}
@@ -158,7 +158,7 @@ package org.shypl.biser.csi.client {
 				_channel.close();
 			}
 			else {
-				handleChannelClose();
+				callDelayed(handleChannelClose);
 			}
 		}
 
@@ -182,7 +182,7 @@ package org.shypl.biser.csi.client {
 		}
 
 		internal function sendByte(byte:int):void {
-			if (_logger.trace) {
+			if (_logger.isTraceEnabled()) {
 				_logger.trace("Send: {}", HexUtils.encodeByte(byte));
 			}
 			if (_alive) {
@@ -254,7 +254,7 @@ package org.shypl.biser.csi.client {
 			_outputMessageBuffer.writeInt(message.length);
 			_outputMessageBuffer.writeBytes(message);
 
-			_channel.writeBytes(_outputMessageBuffer);
+			sendBytes(_outputMessageBuffer);
 
 			_outputMessageBuffer.clear();
 		}
