@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>org.shypl.biser</groupId>
+		<artifactId>biser-io</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>biser-io-flash</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>swc</packaging>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.shypl.common</groupId>
+			<artifactId>common-flash</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<type>swc</type>
+		</dependency>
+		<dependency>
+			<groupId>org.shypl.flexunit</groupId>
+			<artifactId>flexunit</artifactId>
+			<version>1.0.1-SNAPSHOT</version>
+			<type>swc</type>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<sourceDirectory>src/main/flex</sourceDirectory>
+		<testSourceDirectory>src/test/flex</testSourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>net.flexmojos.oss</groupId>
+				<artifactId>flexmojos-maven-plugin</artifactId>
+				<version>7.1.0</version>
+				<extensions>true</extensions>
+
+				<configuration>
+					<debug>true</debug>
+				</configuration>
+
+				<dependencies>
+					<dependency>
+						<groupId>org.apache.flex</groupId>
+						<artifactId>compiler</artifactId>
+						<version>4.15.0</version>
+						<type>pom</type>
+					</dependency>
+				</dependencies>
+
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>sources</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>shypl-thirdparty</id>
+			<url>http://178.132.202.170:8080/nexus/content/repositories/thirdparty/</url>
+		</repository>
+	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>sonatype</id>
+			<url>https://oss.sonatype.org/content/repositories/releases/</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>shypl-thirdparty</id>
+			<url>http://178.132.202.170:8080/nexus/content/repositories/thirdparty/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+</project>

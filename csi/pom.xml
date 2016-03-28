@@ -5,25 +5,18 @@
 
 	<parent>
 		<groupId>org.shypl.biser</groupId>
-		<artifactId>biser-java-parent</artifactId>
+		<artifactId>biser-parent</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>biser-java-csi-netty</artifactId>
+	<artifactId>biser-csi</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>pom</packaging>
 
-	<dependencies>
-		<dependency>
-			<groupId>org.shypl.biser</groupId>
-			<artifactId>biser-java-csi</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-all</artifactId>
-			<version>4.0.34.Final</version>
-		</dependency>
-	</dependencies>
+	<modules>
+		<module>flash</module>
+		<module>java</module>
+	</modules>
+
 </project>
