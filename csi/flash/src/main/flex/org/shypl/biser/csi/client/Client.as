@@ -60,7 +60,7 @@ package org.shypl.biser.csi.client {
 		}
 
 		public function disconnect():void {
-			if (!isConnecting() && !isConnecting()) {
+			if (!_connecting && !_connected) {
 				throw new IllegalStateException();
 			}
 			_connecting = false;
