@@ -17,6 +17,7 @@ class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel,
 	private io.netty.channel.Channel channel;
 	private ChannelHandler           handler;
 
+	private boolean opened;
 	private int     writeCounter;
 	private boolean closeAfterWrites;
 
@@ -26,11 +27,12 @@ class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel,
 
 	@Override
 	public SocketAddress getRemoteAddress() {
-		return channel.remoteAddress();
+		return opened ? channel.remoteAddress() : null;
 	}
 
 	@Override
 	public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+		opened = true;
 		channel = ctx.channel();
 		handler = acceptor.accept(this);
 		acceptor = null;
@@ -38,7 +40,8 @@ class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel,
 
 	@Override
 	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-		if (handler != null) {
+		if (opened) {
+			opened = false;
 			handler.handleChannelClose();
 			handler = null;
 			channel = null;
@@ -48,15 +51,15 @@ class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel,
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		if (handler == null) {
-			ctx.close();
-		}
-		else {
+		if (opened) {
 			ByteBuf buf = (ByteBuf)msg;
 			byte[] bytes = new byte[buf.readableBytes()];
 			buf.readBytes(bytes);
 			buf.release();
 			handler.handleChannelData(bytes);
+		}
+		else {
+			ctx.close();
 		}
 	}
 
@@ -67,29 +70,35 @@ class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel,
 
 	@Override
 	public void write(byte[] bytes) {
-		incrementWriteCounter();
+		if (opened) {
+			incrementWriteCounter();
 
-		ByteBuf buf = allocBuf(bytes.length);
-		buf.writeBytes(bytes);
-		writeBuf(buf);
+			ByteBuf buf = allocBuf(bytes.length);
+			buf.writeBytes(bytes);
+			writeBuf(buf);
+		}
 	}
 
 	@Override
 	public void write(byte b) {
-		incrementWriteCounter();
+		if (opened) {
+			incrementWriteCounter();
 
-		ByteBuf buf = allocBuf(1);
-		buf.writeByte(b);
-		writeBuf(buf);
+			ByteBuf buf = allocBuf(1);
+			buf.writeByte(b);
+			writeBuf(buf);
+		}
 	}
 
 	@Override
 	public void close() {
-		if (writeCounter == 0) {
-			channel.close();
-		}
-		else {
-			closeAfterWrites = true;
+		if (opened) {
+			if (writeCounter == 0) {
+				channel.close();
+			}
+			else {
+				closeAfterWrites = true;
+			}
 		}
 	}
 
