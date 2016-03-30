@@ -8,8 +8,7 @@ package org.shypl.biser.csi.client {
 		private var _api:Api;
 		private var _serviceId:int;
 		private var _serviceName:String;
-
-		private var _message:ByteArray = new ByteArray();
+		private var _message:ByteArray;
 
 		public function ServerService(api:Api, serviceId:int, serviceName:String) {
 			_api = api;
@@ -18,6 +17,7 @@ package org.shypl.biser.csi.client {
 		}
 
 		protected final function _prepareMessage(methodId:int, holder:ResultHandlerHolder = null):DataWriter {
+			_message = new ByteArray();
 			var writer:DataWriter = new DataWriter(_message);
 			writer.writeInt(_serviceId);
 			writer.writeInt(methodId);
@@ -29,7 +29,7 @@ package org.shypl.biser.csi.client {
 
 		protected final function _sendMessage():void {
 			_api.sendMessage(_message);
-			_message.clear();
+			_message = null;
 		}
 
 		protected final function _log(methodName:String, ...args):void {

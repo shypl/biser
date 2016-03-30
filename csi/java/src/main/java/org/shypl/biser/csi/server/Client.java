@@ -189,6 +189,10 @@ public abstract class Client {
 				connection.send(inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
 
 				try {
+					if (bytes.length == 0) {
+						throw new IllegalArgumentException("Received message is empty");
+					}
+
 					server.getApi().processIncomingMessage(this, bytes);
 				}
 				catch (Throwable e) {
@@ -255,6 +259,10 @@ public abstract class Client {
 	}
 
 	private void sendMessage0(byte[] bytes) {
+		if (bytes.length == 0) {
+			throw new IllegalArgumentException("Outgoing message is empty");
+		}
+
 		outputMessageSendAvailable = false;
 		outputMessageEven = !outputMessageEven;
 

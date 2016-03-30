@@ -2,12 +2,12 @@ package org.shypl.biser.csi.server;
 
 import org.shypl.biser.csi.ByteBuffer;
 import org.shypl.biser.csi.ConnectionCloseReason;
-import org.shypl.biser.csi.Protocol;
 import org.shypl.biser.csi.ProtocolException;
 import org.shypl.common.concurrent.Worker;
 import org.shypl.common.concurrent.WrappedTaskWorker;
 import org.shypl.common.slf4j.PrefixedLoggerProxy;
 import org.shypl.common.util.Cancelable;
+import org.shypl.common.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +74,10 @@ class Connection implements ChannelHandler {
 	@Override
 	public void handleChannelData(byte[] bytes) {
 		worker.addTask(() -> {
+			if (logger.isTraceEnabled()) {
+				logger.trace(">> {}", StringUtils.toString(bytes));
+			}
+
 			activity = true;
 			readerData = bytes;
 			readerCursor = 0;
@@ -115,11 +119,11 @@ class Connection implements ChannelHandler {
 	}
 
 	public void send(byte b) {
-		worker.addTask(() -> channel.write(b));
+		worker.addTask(() -> syncSend(b));
 	}
 
 	public void send(byte[] bytes) {
-		worker.addTask(() -> channel.write(bytes));
+		worker.addTask(() -> syncSend(bytes));
 	}
 
 	public void close(ConnectionCloseReason reason) {
@@ -127,11 +131,11 @@ class Connection implements ChannelHandler {
 	}
 
 	void syncSend(byte[] bytes) {
-		channel.write(bytes);
+		writeToChannel(bytes);
 	}
 
 	void syncSend(byte b) {
-		channel.write(b);
+		writeToChannel(b);
 	}
 
 	void syncClose() {
@@ -144,7 +148,7 @@ class Connection implements ChannelHandler {
 	void syncClose(ConnectionCloseReason reason) {
 		if (opened) {
 			opened = false;
-			channel.write(ConnectionCloseReason.getProtocolFlag(reason));
+			writeToChannel(ConnectionCloseReason.getProtocolFlag(reason));
 			channel.close();
 		}
 	}
@@ -187,9 +191,23 @@ class Connection implements ChannelHandler {
 		else {
 			logger.warn("Activity timeout expired");
 			activityTimeout.cancel();
-			channel.write(ConnectionCloseReason.getProtocolFlag(ConnectionCloseReason.ACTIVITY_TIMEOUT_EXPIRED));
+			writeToChannel(ConnectionCloseReason.getProtocolFlag(ConnectionCloseReason.ACTIVITY_TIMEOUT_EXPIRED));
 			channel.close();
 		}
+	}
+
+	private void writeToChannel(byte b) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("<< {}", '[' + StringUtils.toString(b) + ']');
+		}
+		channel.write(b);
+	}
+
+	private void writeToChannel(byte[] bytes) {
+		if (logger.isTraceEnabled()) {
+			logger.trace("<< {}", StringUtils.toString(bytes));
+		}
+		channel.write(bytes);
 	}
 
 	private Runnable wrapWorkerTask(Runnable task) {
