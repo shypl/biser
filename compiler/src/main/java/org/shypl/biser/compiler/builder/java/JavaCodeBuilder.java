@@ -482,12 +482,12 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 		public ServerApiBuilder(String apiName) {
 			super(apiName);
-			clientClass = pack.getClass(Utils.convertToCamel(name) + "Client");
+			clientClass = pack.getClass("AbstractClient");
 		}
 
 		public void buildClient(List<ApiService> services) {
 			CodeClass cls = clientClass;
-			cls.getModifier().set(CodeModifier.PUBLIC);
+			cls.getModifier().set(CodeModifier.PUBLIC | CodeModifier.ABSTRACT);
 			cls.setParent(engine.getClass("org.shypl.biser.csi.server.Client"));
 
 			// constructor
@@ -508,7 +508,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		}
 
 		public void buildServer(List<ApiService> services) {
-			CodeClass cls = pack.getClass(Utils.convertToCamel(name) + "Api");
+			CodeClass cls = pack.getClass("AbstractApi");
 			CodeGeneric c = cls.getGeneric("C");
 			c.setDependence(CodeGeneric.Dependence.EXTENDS, clientClass);
 			cls.setParent(engine.getClass("org.shypl.biser.csi.server.Api").parametrize(c));
