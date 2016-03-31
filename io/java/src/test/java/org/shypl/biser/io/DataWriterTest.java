@@ -111,16 +111,16 @@ public class DataWriterTest {
 	@Test
 	public void testWriteUint() {
 		//arrange
-		final long[] values = {0, 127, 128, 254, 255, 2147483647, 4294967295L};
+		final int[] values = {0, 127, 128, 254, 255, 2147483647, -1};
 
 		final ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		final DataWriter writer = new DataWriter(stream);
 
 		//act
-		for (long value : values) {
+		for (int value : values) {
 			writer.writeUint(value);
 		}
-		for (long value : values) {
+		for (int value : values) {
 			Encoder.UINT.encode(value, writer);
 		}
 

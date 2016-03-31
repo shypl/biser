@@ -4,8 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DataReader {
@@ -37,12 +37,12 @@ public class DataReader {
 		}
 	}
 
-	public long readUint() {
+	public int readUint() {
 		int b = readByte() & 0xFF;
 
 		switch (b) {
 			case 0xFF:
-				return readRawInt() & 0xFFFFFFFFL;
+				return readRawInt();
 			default:
 				return b;
 		}
@@ -189,7 +189,19 @@ public class DataReader {
 	}
 
 	public int[] readUintArray() {
-		return readIntArray();
+		int size = readInt();
+
+		if (size == -1) {
+			return null;
+		}
+
+		int[] array = new int[size];
+
+		for (int i = 0; i < size; ++i) {
+			array[i] = readUint();
+		}
+
+		return array;
 	}
 
 	public long[] readLongArray() {
@@ -209,7 +221,19 @@ public class DataReader {
 	}
 
 	public long[] readUlongArray() {
-		return readLongArray();
+		int size = readInt();
+
+		if (size == -1) {
+			return null;
+		}
+
+		long[] array = new long[size];
+
+		for (int i = 0; i < size; ++i) {
+			array[i] = readUlong();
+		}
+
+		return array;
 	}
 
 	public double[] readDoubleArray() {
@@ -262,8 +286,9 @@ public class DataReader {
 		return map;
 	}
 
-	public <E> Collection<E> readCollection(Decoder<? super E> elementDecoder) {
-		return Arrays.asList(readArray(elementDecoder));
+	public <E> List<E> readCollection(Decoder<? super E> elementDecoder) {
+		E[] array = (E[])readArray(elementDecoder);
+		return Arrays.asList(array);
 	}
 
 	private int readRawInt() {

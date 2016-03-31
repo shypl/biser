@@ -132,7 +132,7 @@ public class DataReaderTest {
 	@Test
 	public void testReadUint() {
 		//arrange
-		final long[] expectedValues = {0, 127, 128, 254, 255, 2147483647, 4294967295L};
+		final int[] expectedValues = {0, 127, 128, 254, 255, 2147483647, -1};
 		final byte[] data = Utils.convertIntArrayToByteArray(new int[]{
 			0x00, // 0
 			0x7F, // 127
@@ -154,17 +154,17 @@ public class DataReaderTest {
 		final ByteArrayInputStream stream = new ByteArrayInputStream(data);
 		final DataReader reader = new DataReader(stream);
 
-		for (long expected : expectedValues) {
+		for (int expected : expectedValues) {
 			//act
-			final long actual = reader.readUint();
+			final int actual = reader.readUint();
 
 			//assert
 			Assert.assertEquals(expected, actual);
 		}
 
-		for (long expected : expectedValues) {
+		for (int expected : expectedValues) {
 			//act
-			final long actual = Decoder.UINT.decode(reader);
+			final int actual = Decoder.UINT.decode(reader);
 
 			//assert
 			Assert.assertEquals(expected, actual);

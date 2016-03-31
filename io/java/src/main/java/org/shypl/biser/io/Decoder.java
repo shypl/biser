@@ -21,9 +21,9 @@ public interface Decoder<T> {
 			return reader.readInt();
 		}
 	};
-	Decoder<Long>    UINT   = new TypedDecoder<Long>(Long.class) {
+	Decoder<Integer> UINT   = new TypedDecoder<Integer>(Integer.class) {
 		@Override
-		public Long decode(DataReader reader) {
+		public Integer decode(DataReader reader) {
 			return reader.readUint();
 		}
 	};

@@ -51,7 +51,7 @@ Format:
 * `0xFF [XXXX]` > XXXX - 4 bytes of unsigned integer raw code
 
 Represent:
-* java: `long`
+* java: `int`
 * flash: `uint`
 
 

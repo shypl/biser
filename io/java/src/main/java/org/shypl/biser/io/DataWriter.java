@@ -37,11 +37,7 @@ public class DataWriter {
 		}
 	}
 
-	public void writeUint(long value) {
-		if (value < 0 || value > 4294967295L) {
-			throw new IllegalArgumentException("Value " + value + " out of bounds for uint");
-		}
-
+	public void writeUint(int value) {
 		if (value >= 0 && value <= 254) {
 			stream.write((byte)value);
 		}
@@ -165,7 +161,15 @@ public class DataWriter {
 	}
 
 	public void writeUintArray(int[] array) {
-		writeIntArray(array);
+		if (array == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(array.length);
+			for (int value : array) {
+				writeUint(value);
+			}
+		}
 	}
 
 	public void writeLongArray(long[] array) {
@@ -181,7 +185,15 @@ public class DataWriter {
 	}
 
 	public void writeUlongArray(long[] array) {
-		writeLongArray(array);
+		if (array == null) {
+			writeInt(-1);
+		}
+		else {
+			writeInt(array.length);
+			for (long value : array) {
+				writeUlong(value);
+			}
+		}
 	}
 
 	public void writeDoubleArray(double[] array) {
