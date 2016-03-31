@@ -543,7 +543,7 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 				field.getModifier().add(CodeModifier.PRIVATE);
 				field.setType(serviceClass);
 
-				method = cls.addMethod("registerService" + service.getCamelName());
+				method = cls.addMethod("setService" + service.getCamelName());
 				method.getModifier().set(CodeModifier.PUBLIC | CodeModifier.FINAL);
 				method.setReturnType(primitiveVoid);
 				method.getArgument("service").setType(serviceClass);

@@ -548,7 +548,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				field.getModifier().add(CodeModifier.PRIVATE);
 				field.setType(serviceClass.parametrize(c));
 
-				method = cls.addMethod("register" + serviceClass.getName());
+				method = cls.addMethod("set" + serviceClass.getName());
 				method.getModifier().set(CodeModifier.PUBLIC | CodeModifier.FINAL);
 				method.setReturnType(primitiveVoid);
 				method.getArgument("service").setType(serviceClass.parametrize(c));
