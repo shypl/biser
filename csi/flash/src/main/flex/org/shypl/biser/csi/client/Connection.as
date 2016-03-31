@@ -247,7 +247,7 @@ package org.shypl.biser.csi.client {
 		}
 
 		private function sendMessage0(message:ByteArray):void {
-			if (message.bytesAvailable == 0) {
+			if (message.length == 0) {
 				throw new IllegalArgumentException("Outgoing message is empty");
 			}
 
