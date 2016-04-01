@@ -157,7 +157,7 @@ public class Server {
 		worker.addTask(() -> {
 			Client oldClient = api.getClient(client.getId());
 			if (oldClient == client) {
-				api.removeClient(client.getId());
+				api.removeClient(client);
 				logger.debug("Disconnect client #{} (clients: {})", client.getId(), api.countClients());
 			}
 			else {

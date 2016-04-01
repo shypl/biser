@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
 
 public abstract class Api<C extends Client> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Api.class);
@@ -33,6 +35,9 @@ public abstract class Api<C extends Client> {
 	private final Map<Long, C> clients = new ConcurrentHashMap<>();
 	private final String name;
 	private final Logger logger;
+
+	private final ConcurrentLinkedQueue<Consumer<C>> clientConnectObservers    = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<Consumer<C>> clientDisconnectObservers = new ConcurrentLinkedQueue<>();
 
 	protected Api(String name) {
 		this.name = name;
@@ -72,6 +77,22 @@ public abstract class Api<C extends Client> {
 		message.send(clients, logger);
 	}
 
+	public final void addClientConnectObserver(Consumer<C> observer) {
+		clientConnectObservers.add(observer);
+	}
+
+	public final void removeClientConnectObserver(Consumer<C> observer) {
+		clientConnectObservers.remove(observer);
+	}
+
+	public final void addClientDisconnectObserver(Consumer<C> observer) {
+		clientDisconnectObservers.add(observer);
+	}
+
+	public final void removeClientDisconnectObserver(Consumer<C> observer) {
+		clientDisconnectObservers.remove(observer);
+	}
+
 	protected abstract C authorizeClient(String key);
 
 	protected abstract void callService(C client, int serviceId, int methodId, DataReader reader, DataWriter writer) throws Throwable;
@@ -96,7 +117,6 @@ public abstract class Api<C extends Client> {
 		CommunicationLoggingUtils.logServerResponse(client.getLogger(), serviceName, methodName, result);
 	}
 
-
 	Client makeClient(String key) {
 		Client client = authorizeClient(key);
 		if (client != null) {
@@ -105,13 +125,32 @@ public abstract class Api<C extends Client> {
 		return client;
 	}
 
-	@SuppressWarnings("unchecked")
 	void addClient(Client client) {
-		clients.put(client.getId(), (C)client);
+		@SuppressWarnings("unchecked")
+		C c = (C)client;
+		clients.put(client.getId(), c);
+		for (Consumer<C> observer : clientConnectObservers) {
+			try {
+				observer.accept(c);
+			}
+			catch (Exception e) {
+				logger.error("Error on client connect observer", e);
+			}
+		}
 	}
 
-	void removeClient(long id) {
-		clients.remove(id);
+	void removeClient(Client client) {
+		@SuppressWarnings("unchecked")
+		C c = (C)client;
+		clients.remove(client.getId());
+		for (Consumer<C> observer : clientDisconnectObservers) {
+			try {
+				observer.accept(c);
+			}
+			catch (Exception e) {
+				logger.error("Error on client disconnect observer", e);
+			}
+		}
 	}
 
 	@SuppressWarnings("unchecked")
