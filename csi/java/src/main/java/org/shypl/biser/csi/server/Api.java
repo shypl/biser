@@ -6,6 +6,8 @@ import org.shypl.biser.io.ByteArrayOutputData;
 import org.shypl.biser.io.DataReader;
 import org.shypl.biser.io.DataWriter;
 import org.shypl.common.slf4j.PrefixedLoggerProxy;
+import org.shypl.common.util.Cancelable;
+import org.shypl.common.util.Observers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +15,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
 public abstract class Api<C extends Client> {
@@ -36,8 +37,8 @@ public abstract class Api<C extends Client> {
 	private final String name;
 	private final Logger logger;
 
-	private final ConcurrentLinkedQueue<Consumer<C>> clientConnectObservers    = new ConcurrentLinkedQueue<>();
-	private final ConcurrentLinkedQueue<Consumer<C>> clientDisconnectObservers = new ConcurrentLinkedQueue<>();
+	private final Observers<Consumer<C>> clientConnectObservers    = new Observers<>();
+	private final Observers<Consumer<C>> clientDisconnectObservers = new Observers<>();
 
 	protected Api(String name) {
 		this.name = name;
@@ -77,16 +78,16 @@ public abstract class Api<C extends Client> {
 		message.send(clients, logger);
 	}
 
-	public final void addClientConnectObserver(Consumer<C> observer) {
-		clientConnectObservers.add(observer);
+	public final Cancelable addClientConnectObserver(Consumer<C> observer) {
+		return clientConnectObservers.add(observer);
 	}
 
 	public final void removeClientConnectObserver(Consumer<C> observer) {
 		clientConnectObservers.remove(observer);
 	}
 
-	public final void addClientDisconnectObserver(Consumer<C> observer) {
-		clientDisconnectObservers.add(observer);
+	public final Cancelable addClientDisconnectObserver(Consumer<C> observer) {
+		return clientDisconnectObservers.add(observer);
 	}
 
 	public final void removeClientDisconnectObserver(Consumer<C> observer) {
@@ -129,28 +130,14 @@ public abstract class Api<C extends Client> {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clients.put(client.getId(), c);
-		for (Consumer<C> observer : clientConnectObservers) {
-			try {
-				observer.accept(c);
-			}
-			catch (Exception e) {
-				logger.error("Error on client connect observer", e);
-			}
-		}
+		clientConnectObservers.inform(observer -> observer.accept(c));
 	}
 
 	void removeClient(Client client) {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clients.remove(client.getId());
-		for (Consumer<C> observer : clientDisconnectObservers) {
-			try {
-				observer.accept(c);
-			}
-			catch (Exception e) {
-				logger.error("Error on client disconnect observer", e);
-			}
-		}
+		clientDisconnectObservers.inform(observer -> observer.accept(c));
 	}
 
 	@SuppressWarnings("unchecked")

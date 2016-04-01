@@ -12,15 +12,15 @@ import org.shypl.biser.csi.Protocol;
 import org.shypl.common.concurrent.Worker;
 import org.shypl.common.slf4j.PrefixedLoggerProxy;
 import org.shypl.common.util.Cancelable;
+import org.shypl.common.util.Observers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public abstract class Client {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
@@ -39,7 +39,7 @@ public abstract class Client {
 		random.nextBytes(SID_SALT);
 	}
 
-	private final Queue<Runnable> disconnectObservers = new ConcurrentLinkedQueue<>();
+	private final Observers<Consumer<Client>> disconnectObservers = new Observers<>();
 	private final long id;
 	private final AttributeMap attributeMap = new DefaultAttributeMap();
 	private Logger logger;
@@ -70,8 +70,12 @@ public abstract class Client {
 		return attributeMap.attr(key);
 	}
 
-	public final void observeDisconnect(Runnable observer) {
-		disconnectObservers.add(observer);
+	public final Cancelable addDisconnectObserver(Consumer<Client> observer) {
+		return disconnectObservers.add(observer);
+	}
+
+	public final void removeDisconnectObserver(Consumer<Client> observer) {
+		disconnectObservers.remove(observer);
 	}
 
 	public final void disconnect() {
@@ -79,14 +83,14 @@ public abstract class Client {
 	}
 
 	public final void disconnect(ConnectionCloseReason reason) {
-		disconnect(reason, null);
+		disconnect(reason, (Consumer<Client>)null);
 	}
 
-	public final void disconnect(ConnectionCloseReason reason, Runnable callback) {
+	public final void disconnect(ConnectionCloseReason reason, Consumer<Client> callback) {
 		worker.addTask(() -> {
 			if (connected) {
 				if (callback != null) {
-					observeDisconnect(callback);
+					disconnectObservers.add(callback);
 				}
 				if (active) {
 					connection.close(reason);
@@ -96,9 +100,13 @@ public abstract class Client {
 				}
 			}
 			else if (callback != null) {
-				callback.run();
+				callback.accept(this);
 			}
 		});
+	}
+
+	public final void disconnect(ConnectionCloseReason reason, Runnable callback) {
+		disconnect(reason, client -> callback.run());
 	}
 
 	protected void onConnect() {
@@ -293,6 +301,8 @@ public abstract class Client {
 
 		server.disconnectClient(this);
 
+		disconnectObservers.inform(observer -> observer.accept(this));
+
 		try {
 			onDisconnect();
 		}
@@ -300,15 +310,7 @@ public abstract class Client {
 			logger.error("Error on disconnect", e);
 		}
 
-		for (Runnable observer : disconnectObservers) {
-			try {
-				observer.run();
-			}
-			catch (Throwable e) {
-				logger.error("Error on disconnect observer", e);
-			}
-		}
-		disconnectObservers.clear();
+		disconnectObservers.removeAll();
 	}
 
 	private void cancelConnectionRecoveryTimeout() {

@@ -133,10 +133,10 @@ public class Server {
 				if (opened) {
 					Client oldClient = api.getClient(client.getId());
 					if (oldClient == null) {
-						api.addClient(client);
-
 						logger.debug("Connect client #{} (clients: {})", client.getId(), api.countClients());
+
 						client.connect(this, connection);
+						api.addClient(client);
 					}
 					else {
 						logger.debug("Concurrent connect client #{}", client.getId());
