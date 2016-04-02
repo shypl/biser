@@ -299,9 +299,9 @@ public abstract class Client {
 
 		cancelConnectionRecoveryTimeout();
 
-		server.disconnectClient(this);
-
 		disconnectObservers.inform(observer -> observer.accept(this));
+
+		server.disconnectClient(this);
 
 		try {
 			onDisconnect();
