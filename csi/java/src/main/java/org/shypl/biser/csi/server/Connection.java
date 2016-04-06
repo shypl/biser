@@ -112,7 +112,7 @@ class Connection implements ChannelHandler {
 			closed = true;
 
 			processor.processClose(breaking);
-			server.releaseConnection();
+			server.releaseConnection(this);
 			processor.destroy();
 			processor = null;
 		});

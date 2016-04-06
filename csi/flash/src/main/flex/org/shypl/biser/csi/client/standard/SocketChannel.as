@@ -72,7 +72,6 @@ package org.shypl.biser.csi.client.standard {
 				_socket.removeEventListener(IOErrorEvent.IO_ERROR, onError);
 				_socket.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 				_socket.removeEventListener(ProgressEvent.SOCKET_DATA, onData);
-				_socket = null;
 
 				try {
 					_socket.close();

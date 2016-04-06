@@ -13,6 +13,8 @@ package org.shypl.biser.csi.client {
 		private var _attempt:int;
 		private var _delayedConnect:Cancelable;
 
+		private var _headerMode:Boolean;
+
 		public function ConnectionProcessorRecovery() {
 		}
 
@@ -59,14 +61,28 @@ package org.shypl.biser.csi.client {
 		override protected function processDataFlag(flag:uint):void {
 			if (flag == Protocol.RECOVERY) {
 				connection.logger.debug("Recovery: Success");
-				connection.recoverSession();
 
-				connection.logger.debug("Recovery: Switch to Messaging");
-				connection.setProcessor(new ConnectionProcessorMessaging());
+				_headerMode = true;
+				setDataExpectBody(1);
 			}
 			else {
 				connection.logger.debug("Recovery: Fail");
 				super.processDataFlag(flag);
+			}
+		}
+
+		override protected function processDataBody(buffer:ByteArray):void {
+			if (_headerMode) {
+				_headerMode = false;
+				setDataExpectBody(buffer.readUnsignedByte());
+			}
+			else {
+				var sid:ByteArray = new ByteArray();
+				buffer.readBytes(sid);
+				connection.recoverSession(sid);
+
+				connection.logger.debug("Recovery: Switch to Messaging");
+				connection.setProcessor(new ConnectionProcessorMessaging());
 			}
 		}
 

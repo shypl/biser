@@ -51,12 +51,14 @@ public abstract class Client {
 	private Connection connection;
 	private Worker     worker;
 
+	private Connection connectionForRecovery;
 	private Cancelable connectionRecoveryTimeout;
 
 	private boolean inputMessageEven;
 	private boolean outputMessageEven;
 	private boolean       outputMessageSendAvailable = true;
 	private Deque<byte[]> outputMessages             = new LinkedList<>();
+
 
 	public Client(long id) {
 		this.id = id;
@@ -137,18 +139,17 @@ public abstract class Client {
 			connection.setProcessor(new ConnectionProcessorMessaging(this));
 
 			if (connection.getLogger().isTraceEnabled()) {
-				logger.debug("Connect (connectionId: {}, sid: {})", id, connection.getId(), Hex.encodeHexString(sid));
+				logger.debug("Connect (connectionId: {}, sid: {})", connection.getId(), Hex.encodeHexString(sid));
 			}
 
-			connection.send(
-				new ByteBuffer(1 + 8 + 1 + sid.length + 4)
-					.writeByte(Protocol.AUTHORIZATION)
-					.writeInt(server.getSettings().getConnectionActivityTimeout())
-					.writeInt(server.getSettings().getConnectionRecoveryTimeout())
-					.writeByte((byte)(sid.length + 8))
-					.writeLong(id)
-					.writeBytes(sid)
-					.readBytes()
+			connection.send(new ByteBuffer(1 + 4 + 4 + 1 + 8 + sid.length)
+				.writeByte(Protocol.AUTHORIZATION)
+				.writeInt(server.getSettings().getConnectionActivityTimeout())
+				.writeInt(server.getSettings().getConnectionRecoveryTimeout())
+				.writeByte((byte)(8 + sid.length))
+				.writeLong(id)
+				.writeBytes(sid)
+				.readBytes()
 			);
 
 			onConnect();
@@ -158,20 +159,32 @@ public abstract class Client {
 	void reconnect(Connection connection) {
 		worker.addTask(() -> {
 			if (connected) {
-				cancelConnectionRecoveryTimeout();
-
-				active = true;
-				this.connection = connection;
-				connection.setProcessor(new ConnectionProcessorMessaging(this));
-
-				if (connection.getLogger().isTraceEnabled()) {
-					logger.debug("Reconnect (connectionId: {})", id, connection.getId());
+				if (active) {
+					connectionForRecovery = connection;
+					this.connection.send(Protocol.PING);
 				}
+				else {
+					cancelConnectionRecoveryTimeout();
 
-				connection.send(new byte[]{
-					Protocol.RECOVERY,
-					inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED});
+					active = true;
+					this.connection = connection;
+					connection.setProcessor(new ConnectionProcessorMessaging(this));
 
+					if (connection.getLogger().isTraceEnabled()) {
+						logger.debug("Reconnect (connectionId: {})", connection.getId());
+					}
+
+					byte[] sid = calculateSid();
+
+					connection.send(new ByteBuffer(1 + 1 + 8 + sid.length + 1)
+						.writeByte(Protocol.RECOVERY)
+						.writeByte((byte)(8 + sid.length))
+						.writeLong(id)
+						.writeBytes(sid)
+						.writeByte(inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED)
+						.readBytes()
+					);
+				}
 			}
 			else {
 				logger.warn("Fail reconnect on disconnected");
@@ -191,7 +204,13 @@ public abstract class Client {
 				handleDisconnect();
 			}
 			else {
-				connectionRecoveryTimeout = worker.scheduleTask(this::handleDisconnect, time, TimeUnit.SECONDS);
+				if (connectionForRecovery == null) {
+					connectionRecoveryTimeout = worker.scheduleTask(this::handleDisconnect, time, TimeUnit.SECONDS);
+				}
+				else {
+					reconnect(connectionForRecovery);
+					connectionForRecovery = null;
+				}
 			}
 		});
 	}

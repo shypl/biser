@@ -112,7 +112,7 @@ public class Server {
 		worker.addTask(() -> {
 			if (opened) {
 				int i = connectionsAmount.incrementAndGet();
-				logger.debug("Accept connection (connections: {})", i);
+				logger.debug("Accept connection #{} (connections: {})", connection.getId(), i);
 			}
 			else {
 				connection.close(ConnectionCloseReason.SERVER_SHUTDOWN);
@@ -122,9 +122,9 @@ public class Server {
 		return connection;
 	}
 
-	void releaseConnection() {
+	void releaseConnection(Connection connection) {
 		int i = connectionsAmount.decrementAndGet();
-		logger.debug("Release connection (connections: {})", i);
+		logger.debug("Release connection #{} (connections: {})", connection.getId(), i);
 	}
 
 	void connectClient(Client client, Connection connection) {

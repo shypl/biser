@@ -85,6 +85,9 @@ package org.shypl.biser.csi.client {
 				_closeReason = reason;
 
 				if (_alive) {
+					if (_messaging) {
+						_channel.writeByte(Protocol.CLOSE);
+					}
 					_channel.close();
 				}
 				else {
@@ -167,8 +170,6 @@ package org.shypl.biser.csi.client {
 		}
 
 		internal function beginSession(sid:ByteArray, activityTimeout:int, recoveryTimeout:int):void {
-
-
 			_logger.debug("Begin session (sid: {}, activityTimeout: {}, recoveryTimeout: {})", sid, activityTimeout, recoveryTimeout);
 
 			_sid = sid;
@@ -178,8 +179,9 @@ package org.shypl.biser.csi.client {
 			callDelayed(beginSessionDelayed);
 		}
 
-		internal function recoverSession():void {
-			_logger.debug("Recover session");
+		internal function recoverSession(sid:ByteArray):void {
+			_logger.debug("Recover session (sid: {})", sid);
+			_sid = sid;
 
 			writeByteToChannel(_inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
 
@@ -233,19 +235,12 @@ package org.shypl.biser.csi.client {
 
 		internal function processMessageReceived(even:Boolean):void {
 			_outputMessageSendAvailable = true;
-			if (_messaging) {
-				if (_outputMessageEven != even) {
-					sendNextMessage();
-				}
-				else {
-					if (_outputMessages.isEmpty()) {
-						logger.error("Violation of the Message Queuing in processMessageReceived()");
-					}
-					else {
-						_outputMessages.removeFirst();
-						sendNextMessageIfExists();
-					}
-				}
+			if (_outputMessageEven != even) {
+				sendNextMessage();
+			}
+			else if (!_outputMessages.isEmpty()) {
+				_outputMessages.removeFirst();
+				sendNextMessageIfExists();
 			}
 		}
 
@@ -286,7 +281,6 @@ package org.shypl.biser.csi.client {
 			_outputMessageBuffer.writeByte(_outputMessageEven ? Protocol.MESSAGE_EVEN : Protocol.MESSAGE_ODD);
 			_outputMessageBuffer.writeInt(message.length);
 			_outputMessageBuffer.writeBytes(message);
-			message.clear();
 
 			sendBytes(_outputMessageBuffer);
 
