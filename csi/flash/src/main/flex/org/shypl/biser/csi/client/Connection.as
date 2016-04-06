@@ -2,12 +2,12 @@ package org.shypl.biser.csi.client {
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
 
-
 	import org.shypl.biser.csi.Address;
 	import org.shypl.biser.csi.ConnectionCloseReason;
 	import org.shypl.biser.csi.Protocol;
 	import org.shypl.common.collection.LinkedList;
 	import org.shypl.common.lang.IllegalArgumentException;
+	import org.shypl.common.lang.IllegalStateException;
 	import org.shypl.common.logging.LogManager;
 	import org.shypl.common.logging.Logger;
 	import org.shypl.common.logging.PrefixedLoggerProxy;
@@ -23,6 +23,7 @@ package org.shypl.biser.csi.client {
 
 		private var _opened:Boolean;
 		private var _alive:Boolean;
+		private var _messaging:Boolean;
 
 		private var _processor:ConnectionProcessor;
 		private var _channel:Channel;
@@ -46,6 +47,7 @@ package org.shypl.biser.csi.client {
 
 			_opened = true;
 			_alive = false;
+			_messaging = false;
 
 			setProcessor(new ConnectionProcessorAuthorization(authorizationKey));
 			openChannel();
@@ -93,9 +95,9 @@ package org.shypl.biser.csi.client {
 
 		public function acceptChannel(channel:Channel):ChannelHandler {
 			if (_opened) {
-				_alive = true;
 				_logger.debug("Channel opened");
 
+				_alive = true;
 				_channel = channel;
 				_processor.processAccept();
 				return this;
@@ -115,6 +117,8 @@ package org.shypl.biser.csi.client {
 		public function handleChannelClose():void {
 			_logger.debug("Channel closed (alive: {})", _alive);
 
+
+			_messaging = false;
 			_alive = false;
 			_channel = null;
 			if (_opened) {
@@ -163,22 +167,23 @@ package org.shypl.biser.csi.client {
 		}
 
 		internal function beginSession(sid:ByteArray, activityTimeout:int, recoveryTimeout:int):void {
+
+
 			_logger.debug("Begin session (sid: {}, activityTimeout: {}, recoveryTimeout: {})", sid, activityTimeout, recoveryTimeout);
 
 			_sid = sid;
 			_activityTimeout = activityTimeout;
 			_recoveryTimeout = recoveryTimeout;
 
-			callDelayed(_client.processConnected);
+			callDelayed(beginSessionDelayed);
 		}
 
 		internal function recoverSession():void {
 			_logger.debug("Recover session");
 
 			writeByteToChannel(_inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
-			_alive = true;
 
-			callDelayed(_client.processConnectionEstablished);
+			callDelayed(recoverSessionDelayed);
 		}
 
 		internal function sendByte(byte:int):void {
@@ -202,8 +207,8 @@ package org.shypl.biser.csi.client {
 		internal function sendMessage(message:ByteArray):void {
 			if (_opened) {
 				_outputMessages.addLast(message);
-				if (_alive && _outputMessageSendAvailable) {
-					sendMessage0(message);
+				if (_messaging && _outputMessageSendAvailable) {
+					sendNextMessage();
 				}
 			}
 			else {
@@ -228,9 +233,9 @@ package org.shypl.biser.csi.client {
 
 		internal function processMessageReceived(even:Boolean):void {
 			_outputMessageSendAvailable = true;
-			if (_alive) {
+			if (_messaging) {
 				if (_outputMessageEven != even) {
-					sendMessage0(ByteArray(_outputMessages.getFirst()));
+					sendNextMessage();
 				}
 				else {
 					if (_outputMessages.isEmpty()) {
@@ -238,15 +243,39 @@ package org.shypl.biser.csi.client {
 					}
 					else {
 						_outputMessages.removeFirst();
-						if (!_outputMessages.isEmpty()) {
-							sendMessage0(ByteArray(_outputMessages.getFirst()));
-						}
+						sendNextMessageIfExists();
 					}
 				}
 			}
 		}
 
+		private function beginSessionDelayed():void {
+			_messaging = true;
+			_client.processConnected();
+			if (_messaging && _outputMessageSendAvailable) {
+				sendNextMessageIfExists();
+			}
+		}
+
+		private function recoverSessionDelayed():void {
+			_messaging = true;
+			_client.processConnectionEstablished();
+		}
+
+		private function sendNextMessageIfExists():void {
+			if (!_outputMessages.isEmpty()) {
+				sendMessage0(ByteArray(_outputMessages.getFirst()));
+			}
+		}
+
+		private function sendNextMessage():void {
+			sendMessage0(ByteArray(_outputMessages.getFirst()));
+		}
+
 		private function sendMessage0(message:ByteArray):void {
+			if (!_outputMessageSendAvailable) {
+				throw new IllegalStateException("Send message is not available");
+			}
 			if (message.length == 0) {
 				throw new IllegalArgumentException("Outgoing message is empty");
 			}
