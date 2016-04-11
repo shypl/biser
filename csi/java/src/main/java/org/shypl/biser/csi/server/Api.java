@@ -1,5 +1,6 @@
 package org.shypl.biser.csi.server;
 
+import org.shypl.biser.csi.ClientProcessor;
 import org.shypl.biser.csi.CommunicationLoggingUtils;
 import org.shypl.biser.io.ByteArrayInputData;
 import org.shypl.biser.io.ByteArrayOutputData;
@@ -68,6 +69,25 @@ public abstract class Api<C extends Client> {
 
 	public final C getClient(long id) {
 		return clients.get(id);
+	}
+
+	public final void processClient(long id, ClientProcessor<C> receiver) {
+		C client = clients.get(id);
+
+		if (client.isConnected()) {
+			client.getWorker().addTask(() -> {
+				if (client.isConnected()) {
+					receiver.processConnectedClient(client);
+				}
+				else {
+					receiver.processNotConnectedClient(id);
+				}
+			});
+		}
+		else {
+			receiver.processNotConnectedClient(id);
+		}
+
 	}
 
 	public final void sendMessage(GlobalMessage message) {

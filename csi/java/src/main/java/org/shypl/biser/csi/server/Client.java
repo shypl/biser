@@ -76,6 +76,10 @@ public abstract class Client {
 		return worker;
 	}
 
+	public boolean isConnected() {
+		return connected;
+	}
+
 	public final Cancelable addDisconnectObserver(Consumer<Client> observer) {
 		return disconnectObservers.add(observer);
 	}
