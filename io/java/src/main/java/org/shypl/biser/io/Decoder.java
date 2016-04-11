@@ -1,5 +1,6 @@
 package org.shypl.biser.io;
 
+import java.util.Date;
 import java.util.Map;
 
 public interface Decoder<T> {
@@ -55,6 +56,12 @@ public interface Decoder<T> {
 		@Override
 		public String decode(DataReader reader) {
 			return reader.readString();
+		}
+	};
+	Decoder<Date>    DATE   = new TypedDecoder<Date>(Date.class) {
+		@Override
+		public Date decode(DataReader reader) {
+			return reader.readDate();
 		}
 	};
 

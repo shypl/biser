@@ -103,6 +103,16 @@ Represent:
 * flash: `String`
 
 
+#### Date
+Date of unit timestamp
+
+Format:
+* `XXXXXXXX` > 8 bytes of raw long int (-1 = null)
+
+Represent:
+* java: `Date`
+* flash: `Date`
+
 #### Bytes
 Sequence of bytes
 

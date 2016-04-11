@@ -117,6 +117,12 @@ package org.shypl.biser.io {
 			}
 		}
 
+		public function writeDate(value:Date):void {
+			const ms:Long = value === null ? Long.MIN_VALUE : Long.valueOfNumber(value.getTime());
+			_stream.writeUnsignedInt(ms.highBits);
+			_stream.writeUnsignedInt(ms.lowBits);
+		}
+		
 		public function writeEnum(value:Enum):void {
 			writeInt(value === null ? -1 : value.ordinal);
 		}

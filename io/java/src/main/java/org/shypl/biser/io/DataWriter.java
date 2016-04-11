@@ -2,6 +2,7 @@ package org.shypl.biser.io;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 public class DataWriter {
@@ -110,6 +111,10 @@ public class DataWriter {
 			writeInt(utfBytes.length);
 			stream.write(utfBytes);
 		}
+	}
+
+	public void writeDate(Date value) {
+		writeRawLong(value == null ? Long.MIN_VALUE : value.getTime());
 	}
 
 	public void writeEnum(Enum<?> value) {

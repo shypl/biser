@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +99,16 @@ public class DataReader {
 		readBytesToBuffer(size);
 
 		return new String(buffer, 0, size, StandardCharsets.UTF_8);
+	}
+
+	public Date readDate() {
+		long ms = readRawLong();
+
+		if (ms == Long.MIN_VALUE) {
+			return null;
+		}
+
+		return new Date(ms);
 	}
 
 	public <E extends Enum<E>> E readEnum(Class<E> type) {

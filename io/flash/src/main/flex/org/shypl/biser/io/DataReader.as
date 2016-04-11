@@ -107,6 +107,11 @@ package org.shypl.biser.io {
 			return _stream.readUTFBytes(size);
 		}
 
+		public function readDate():Date {
+			const ms:Long = Long.valueOfBits(_stream.readUnsignedInt(), _stream.readUnsignedInt());
+			return ms.equals(Long.MIN_VALUE) ? null : new Date(ms.numberValue());
+		}
+		
 		public function readEnum(type:Class):Enum {
 			const ordinal:int = readInt();
 

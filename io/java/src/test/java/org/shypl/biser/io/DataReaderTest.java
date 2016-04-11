@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -424,6 +425,45 @@ public class DataReaderTest {
 			Assert.assertEquals(expected, actual);
 		}
 
+
+		Assert.assertEquals(0, stream.getReadableBytes());
+	}
+
+	@Test
+	public void testReadDate() {
+		//arrange
+		final Date[] expectedValues = {null, new Date(0), new Date(-100000), new Date(100000), new Date(Integer.MAX_VALUE)};
+		final byte[] data = Utils.convertIntArrayToByteArray(new int[]{
+			0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // null
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0
+			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0x79, 0x60, // -100000
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x86, 0xA0, // 100000
+			0x00, 0x00, 0x00, 0x00, 0x7F, 0xFF, 0xFF, 0xFF, // Integer.MAX_VALUE
+
+			0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // null
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 0
+			0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0x79, 0x60, // -100000
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x86, 0xA0, // 100000
+			0x00, 0x00, 0x00, 0x00, 0x7F, 0xFF, 0xFF, 0xFF, // Integer.MAX_VALUE
+		});
+
+		final ByteArrayInputStream stream = new ByteArrayInputStream(data);
+		final DataReader reader = new DataReader(stream);
+
+		for (Date expected : expectedValues) {
+			//act
+			final Date actual = reader.readDate();
+
+			//assert
+			Assert.assertEquals(expected, actual);
+		}
+		for (Date expected : expectedValues) {
+			//act
+			final Date actual = Decoder.DATE.decode(reader);
+
+			//assert
+			Assert.assertEquals(expected, actual);
+		}
 
 		Assert.assertEquals(0, stream.getReadableBytes());
 	}
