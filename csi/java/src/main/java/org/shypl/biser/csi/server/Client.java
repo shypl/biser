@@ -72,6 +72,10 @@ public abstract class Client {
 		return attributeMap.attr(key);
 	}
 
+	public final Worker getWorker() {
+		return worker;
+	}
+
 	public final Cancelable addDisconnectObserver(Consumer<Client> observer) {
 		return disconnectObservers.add(observer);
 	}
