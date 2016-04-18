@@ -26,11 +26,11 @@ public class CommunicationLoggingUtils {
 	}
 
 	public static void logServerResponse(Logger logger, String serviceName, String methodName, Object result) {
-		if (logger.isTraceEnabled()) {
+		if (logger.isDebugEnabled()) {
 			StringBuilder message = createMessage(false, serviceName, methodName);
 			message.append(RESULT);
 			StringUtils.toString(message, result);
-			logger.trace(message.toString());
+			logger.debug(message.toString());
 		}
 	}
 
@@ -51,35 +51,35 @@ public class CommunicationLoggingUtils {
 	}
 
 	private static void logCall(boolean cts, Logger logger, String serviceName, String methodName) {
-		if (logger.isTraceEnabled()) {
-			logger.trace(createMessage(cts, serviceName, methodName).append(ARGS_EMPTY).toString());
+		if (logger.isDebugEnabled()) {
+			logger.debug(createMessage(cts, serviceName, methodName).append(ARGS_EMPTY).toString());
 		}
 	}
 
 	private static void logCall(boolean cts, Logger logger, String serviceName, String methodName, Object arg) {
-		if (logger.isTraceEnabled()) {
+		if (logger.isDebugEnabled()) {
 			StringBuilder message = createMessage(cts, serviceName, methodName);
 			message.append('(');
 			StringUtils.toString(message, arg);
 			message.append(')');
-			logger.trace(message.toString());
+			logger.debug(message.toString());
 		}
 	}
 
 	private static void logCall(boolean cts, Logger logger, String serviceName, String methodName, Object arg1, Object arg2) {
-		if (logger.isTraceEnabled()) {
+		if (logger.isDebugEnabled()) {
 			StringBuilder message = createMessage(cts, serviceName, methodName);
 			message.append('(');
 			StringUtils.toString(message, arg1);
 			message.append(ARGS_SEP);
 			StringUtils.toString(message, arg2);
 			message.append(')');
-			logger.trace(message.toString());
+			logger.debug(message.toString());
 		}
 	}
 
 	private static void logCall(boolean cts, Logger logger, String serviceName, String methodName, Object[] args) {
-		if (logger.isTraceEnabled()) {
+		if (logger.isDebugEnabled()) {
 			StringBuilder message = createMessage(cts, serviceName, methodName);
 			message.append('(');
 
@@ -96,7 +96,7 @@ public class CommunicationLoggingUtils {
 
 			message.append(')');
 
-			logger.trace(message.toString());
+			logger.debug(message.toString());
 		}
 	}
 

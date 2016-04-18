@@ -8,8 +8,8 @@ package org.shypl.biser.csi {
 		}
 
 		public static function logServerResponse(logger:Logger, serviceName:String, methodName:String, result:Object):void {
-			if (logger.isTraceEnabled()) {
-				logger.trace(createMessage(false, serviceName, methodName) + ": " + StringUtils.toString(result));
+			if (logger.isDebugEnabled()) {
+				logger.debug(createMessage(false, serviceName, methodName) + ": " + StringUtils.toString(result));
 			}
 		}
 
@@ -18,7 +18,7 @@ package org.shypl.biser.csi {
 		}
 
 		private static function logCall(cts:Boolean, logger:Logger, serviceName:String, methodName:String, args:Array):void {
-			if (logger.isTraceEnabled()) {
+			if (logger.isDebugEnabled()) {
 				var message:String = createMessage(cts, serviceName, methodName);
 
 				message += "(";
@@ -34,7 +34,7 @@ package org.shypl.biser.csi {
 				}
 				message += ")";
 
-				logger.trace(message);
+				logger.debug(message);
 			}
 		}
 
