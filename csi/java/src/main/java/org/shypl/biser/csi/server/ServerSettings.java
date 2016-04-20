@@ -14,6 +14,7 @@ public class ServerSettings {
 
 	private int connectionRecoveryTimeout = 60 * 3;
 	private int connectionActivityTimeout = 60;
+	private long emulateDelayInConnectionDataProcessingMillis = 0;
 
 	public ServerSettings(Address address) {
 		this.address = address;
@@ -75,5 +76,17 @@ public class ServerSettings {
 
 	public void setConnectionActivityTimeout(int value) {
 		connectionActivityTimeout = value;
+	}
+
+	public boolean isEmulateDelayInConnectionDataProcessing() {
+		return emulateDelayInConnectionDataProcessingMillis > 0;
+	}
+
+	public long getEmulateDelayInConnectionDataProcessingMillis() {
+		return emulateDelayInConnectionDataProcessingMillis;
+	}
+
+	public void setEmulateDelayInConnectionDataProcessing(long millis) {
+		this.emulateDelayInConnectionDataProcessingMillis = millis;
 	}
 }

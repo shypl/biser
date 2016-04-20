@@ -78,6 +78,16 @@ class Connection implements ChannelHandler {
 				logger.trace(">> {}", StringUtils.toString(bytes));
 			}
 
+			if (server.getSettings().isEmulateDelayInConnectionDataProcessing()) {
+				try {
+					Thread.sleep(server.getSettings().getEmulateDelayInConnectionDataProcessingMillis());
+				}
+				catch (InterruptedException e) {
+					logger.error("EmulateDelayInConnectionDataProcessing interrupted", e);
+					syncClose(ConnectionCloseReason.SERVER_ERROR);
+				}
+			}
+
 			activity = true;
 			readerData = bytes;
 			readerCursor = 0;
