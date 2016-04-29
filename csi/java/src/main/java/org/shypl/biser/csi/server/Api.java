@@ -74,7 +74,7 @@ public abstract class Api<C extends Client> {
 	public final void processClient(long id, ClientProcessor<C> receiver) {
 		C client = clients.get(id);
 
-		if (client.isConnected()) {
+		if (client != null && client.isConnected()) {
 			client.getWorker().addTask(() -> {
 				if (client.isConnected()) {
 					receiver.processConnectedClient(client);
