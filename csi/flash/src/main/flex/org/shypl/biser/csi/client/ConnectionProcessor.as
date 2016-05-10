@@ -81,7 +81,7 @@ package org.shypl.biser.csi.client {
 
 		private function readDataBody(data:IDataInput):void {
 			var bufferSize:uint = _dataBuffer.bytesAvailable;
-			data.readBytes(_dataBuffer, bufferSize, _dataExpectedSize - bufferSize);
+			data.readBytes(_dataBuffer, bufferSize, Math.min(_dataExpectedSize - bufferSize, data.bytesAvailable));
 
 			if (_dataExpectedSize == _dataBuffer.bytesAvailable) {
 				setDataExpectFlag();
