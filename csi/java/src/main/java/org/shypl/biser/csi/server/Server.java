@@ -68,7 +68,7 @@ public class Server {
 				opened = false;
 				logger.info("Stopping");
 
-				if (timeout == 0) {
+				if (timeout == 0 || isNotConnectionsAndClients()) {
 					doStop0();
 				}
 				else {
@@ -196,7 +196,7 @@ public class Server {
 	}
 
 	private void doStop0() {
-		if (connectionsAmount.get() == 0 && api.countClients() == 0) {
+		if (isNotConnectionsAndClients()) {
 			doStop1();
 		}
 		else {
@@ -205,6 +205,10 @@ public class Server {
 			}
 			stopperChecker = worker.scheduleTaskPeriodic(this::doStop1, 1, TimeUnit.SECONDS);
 		}
+	}
+
+	private boolean isNotConnectionsAndClients() {
+		return connectionsAmount.get() == 0 && api.countClients() == 0;
 	}
 
 	private void doStop1() {
