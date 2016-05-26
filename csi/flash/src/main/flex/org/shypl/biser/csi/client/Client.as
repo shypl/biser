@@ -18,14 +18,14 @@ package org.shypl.biser.csi.client {
 		private static const LOGGER:Logger = LogManager.getLogger(Client);
 
 		private var _channelProvider:ChannelProvider;
-		private var _api:Api;
+		private var _api:AbstractApi;
 		private var _logger:PrefixedLoggerProxy;
 
 		private var _connecting:Boolean;
 		private var _connected:Boolean;
 		private var _connection:Connection;
 
-		public function Client(channelProvider:ChannelProvider, api:Api) {
+		public function Client(channelProvider:ChannelProvider, api:AbstractApi) {
 			_channelProvider = channelProvider;
 			_api = api;
 
@@ -36,7 +36,7 @@ package org.shypl.biser.csi.client {
 			return _channelProvider;
 		}
 
-		internal function get api():Api {
+		internal function get api():AbstractApi {
 			return _api;
 		}
 

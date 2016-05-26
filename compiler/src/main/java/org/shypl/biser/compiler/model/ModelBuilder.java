@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class ModelBuilder {
 	private final Map<String, StructureType> structures = new HashMap<>();
-	private final Map<String, Api>           csiGates   = new HashMap<>();
+	private final Api                        api        = new Api();
 
 	public EntityType getEntity(String name) throws ModelException {
 		StructureType type = structures.get(name);
@@ -43,16 +43,11 @@ public class ModelBuilder {
 		return structures.get(name);
 	}
 
-	public Api getCsiGate(String name) {
-		Api gate = csiGates.get(name);
-		if (gate == null) {
-			gate = new Api(name);
-			csiGates.put(name, gate);
-		}
-		return gate;
+	public Api getApi() {
+		return api;
 	}
 
 	public Model buildModel() {
-		return new Model(structures.values(), csiGates.values());
+		return new Model(structures.values(), api);
 	}
 }

@@ -5,18 +5,18 @@ import java.util.Collection;
 
 public class Model {
 	private final Collection<StructureType> structures;
-	private final Collection<Api>           apis;
+	private final Api                       api;
 
-	public Model(Collection<StructureType> structures, Collection<Api> apis) {
-		this.apis = apis;
+	public Model(Collection<StructureType> structures, Api api) {
 		this.structures = new ArrayList<>(structures);
+		this.api = api;
 	}
 
 	public Collection<StructureType> getStructures() {
 		return new ArrayList<>(structures);
 	}
 
-	public Collection<Api> getApis() {
-		return new ArrayList<>(apis);
+	public Api getApi() {
+		return api;
 	}
 }

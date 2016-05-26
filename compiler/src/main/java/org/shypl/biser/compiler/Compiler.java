@@ -1,6 +1,7 @@
 package org.shypl.biser.compiler;
 
 import org.shypl.biser.compiler.builder.ModuleBuilderManager;
+import org.shypl.biser.compiler.model.ApiSide;
 import org.shypl.biser.compiler.model.Model;
 import org.shypl.biser.compiler.parser.Parser;
 import org.shypl.biser.compiler.parser.ParserException;
@@ -14,9 +15,6 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
 
 public final class Compiler {
 
@@ -42,21 +40,8 @@ public final class Compiler {
 			}
 		}
 
-		for (Map.Entry<String, CompilerConfig.ModuleConfig> entry : config.modules.entrySet()) {
-			String moduleName = entry.getKey();
-			CompilerConfig.ModuleConfig moduleConfig = entry.getValue();
-
-			if (moduleConfig.lang == null) {
-				throw new CompilerException("For module " + moduleName + " not specified lang");
-			}
-
-			if (moduleConfig.target == null) {
-				throw new CompilerException("For module " + moduleName + " not specified target");
-			}
-			if (!moduleConfig.target.isAbsolute()) {
-				moduleConfig.target = baseDir.resolve(moduleConfig.target);
-			}
-		}
+		prepareModuleConfig(config.server, baseDir);
+		prepareModuleConfig(config.client, baseDir);
 
 		run(config);
 	}
@@ -64,14 +49,8 @@ public final class Compiler {
 	public static void run(CompilerConfig config) throws CompilerException {
 		Model model = config.sourceCode == null ? parseModel(config.source) : parseModel(config.sourceCode);
 
-		Collection<Module> modules = new ArrayList<>();
-
-		for (Map.Entry<String, CompilerConfig.ModuleConfig> entry : config.modules.entrySet()) {
-			final CompilerConfig.ModuleConfig value = entry.getValue();
-			modules.add(new Module(entry.getKey(), value.lang, value.pack, value.target, value.api));
-		}
-
-		compile(modules, model);
+		compile(createModule(config.server, ApiSide.SERVER), model);
+		compile(createModule(config.client, ApiSide.CLIENT), model);
 	}
 
 	public static Model parseModel(String code) throws CompilerException {
@@ -125,11 +104,19 @@ public final class Compiler {
 		}
 	}
 
-	private static void compile(Collection<Module> modules, Model model) throws CompilerException {
-		for (Module module : modules) {
-			clearDirectory(module.getTarget().resolve(module.getPackage().replace('.', File.separatorChar)).toFile());
-			ModuleBuilderManager.getBuilder(module.getLanguage()).build(module, model);
+	private static Module createModule(CompilerConfig.ModuleConfig config, ApiSide side) {
+		return new Module(config.lang, config.pack, config.target, side);
+	}
+
+	private static void prepareModuleConfig(CompilerConfig.ModuleConfig config, Path baseDir) {
+		if (!config.target.isAbsolute()) {
+			config.target = baseDir.resolve(config.target);
 		}
+	}
+
+	private static void compile(Module module, Model model) throws CompilerException {
+		clearDirectory(module.getTarget().resolve(module.getPackage().replace('.', File.separatorChar)).toFile());
+		ModuleBuilderManager.getBuilder(module.getLanguage()).build(module, model);
 	}
 
 	private static void clearDirectory(final File directory) throws CompilerException {

@@ -46,7 +46,7 @@ public abstract class GlobalMessage {
 		CommunicationLoggingUtils.logServerCall(logger, serviceName, methodName, args);
 	}
 
-	void send(Collection<? extends Client> clients, Logger logger) {
+	void send(Collection<? extends AbstractClient> clients, Logger logger) {
 		this.logger = logger;
 
 		ByteArrayOutputData data = threadLocalData.get();
@@ -60,7 +60,7 @@ public abstract class GlobalMessage {
 
 		byte[] bytes = data.getArray();
 
-		for (Client client : clients) {
+		for (AbstractClient client : clients) {
 			client.sendMessage(bytes);
 		}
 	}

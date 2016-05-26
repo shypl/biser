@@ -21,7 +21,7 @@ public class Server {
 	private final ScheduledExecutorService connectionsExecutor;
 	private final ChannelGate              channelGate;
 	private final ServerSettings           settings;
-	private final Api<?>                   api;
+	private final AbstractApi<?>           api;
 	private final Worker                   worker;
 	private final PrefixedLoggerProxy      logger;
 
@@ -33,7 +33,7 @@ public class Server {
 	private Cancelable stopperChecker;
 
 	public Server(ScheduledExecutorService serverExecutor, ScheduledExecutorService connectionsExecutor,
-		ChannelGate channelGate, ServerSettings settings, Api<?> api
+		ChannelGate channelGate, ServerSettings settings, AbstractApi<?> api
 	) {
 		this.connectionsExecutor = connectionsExecutor;
 		this.channelGate = channelGate;
@@ -73,7 +73,7 @@ public class Server {
 				}
 				else {
 					byte[] bytes = new ByteBuffer(2).writeByte(Protocol.SERVER_SHUTDOWN_TIMEOUT).writeInt(timeout).readBytes();
-					for (Client client : api.getAllClients()) {
+					for (AbstractClient client : api.getAllClients()) {
 						client.sendData(bytes);
 					}
 					worker.scheduleTask(this::doStop0, timeout, TimeUnit.SECONDS);
@@ -102,7 +102,7 @@ public class Server {
 		return settings;
 	}
 
-	Api<?> getApi() {
+	AbstractApi<?> getApi() {
 		return api;
 	}
 
@@ -127,11 +127,11 @@ public class Server {
 		logger.debug("Release connection #{} (connections: {})", connection.getId(), i);
 	}
 
-	void connectClient(Client client, Connection connection) {
+	void connectClient(AbstractClient client, Connection connection) {
 		worker.addTask(() -> {
 			if (connection.isOpened()) {
 				if (opened) {
-					Client oldClient = api.getClient(client.getId());
+					AbstractClient oldClient = api.getClient(client.getId());
 					if (oldClient == null) {
 						logger.debug("Connect client #{} (clients: {})", client.getId(), api.countClients());
 
@@ -153,9 +153,9 @@ public class Server {
 		});
 	}
 
-	void disconnectClient(Client client) {
+	void disconnectClient(AbstractClient client) {
 		worker.addTask(() -> {
-			Client oldClient = api.getClient(client.getId());
+			AbstractClient oldClient = api.getClient(client.getId());
 			if (oldClient == client) {
 				api.removeClient(client);
 				logger.debug("Disconnect client #{} (clients: {})", client.getId(), api.countClients());
@@ -171,7 +171,7 @@ public class Server {
 			if (opened) {
 				if (connection.isOpened()) {
 					if (running) {
-						Client client = api.getClient(clientId);
+						AbstractClient client = api.getClient(clientId);
 
 						if (client == null || !Arrays.equals(client.calculateSid(), clientSid)) {
 							connection.close(ConnectionCloseReason.RECOVERY_REJECT);
@@ -200,7 +200,7 @@ public class Server {
 			doStop1();
 		}
 		else {
-			for (Client client : api.getAllClients()) {
+			for (AbstractClient client : api.getAllClients()) {
 				client.disconnect(ConnectionCloseReason.SERVER_SHUTDOWN);
 			}
 			stopperChecker = worker.scheduleTaskPeriodic(this::doStop1, 1, TimeUnit.SECONDS);

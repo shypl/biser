@@ -5,18 +5,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Api {
-	private final String name;
 	private final Map<String, ApiService> services = new HashMap<>();
-
-	public Api(String name) {
-		this.name = name;
-	}
-
-	public String getName() {
-		return name;
-	}
 
 	public ApiService getService(String name) {
 		ApiService service = services.get(name);
@@ -32,22 +24,10 @@ public class Api {
 	}
 
 	public List<ApiService> getServerServices() {
-		List<ApiService> services = new ArrayList<>();
-		for (ApiService service : this.services.values()) {
-			if (service.hasServerActions()) {
-				services.add(service);
-			}
-		}
-		return services;
+		return this.services.values().stream().filter(ApiService::hasServerActions).collect(Collectors.toList());
 	}
 
 	public List<ApiService> getClientServices() {
-		List<ApiService> services = new ArrayList<>();
-		for (ApiService service : this.services.values()) {
-			if (service.hasClientActions()) {
-				services.add(service);
-			}
-		}
-		return services;
+		return this.services.values().stream().filter(ApiService::hasClientActions).collect(Collectors.toList());
 	}
 }

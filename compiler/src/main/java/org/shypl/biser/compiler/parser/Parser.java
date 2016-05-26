@@ -56,7 +56,7 @@ public class Parser {
 				parseStructure(stream, entry.getValue());
 			}
 			else if (entry.isToken(Token.CARET)) {
-				parseApiGate(stream);
+				parseApi(stream);
 			}
 			else {
 				throw new UnexpectedTokenException(entry);
@@ -210,21 +210,18 @@ public class Parser {
 		return parameters;
 	}
 
-	private void parseApiGate(TokenStream stream) throws ParserException {
-		Api gate = modelBuilder.getCsiGate(stream.next(Token.WORD).getValue());
+	private void parseApi(TokenStream stream) throws ParserException {
+		Api api = modelBuilder.getApi();
 		TokenEntry entry = stream.next();
 
-		if (entry.isToken(Token.DOT)) {
-			parseApiService(stream, gate, stream.next(Token.WORD).getValue());
-		}
-		else if (entry.isToken(Token.BRACKET_CURLY_OPEN)) {
+		if (entry.isToken(Token.BRACKET_CURLY_OPEN)) {
 			while (true) {
 				entry = stream.next();
 				if (entry.isToken(Token.BRACKET_CURLY_CLOSE)) {
 					break;
 				}
 				if (entry.isToken(Token.WORD)) {
-					parseApiService(stream, gate, entry.getValue());
+					parseApiService(stream, api, entry.getValue());
 				}
 				else {
 					throw new UnexpectedTokenException(entry);
@@ -232,7 +229,7 @@ public class Parser {
 			}
 		}
 		else {
-			throw new UnexpectedTokenException(entry);
+			parseApiService(stream, api, entry.getValue());
 		}
 	}
 
@@ -241,7 +238,7 @@ public class Parser {
 
 		stream.next(Token.BRACKET_CURLY_OPEN);
 
-		String namePrefix = api.getName() + '.' + service.getCamelName();
+		String namePrefix = "api." + service.getCamelName();
 
 		while (true) {
 			final TokenEntry entry = stream.next();
@@ -263,7 +260,7 @@ public class Parser {
 				}
 			}
 			catch (ModelException e) {
-				throw new ParserException("Error on parse api service " + api.getName() + "." + name, e);
+				throw new ParserException("Error on parse api service " + name, e);
 			}
 		}
 	}

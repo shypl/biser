@@ -22,8 +22,8 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-public abstract class Client {
-	private static final Logger LOGGER = LoggerFactory.getLogger(Client.class);
+public abstract class AbstractClient {
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractClient.class);
 	private static final byte[] SID_SALT;
 
 	private static final ThreadLocal<ByteBuffer> threadLocalMessageBuffer = new ThreadLocal<ByteBuffer>() {
@@ -39,7 +39,7 @@ public abstract class Client {
 		random.nextBytes(SID_SALT);
 	}
 
-	private final Observers<Consumer<Client>> disconnectObservers = new Observers<>();
+	private final Observers<Consumer<AbstractClient>> disconnectObservers = new Observers<>();
 	private final long id;
 	private final AttributeMap attributeMap = new DefaultAttributeMap();
 	private Logger logger;
@@ -60,7 +60,7 @@ public abstract class Client {
 	private Deque<byte[]> outputMessages             = new LinkedList<>();
 
 
-	public Client(long id) {
+	public AbstractClient(long id) {
 		this.id = id;
 	}
 
@@ -80,11 +80,11 @@ public abstract class Client {
 		return connected;
 	}
 
-	public final Cancelable addDisconnectObserver(Consumer<Client> observer) {
+	public final Cancelable addDisconnectObserver(Consumer<AbstractClient> observer) {
 		return disconnectObservers.add(observer);
 	}
 
-	public final void removeDisconnectObserver(Consumer<Client> observer) {
+	public final void removeDisconnectObserver(Consumer<AbstractClient> observer) {
 		disconnectObservers.remove(observer);
 	}
 
@@ -93,10 +93,10 @@ public abstract class Client {
 	}
 
 	public final void disconnect(ConnectionCloseReason reason) {
-		disconnect(reason, (Consumer<Client>)null);
+		disconnect(reason, (Consumer<AbstractClient>)null);
 	}
 
-	public final void disconnect(ConnectionCloseReason reason, Consumer<Client> callback) {
+	public final void disconnect(ConnectionCloseReason reason, Consumer<AbstractClient> callback) {
 		worker.addTask(() -> {
 			if (connected) {
 				if (callback != null) {

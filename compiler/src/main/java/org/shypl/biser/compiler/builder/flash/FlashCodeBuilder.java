@@ -1,6 +1,5 @@
 package org.shypl.biser.compiler.builder.flash;
 
-import org.shypl.biser.compiler.Utils;
 import org.shypl.biser.compiler.builder.OopCodeBuilder;
 import org.shypl.biser.compiler.code.CodeClass;
 import org.shypl.biser.compiler.code.CodeEngine;
@@ -273,7 +272,7 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 	@Override
 	public void buildClientApi(Api api) {
-		ClientCsiBuilder builder = new ClientCsiBuilder(api.getName());
+		ClientCsiBuilder builder = new ClientCsiBuilder();
 		builder.buildServer(api.getServerServices());
 		builder.buildClient(api.getClientServices());
 	}
@@ -481,13 +480,20 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 		private final CodeClass apiClass;
 
-		public ClientCsiBuilder(String apiName) {
-			super(apiName);
-			apiClass = pack.getClass(Utils.convertToCamel(apiName) + "Api");
+		public ClientCsiBuilder() {
+			super("api");
+			apiClass = pack.getClass("Api");
+			apiClass.setParent(engine.getClass("org.shypl.biser.csi.client.AbstractApi"));
+			apiClass.getModifier().add(CodeModifier.PUBLIC);
 		}
 
 		public void buildServer(List<ApiService> services) {
 			CodeClass cls = apiClass;
+
+			CodeMethod constructor = cls.addMethod(cls.getName());
+			constructor.getModifier().add(CodeModifier.PUBLIC);
+			constructor.getArgument("name").setType(primitiveString).setValue(new CodeExpressionString("main"));
+			constructor.getBody().addStatement(new CodeExpressionMethod("super", new CodeExpressionWord("name")));
 
 			if (!services.isEmpty()) {
 				buildServerServices(services);
@@ -496,14 +502,10 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 				server.setType(pack.getClass("ServerServices"));
 				server.getModifier().add(CodeModifier.PRIVATE);
 
-				CodeMethod method = cls.addMethod(cls.getName());
-				method.getModifier().add(CodeModifier.PUBLIC);
-				method.getBody()
-					.addStatement(new CodeExpressionMethod("super", new CodeExpressionString(name)))
-					.addStatement(
+				constructor.getBody().addStatement(
 						new CodeExpressionWord(server.getName()).assign(new CodeExpressionNew(pack.getClass("ServerServices"), CodeExpressionWord.THIS)));
 
-				method = cls.addMethod("server");
+				CodeMethod method = cls.addMethod("server");
 				method.getModifier().add(CodeModifier.PUBLIC | CodeModifier.GETTER | CodeModifier.FINAL);
 				method.setReturnType(pack.getClass("ServerServices"));
 				method.getBody().addStatement(new CodeStatementReturn(server.getName()));
@@ -512,8 +514,6 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 		public void buildClient(List<ApiService> services) {
 			CodeClass cls = apiClass;
-			cls.setParent(engine.getClass("org.shypl.biser.csi.client.Api"));
-			cls.getModifier().add(CodeModifier.PUBLIC);
 
 			CodeMethod method = cls.addMethod("callService");
 			method.getModifier().add(CodeModifier.PROTECTED | CodeModifier.FINAL | CodeModifier.OVERRIDE);

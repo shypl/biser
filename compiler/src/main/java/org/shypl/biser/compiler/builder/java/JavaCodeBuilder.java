@@ -269,7 +269,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 	@Override
 	public void buildServerApi(Api api) {
-		ServerApiBuilder builder = new ServerApiBuilder(api.getName());
+		ServerApiBuilder builder = new ServerApiBuilder();
 		builder.buildClient(api.getClientServices());
 		builder.buildServer(api.getServerServices());
 	}
@@ -480,15 +480,15 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 		private final CodeClass clientClass;
 
-		public ServerApiBuilder(String apiName) {
-			super(apiName);
-			clientClass = pack.getClass("AbstractClient");
+		public ServerApiBuilder() {
+			super("api");
+			clientClass = pack.getClass("Client");
 		}
 
 		public void buildClient(List<ApiService> services) {
 			CodeClass cls = clientClass;
-			cls.getModifier().set(CodeModifier.PUBLIC | CodeModifier.ABSTRACT);
-			cls.setParent(engine.getClass("org.shypl.biser.csi.server.Client"));
+			cls.getModifier().set(CodeModifier.PUBLIC);
+			cls.setParent(engine.getClass("org.shypl.biser.csi.server.AbstractClient"));
 
 			// constructor
 			CodeMethod method = cls.addMethod(cls.getName());
@@ -508,16 +508,24 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		}
 
 		public void buildServer(List<ApiService> services) {
-			CodeClass cls = pack.getClass("AbstractApi");
+			CodeClass cls = pack.getClass("Api");
 			CodeGeneric c = cls.getGeneric("C");
 			c.setDependence(CodeGeneric.Dependence.EXTENDS, clientClass);
-			cls.setParent(engine.getClass("org.shypl.biser.csi.server.Api").parametrize(c));
-			cls.getModifier().add(CodeModifier.ABSTRACT | CodeModifier.PUBLIC);
+			cls.setParent(engine.getClass("org.shypl.biser.csi.server.AbstractApi").parametrize(c));
+			cls.getModifier().add(CodeModifier.PUBLIC);
 
-			// constructor
+			// constructor1
 			CodeMethod method = cls.addMethod(cls.getName());
 			method.getModifier().set(CodeModifier.PUBLIC);
-			method.getBody().addStatement(new CodeExpressionMethod("super", new CodeExpressionString(name)));
+			method.getArgument("clientFactory").setType(engine.getClass("java.util.function.Function").parametrize(primitiveString, c));
+			method.getBody().addStatement(new CodeExpressionMethod("this", new CodeExpressionString("main"), new CodeExpressionWord("clientFactory")));
+
+			// constructor2
+			method = cls.addMethod(cls.getName());
+			method.getModifier().set(CodeModifier.PUBLIC);
+			method.getArgument("name").setType(primitiveString);
+			method.getArgument("clientFactory").setType(engine.getClass("java.util.function.Function").parametrize(primitiveString, c));
+			method.getBody().addStatement(new CodeExpressionMethod("super", new CodeExpressionWord("name"), new CodeExpressionWord("clientFactory")));
 
 			// callService
 			method = cls.addMethod("callService");
@@ -792,49 +800,5 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 			return cls;
 		}
-
-		/*
-		private class LogMethod extends CodeExpressionMethod {
-			private final List<Arg> args = new ArrayList<>();
-			private       boolean   raw  = true;
-
-			public LogMethod(CodeExpression target, String method, int type, ApiService service, ApiServiceMethod action, int argumentsSize, Arg... args) {
-				super(target, method, createActionLogMessage(type, service, action, argumentsSize));
-				Collections.addAll(this.args, args);
-			}
-
-			public LogMethod(String method, int type, ApiService service, ApiServiceMethod action, int argumentsSize, Arg... args) {
-				super(method, createActionLogMessage(type, service, action, argumentsSize));
-				Collections.addAll(this.args, args);
-			}
-
-			public void addArgument(String argument, DataType type) {
-				addArgument(new CodeExpressionWord(argument), type);
-			}
-
-			public void addArgument(CodeExpression argument, DataType type) {
-				args.add(new Arg(argument, type));
-			}
-
-			@Override
-			public void visit(CodeVisitor visitor) {
-				if (raw) {
-					raw = false;
-					if (args.size() == 1
-						&& (args.get(0).type instanceof ArrayType)
-						&& !(((ArrayType)args.get(0).type).getElementType() instanceof PrimitiveType)
-						) {
-						Arg arg = args.get(0);
-						arg.argument = new CodeExpressionNew(engine.getClass("org.shypl.common.util.VarargsObjectArray"), arg.argument);
-					}
-					for (Arg arg : args) {
-						addArgument(arg.argument);
-					}
-				}
-				super.visit(visitor);
-			}
-		}
-
-		*/
 	}
 }

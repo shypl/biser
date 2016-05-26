@@ -17,9 +17,10 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
-public abstract class Api<C extends Client> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(Api.class);
+public abstract class AbstractApi<C extends AbstractClient> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractApi.class);
 
 	private static final ThreadLocal<ByteArrayInputData>  threadLocalInputData  = new ThreadLocal<ByteArrayInputData>() {
 		@Override
@@ -36,13 +37,15 @@ public abstract class Api<C extends Client> {
 
 	private final Map<Long, C> clients = new ConcurrentHashMap<>();
 	private final String name;
+	private final Function<String, C> clientFactory;
 	private final Logger logger;
 
 	private final Observers<Consumer<C>> clientConnectObservers    = new Observers<>();
 	private final Observers<Consumer<C>> clientDisconnectObservers = new Observers<>();
 
-	protected Api(String name) {
+	protected AbstractApi(String name, Function<String, C> clientFactory) {
 		this.name = name;
+		this.clientFactory = clientFactory;
 		logger = new PrefixedLoggerProxy(LOGGER, '[' + name + "] ");
 	}
 
@@ -94,7 +97,7 @@ public abstract class Api<C extends Client> {
 		sendMessage(message, clients.values());
 	}
 
-	public final void sendMessage(GlobalMessage message, Collection<? extends Client> clients) {
+	public final void sendMessage(GlobalMessage message, Collection<? extends AbstractClient> clients) {
 		message.send(clients, logger);
 	}
 
@@ -114,46 +117,44 @@ public abstract class Api<C extends Client> {
 		clientDisconnectObservers.remove(observer);
 	}
 
-	protected abstract C authorizeClient(String key);
-
 	protected abstract void callService(C client, int serviceId, int methodId, DataReader reader, DataWriter writer) throws Throwable;
 
-	protected final void logCall(Client client, String serviceName, String methodName) {
+	protected final void logCall(AbstractClient client, String serviceName, String methodName) {
 		CommunicationLoggingUtils.logClientCall(client.getLogger(), serviceName, methodName);
 	}
 
-	protected final void logCall(Client client, String serviceName, String methodName, Object arg) {
+	protected final void logCall(AbstractClient client, String serviceName, String methodName, Object arg) {
 		CommunicationLoggingUtils.logClientCall(client.getLogger(), serviceName, methodName, arg);
 	}
 
-	protected final void logCall(Client client, String serviceName, String methodName, Object arg1, Object arg2) {
+	protected final void logCall(AbstractClient client, String serviceName, String methodName, Object arg1, Object arg2) {
 		CommunicationLoggingUtils.logClientCall(client.getLogger(), serviceName, methodName, arg1, arg2);
 	}
 
-	protected final void logCall(Client client, String serviceName, String methodName, Object... args) {
+	protected final void logCall(AbstractClient client, String serviceName, String methodName, Object... args) {
 		CommunicationLoggingUtils.logClientCall(client.getLogger(), serviceName, methodName, args);
 	}
 
-	protected final void logResponse(Client client, String serviceName, String methodName, Object result) {
+	protected final void logResponse(AbstractClient client, String serviceName, String methodName, Object result) {
 		CommunicationLoggingUtils.logServerResponse(client.getLogger(), serviceName, methodName, result);
 	}
 
-	Client makeClient(String key) {
-		Client client = authorizeClient(key);
+	AbstractClient makeClient(String key) {
+		AbstractClient client = clientFactory.apply(key);
 		if (client != null) {
 			client.init(name);
 		}
 		return client;
 	}
 
-	void addClient(Client client) {
+	void addClient(AbstractClient client) {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clients.put(client.getId(), c);
 		clientConnectObservers.inform(observer -> observer.accept(c));
 	}
 
-	void removeClient(Client client) {
+	void removeClient(AbstractClient client) {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clients.remove(client.getId());
@@ -161,7 +162,7 @@ public abstract class Api<C extends Client> {
 	}
 
 	@SuppressWarnings("unchecked")
-	void processIncomingMessage(Client client, byte[] message) throws Throwable {
+	void processIncomingMessage(AbstractClient client, byte[] message) throws Throwable {
 		ByteArrayInputData inputData = threadLocalInputData.get();
 		ByteArrayOutputData outputData = threadLocalOutputData.get();
 

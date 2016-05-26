@@ -5,14 +5,14 @@ import org.shypl.biser.csi.Protocol;
 import org.shypl.biser.csi.ProtocolException;
 
 class ConnectionProcessorMessaging extends ConnectionProcessor {
-	private final Client client;
+	private final AbstractClient client;
 
 	private State      state  = State.FLAG;
 	private ByteBuffer buffer = new ByteBuffer();
 	private int     messageLen;
 	private boolean messageEven;
 
-	public ConnectionProcessorMessaging(Client client) {
+	public ConnectionProcessorMessaging(AbstractClient client) {
 		super();
 		this.client = client;
 	}

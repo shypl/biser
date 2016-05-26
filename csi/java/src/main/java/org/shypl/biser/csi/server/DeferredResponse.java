@@ -8,10 +8,10 @@ public abstract class DeferredResponse {
 	protected DataWriter          _writer;
 	private   String              serviceName;
 	private   String              methodName;
-	private   Client              client;
+	private   AbstractClient      client;
 	private   ByteArrayOutputData data;
 
-	protected DeferredResponse(Client client, int responseId, String serviceName, String methodName) {
+	protected DeferredResponse(AbstractClient client, int responseId, String serviceName, String methodName) {
 		this.client = client;
 		this.serviceName = serviceName;
 		this.methodName = methodName;

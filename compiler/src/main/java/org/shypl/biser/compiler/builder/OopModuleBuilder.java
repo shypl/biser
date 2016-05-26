@@ -3,7 +3,6 @@ package org.shypl.biser.compiler.builder;
 import org.shypl.biser.compiler.CompilerException;
 import org.shypl.biser.compiler.Module;
 import org.shypl.biser.compiler.code.CodeClass;
-import org.shypl.biser.compiler.model.Api;
 import org.shypl.biser.compiler.model.EntityType;
 import org.shypl.biser.compiler.model.EnumType;
 import org.shypl.biser.compiler.model.Model;
@@ -39,17 +38,13 @@ public abstract class OopModuleBuilder implements ModuleBuilder {
 			}
 		}
 
-		for (Api api : model.getApis()) {
-			if (module.hasApi(api.getName())) {
-				switch (module.getApiSide(api.getName())) {
-					case CLIENT:
-						codeBuilder.buildClientApi(api);
-						break;
-					case SERVER:
-						codeBuilder.buildServerApi(api);
-						break;
-				}
-			}
+		switch (module.getSide()) {
+			case CLIENT:
+				codeBuilder.buildClientApi(model.getApi());
+				break;
+			case SERVER:
+				codeBuilder.buildServerApi(model.getApi());
+				break;
 		}
 
 		for (CodeClass cls : codeBuilder.getClasses()) {

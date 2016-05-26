@@ -5,12 +5,12 @@ package org.shypl.biser.csi.client {
 	import org.shypl.biser.io.DataWriter;
 
 	public class ServerService {
-		private var _api:Api;
+		private var _api:AbstractApi;
 		private var _serviceId:int;
 		private var _serviceName:String;
 		private var _message:ByteArray;
 
-		public function ServerService(api:Api, serviceId:int, serviceName:String) {
+		public function ServerService(api:AbstractApi, serviceId:int, serviceName:String) {
 			_api = api;
 			_serviceId = serviceId;
 			_serviceName = serviceName;

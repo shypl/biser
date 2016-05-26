@@ -38,7 +38,7 @@ class ConnectionProcessorAuthorization extends ConnectionProcessor {
 		connection.getLogger().debug("Authorization: Authorize client by key {}", key);
 
 		Server server = connection.getServer();
-		Client client = server.getApi().makeClient(key);
+		AbstractClient client = server.getApi().makeClient(key);
 
 		if (client == null) {
 			connection.getLogger().warn("Authorization: Reject", key);

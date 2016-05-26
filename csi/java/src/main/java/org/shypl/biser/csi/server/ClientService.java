@@ -14,11 +14,11 @@ public abstract class ClientService {
 		}
 	};
 
-	private final int    serviceId;
-	private final String serviceName;
-	private final Client client;
+	private final int            serviceId;
+	private final String         serviceName;
+	private final AbstractClient client;
 
-	protected ClientService(int serviceId, String serviceName, Client client) {
+	protected ClientService(int serviceId, String serviceName, AbstractClient client) {
 		this.serviceId = serviceId;
 		this.serviceName = serviceName;
 		this.client = client;

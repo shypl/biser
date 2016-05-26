@@ -9,13 +9,13 @@ package org.shypl.biser.csi.client {
 	import org.shypl.common.logging.Logger;
 
 	[Abstract]
-	public class Api {
+	public class AbstractApi {
 		private var _name:String;
 		private var _resultHandlers:Object = {};
 		private var _resultHandlerIdCounter:uint;
 		private var _connection:Connection;
 
-		public function Api(name:String) {
+		public function AbstractApi(name:String) {
 			_name = name;
 		}
 
