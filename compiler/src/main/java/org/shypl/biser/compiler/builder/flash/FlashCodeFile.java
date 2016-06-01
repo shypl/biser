@@ -329,7 +329,7 @@ public class FlashCodeFile extends OopCodeFile implements CodeVisitor {
 
 	private void writeField(CodeParameter field) {
 		writeModifier(field.getModifier());
-		write(field.getModifier().is(CodeModifier.CONST) ? "const " : "var ");
+		write(field.getModifier().is(CodeModifier.FINAL) ? "const " : "var ");
 		write(field.getName(), ":");
 		writeType(field.getType());
 		if (field.hasValue()) {

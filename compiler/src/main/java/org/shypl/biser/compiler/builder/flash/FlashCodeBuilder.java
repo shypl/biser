@@ -161,7 +161,7 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 		entityDecoderClass.setParent(engine.getClass("org.shypl.biser.io.EntityDecoder"));
 
 		CodeParameter decoder = cls.getField("_DECODER");
-		decoder.getModifier().set(CodeModifier.PUBLIC | CodeModifier.STATIC | CodeModifier.CONST);
+		decoder.getModifier().set(CodeModifier.PUBLIC | CodeModifier.STATIC | CodeModifier.FINAL);
 		decoder.setType(engine.getClass("org.shypl.biser.io.Decoder"));
 		decoder.setValue(new CodeExpressionNew(entityDecoderClass, cls));
 
@@ -250,12 +250,12 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 		for (String value : type.getValues()) {
 			CodeParameter field = cls.getField(value);
 			field.setType(cls);
-			field.getModifier().add(CodeModifier.PUBLIC | CodeModifier.STATIC | CodeModifier.CONST);
+			field.getModifier().add(CodeModifier.PUBLIC | CodeModifier.STATIC | CodeModifier.FINAL);
 			field.setValue(new CodeExpressionNew(cls, new CodeExpressionString(value)));
 		}
 
 		CodeParameter field = cls.getField("_DECODER");
-		field.getModifier().set(CodeModifier.PUBLIC | CodeModifier.STATIC | CodeModifier.CONST);
+		field.getModifier().set(CodeModifier.PUBLIC | CodeModifier.STATIC | CodeModifier.FINAL);
 		field.setType(engine.getClass("org.shypl.biser.io.Decoder"));
 		field.setValue(new CodeExpressionNew(engine.getClass("org.shypl.biser.io.EnumDecoder"), cls));
 
@@ -560,9 +560,9 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 		private void buildServerServices(List<ApiService> services) {
 			CodeClass cls = pack.getClass("ServerServices");
-			cls.getModifier().add(CodeModifier.PUBLIC);
+			cls.getModifier().add(CodeModifier.PUBLIC | CodeModifier.FINAL);
 			CodeMethod method = cls.addMethod(cls.getName());
-			method.getModifier().add(CodeModifier.FINAL | CodeModifier.PUBLIC);
+			method.getModifier().add(CodeModifier.PUBLIC);
 			method.getArgument("api").setType(apiClass);
 			CodeStatementBlock body = method.getBody();
 
@@ -657,6 +657,7 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 			field.getModifier().add(CodeModifier.PRIVATE);
 
 			CodeMethod method = holderClass.addMethod(holderClass.getName());
+			method.getModifier().add(CodeModifier.PUBLIC);
 			CodeParameter arg = method.getArgument("handler");
 			arg.setType(cls);
 			method.getBody().addStatement(field.getVariable().assign(arg.getVariable()));

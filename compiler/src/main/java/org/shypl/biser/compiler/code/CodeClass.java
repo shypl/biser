@@ -1,6 +1,5 @@
 package org.shypl.biser.compiler.code;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -11,33 +10,6 @@ import java.util.List;
 import java.util.Set;
 
 public class CodeClass extends CodeType implements CodeModifiable {
-	public static final Comparator<CodeParameter> PARAMETER_COMPARATOR = new Comparator<CodeParameter>() {
-		@Override
-		public int compare(CodeParameter o1, CodeParameter o2) {
-			CodeModifier m1 = o1.getModifier();
-			CodeModifier m2 = o2.getModifier();
-
-			if (m1.equals(m2)) {
-				return 0;
-			}
-
-			if (compare0(m1, m2)) {
-				return -1;
-			}
-
-			if (compare0(m2, m1)) {
-				return 1;
-			}
-
-			return 0;
-		}
-
-		private boolean compare0(CodeModifier m1, CodeModifier m2) {
-			return m1.is(Modifier.STATIC) && m2.not(Modifier.STATIC)
-				|| m1.is(Modifier.FINAL) && m2.not(Modifier.FINAL);
-		}
-	};
-
 	private final CodePackage pack;
 	private final CodeModifier                      modifier         = new CodeModifier();
 	private final Set<CodeClass>                    implementClasses = new HashSet<>();
@@ -118,7 +90,7 @@ public class CodeClass extends CodeType implements CodeModifiable {
 		return !implementClasses.isEmpty();
 	}
 
-	public Collection<CodeClass> getImplements() {
+	public List<CodeClass> getImplements() {
 		return new ArrayList<>(implementClasses);
 	}
 
@@ -142,10 +114,10 @@ public class CodeClass extends CodeType implements CodeModifiable {
 		return field;
 	}
 
-	public Collection<CodeParameter> getFields() {
-		List<CodeParameter> elements = fields.getElements();
-		elements.sort(PARAMETER_COMPARATOR);
-		return elements;
+	public List<CodeParameter> getFields() {
+		List<CodeParameter> list = fields.getElements();
+		list.sort(CodeMethod.COMPARATOR);
+		return list;
 	}
 
 	public boolean hasFields() {
@@ -158,8 +130,20 @@ public class CodeClass extends CodeType implements CodeModifiable {
 		return method;
 	}
 
-	public Collection<CodeMethod> getMethods() {
-		return new ArrayList<>(methods);
+	public List<CodeMethod> getMethods() {
+		List<CodeMethod> list = new ArrayList<>(this.methods);
+		list.sort(new Comparator<CodeMethod>() {
+			@Override
+			public int compare(CodeMethod o1, CodeMethod o2) {
+				boolean c1 = o1.getName().equals(getName());
+				boolean c2 = o2.getName().equals(getName());
+				if (c1 == c2) {
+					return CodeMethod.COMPARATOR.compare(o1, o2);
+				}
+				return c1 ? -1 : 1;
+			}
+		});
+		return list;
 	}
 
 	public boolean hasMethods() {
@@ -178,7 +162,7 @@ public class CodeClass extends CodeType implements CodeModifiable {
 		return generic;
 	}
 
-	public Collection<CodeGeneric> getGenerics() {
+	public List<CodeGeneric> getGenerics() {
 		return generics.getElements();
 	}
 
@@ -194,7 +178,7 @@ public class CodeClass extends CodeType implements CodeModifiable {
 		return cls;
 	}
 
-	public Collection<CodeClass> getClasses() {
+	public List<CodeClass> getClasses() {
 		return classes.getElements();
 	}
 
