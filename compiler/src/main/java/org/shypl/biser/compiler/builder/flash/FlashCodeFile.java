@@ -328,7 +328,7 @@ public class FlashCodeFile extends OopCodeFile implements CodeVisitor {
 	}
 
 	private void writeField(CodeParameter field) {
-		writeModifier(field.getModifier());
+		writeModifier(field.getModifier(), true);
 		write(field.getModifier().is(CodeModifier.FINAL) ? "const " : "var ");
 		write(field.getName(), ":");
 		writeType(field.getType());
@@ -373,7 +373,12 @@ public class FlashCodeFile extends OopCodeFile implements CodeVisitor {
 		}
 	}
 
+
 	private void writeModifier(CodeModifier modifier) {
+		writeModifier(modifier, false);
+	}
+
+	private void writeModifier(CodeModifier modifier, boolean forField) {
 		if (modifier.is(CodeModifier.ABSTRACT)) {
 			writeLine("[Abstract]");
 		}
@@ -395,7 +400,7 @@ public class FlashCodeFile extends OopCodeFile implements CodeVisitor {
 		if (modifier.is(CodeModifier.STATIC)) {
 			write("static ");
 		}
-		if (modifier.is(CodeModifier.FINAL)) {
+		if (!forField && modifier.is(CodeModifier.FINAL)) {
 			write("final ");
 		}
 	}
