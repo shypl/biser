@@ -1,7 +1,5 @@
 package org.shypl.biser.compiler.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +17,8 @@ public class Api {
 		return service;
 	}
 
-	public Collection<ApiService> getServices() {
-		return new ArrayList<>(services.values());
+	public boolean hasServices() {
+		return !services.isEmpty();
 	}
 
 	public List<ApiService> getServerServices() {
