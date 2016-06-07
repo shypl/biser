@@ -41,7 +41,7 @@ class Connection implements ChannelHandler {
 		this.server = server;
 		this.channel = channel;
 		logger = new PrefixedLoggerProxy(LoggerFactory.getLogger(Connection.class), "[" + server.getApi().getName() + '#' + channel.getRemoteAddress() + "] ");
-		worker = new WrappedTaskWorker(server.getExecutor(), this::wrapWorkerTask);
+		worker = new WrappedTaskWorker(server.getConnectionsExecutor(), this::wrapWorkerTask);
 
 		logger.debug("Open");
 

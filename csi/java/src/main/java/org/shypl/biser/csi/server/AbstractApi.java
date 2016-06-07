@@ -151,7 +151,6 @@ public abstract class AbstractApi<C extends AbstractClient> {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clients.put(client.getId(), c);
-		clientConnectObservers.inform(observer -> observer.accept(c));
 	}
 
 	void removeClient(AbstractClient client) {
@@ -159,6 +158,12 @@ public abstract class AbstractApi<C extends AbstractClient> {
 		C c = (C)client;
 		clients.remove(client.getId());
 		clientDisconnectObservers.inform(observer -> observer.accept(c));
+	}
+
+	void informClientConnectObservers(AbstractClient client) {
+		@SuppressWarnings("unchecked")
+		C c = (C)client;
+		clientConnectObservers.inform(observer -> observer.accept(c));
 	}
 
 	@SuppressWarnings("unchecked")

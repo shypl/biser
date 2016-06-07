@@ -94,7 +94,7 @@ public class Server {
 		}
 	}
 
-	ScheduledExecutorService getExecutor() {
+	ScheduledExecutorService getConnectionsExecutor() {
 		return connectionsExecutor;
 	}
 
