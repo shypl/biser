@@ -160,7 +160,12 @@ public abstract class AbstractClient {
 				.readBytes()
 			);
 
-			onConnect();
+			try {
+				onConnect();
+			}
+			catch (Throwable e) {
+				logger.error("Error on connect", e);
+			}
 
 			server.getApi().informClientConnectObservers(this);
 		});
@@ -328,9 +333,10 @@ public abstract class AbstractClient {
 
 		cancelConnectionRecoveryTimeout();
 
-		disconnectObservers.inform(observer -> observer.accept(this));
-
 		server.disconnectClient(this);
+		server.getApi().informClientDisconnectObservers(this);
+
+		disconnectObservers.inform(observer -> observer.accept(this));
 
 		try {
 			onDisconnect();

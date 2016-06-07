@@ -36,9 +36,9 @@ public abstract class AbstractApi<C extends AbstractClient> {
 	};
 
 	private final Map<Long, C> clients = new ConcurrentHashMap<>();
-	private final String name;
+	private final String              name;
 	private final Function<String, C> clientFactory;
-	private final Logger logger;
+	private final Logger              logger;
 
 	private final Observers<Consumer<C>> clientConnectObservers    = new Observers<>();
 	private final Observers<Consumer<C>> clientDisconnectObservers = new Observers<>();
@@ -157,13 +157,18 @@ public abstract class AbstractApi<C extends AbstractClient> {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clients.remove(client.getId());
-		clientDisconnectObservers.inform(observer -> observer.accept(c));
 	}
 
 	void informClientConnectObservers(AbstractClient client) {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clientConnectObservers.inform(observer -> observer.accept(c));
+	}
+
+	void informClientDisconnectObservers(AbstractClient client) {
+		@SuppressWarnings("unchecked")
+		C c = (C)client;
+		clientDisconnectObservers.inform(observer -> observer.accept(c));
 	}
 
 	@SuppressWarnings("unchecked")
