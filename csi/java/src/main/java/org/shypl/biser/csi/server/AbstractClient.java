@@ -165,6 +165,8 @@ public abstract class AbstractClient {
 			}
 			catch (Throwable e) {
 				logger.error("Error on connect", e);
+				disconnect(ConnectionCloseReason.SERVER_ERROR);
+				return;
 			}
 
 			server.getApi().informClientConnectObservers(this);
