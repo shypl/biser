@@ -56,13 +56,6 @@
 		<flash.flexSdk.version>4.15.0</flash.flexSdk.version>
 	</properties>
 
-	<modules>
-		<module>io</module>
-		<module>compiler</module>
-		<module>csi</module>
-		<module>csi-netty</module>
-	</modules>
-
 	<dependencyManagement>
 		<dependencies>
 			<!-- java -->
@@ -77,7 +70,6 @@
 				<version>4.12</version>
 				<scope>test</scope>
 			</dependency>
-
 
 			<!-- flash -->
 			<dependency>
