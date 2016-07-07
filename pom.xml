@@ -116,11 +116,6 @@
 					<artifactId>flexmojos-maven-plugin</artifactId>
 					<version>7.1.0</version>
 					<extensions>true</extensions>
-
-					<configuration>
-						<debug>true</debug>
-					</configuration>
-
 					<dependencies>
 						<dependency>
 							<groupId>org.apache.flex</groupId>
@@ -129,6 +124,10 @@
 							<type>pom</type>
 						</dependency>
 					</dependencies>
+
+					<configuration>
+						<debug>true</debug>
+					</configuration>
 
 					<executions>
 						<execution>
