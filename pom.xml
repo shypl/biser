@@ -56,6 +56,18 @@
 		<flash.flexSdk.version>4.15.0</flash.flexSdk.version>
 	</properties>
 
+	<profiles>
+		<profile>
+			<id>all modules</id>
+			<modules>
+				<module>io</module>
+				<module>compiler</module>
+				<module>csi</module>
+				<module>csi-netty</module>
+			</modules>
+		</profile>
+	</profiles>
+
 	<dependencyManagement>
 		<dependencies>
 			<!-- java -->
