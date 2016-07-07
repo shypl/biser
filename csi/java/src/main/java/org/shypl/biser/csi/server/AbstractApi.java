@@ -17,7 +17,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public abstract class AbstractApi<C extends AbstractClient> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractApi.class);
@@ -36,14 +35,14 @@ public abstract class AbstractApi<C extends AbstractClient> {
 	};
 
 	private final Map<Long, C> clients = new ConcurrentHashMap<>();
-	private final String              name;
-	private final Function<String, C> clientFactory;
-	private final Logger              logger;
+	private final String           name;
+	private final ClientFactory<C> clientFactory;
+	private final Logger           logger;
 
 	private final Observers<Consumer<C>> clientConnectObservers    = new Observers<>();
 	private final Observers<Consumer<C>> clientDisconnectObservers = new Observers<>();
 
-	protected AbstractApi(String name, Function<String, C> clientFactory) {
+	protected AbstractApi(String name, ClientFactory<C> clientFactory) {
 		this.name = name;
 		this.clientFactory = clientFactory;
 		logger = new PrefixedLoggerProxy(LOGGER, '[' + name + "] ");
@@ -140,7 +139,7 @@ public abstract class AbstractApi<C extends AbstractClient> {
 	}
 
 	AbstractClient makeClient(String key) {
-		AbstractClient client = clientFactory.apply(key);
+		AbstractClient client = clientFactory.factoryClient(key);
 		if (client != null) {
 			client.init(name);
 		}

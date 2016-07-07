@@ -1,9 +1,5 @@
 package org.shypl.biser.csi.server;
 
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
-import io.netty.util.AttributeMap;
-import io.netty.util.DefaultAttributeMap;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.shypl.biser.csi.ByteBuffer;
@@ -40,9 +36,8 @@ public abstract class AbstractClient {
 	}
 
 	private final Observers<Consumer<AbstractClient>> disconnectObservers = new Observers<>();
-	private final long id;
-	private final AttributeMap attributeMap = new DefaultAttributeMap();
-	private Logger logger;
+	private final long   id;
+	private       Logger logger;
 
 	private volatile boolean connected;
 	private volatile boolean active;
@@ -66,10 +61,6 @@ public abstract class AbstractClient {
 
 	public final long getId() {
 		return id;
-	}
-
-	public final <T> Attribute<T> getAttribute(AttributeKey<T> key) {
-		return attributeMap.attr(key);
 	}
 
 	public final Worker getWorker() {

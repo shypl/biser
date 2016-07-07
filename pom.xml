@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.shypl.biser</groupId>
@@ -11,22 +11,6 @@
 	<name>Biser</name>
 	<description>Binary serialization framework</description>
 	<url>https://github.com/shypl/biser.git</url>
-
-	<licenses>
-		<license>
-			<name>The Apache Software License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-			<distribution>repo</distribution>
-		</license>
-	</licenses>
-
-	<developers>
-		<developer>
-			<id>shnyaka</id>
-			<name>Alexey Chuprina</name>
-			<email>shnyaka@gmail.com</email>
-		</developer>
-	</developers>
 
 	<scm>
 		<connection>scm:git:https://github.com/shypl/biser.git</connection>
@@ -46,18 +30,148 @@
 		</snapshotRepository>
 	</distributionManagement>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
-
 	<repositories>
 		<repository>
-			<id>shypl-releases</id>
-			<url>http://nexus.shypl.org/content/repositories/releases/</url>
-		</repository>
-		<repository>
-			<id>shypl-snapshots</id>
-			<url>http://nexus.shypl.org/content/repositories/snapshots/</url>
+			<id>shypl</id>
+			<url>http://nexus.shypl.org/content/groups/public/</url>
 		</repository>
 	</repositories>
+
+	<pluginRepositories>
+		<pluginRepository>
+			<id>shypl-thirdparty</id>
+			<url>http://nexus.shypl.org/content/repositories/thirdparty/</url>
+		</pluginRepository>
+		<pluginRepository>
+			<id>sonatype</id>
+			<url>https://oss.sonatype.org/content/repositories/releases/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+
+		<flash.flexSdk.version>4.15.0</flash.flexSdk.version>
+	</properties>
+
+	<modules>
+		<module>io</module>
+		<module>compiler</module>
+		<module>csi</module>
+		<module>csi-netty</module>
+	</modules>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- java -->
+			<dependency>
+				<groupId>org.shypl.common</groupId>
+				<artifactId>common-java</artifactId>
+				<version>1.0.0-SNAPSHOT</version>
+			</dependency>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.12</version>
+				<scope>test</scope>
+			</dependency>
+
+
+			<!-- flash -->
+			<dependency>
+				<groupId>com.adobe.flash.framework</groupId>
+				<artifactId>playerglobal</artifactId>
+				<version>12.0</version>
+				<type>swc</type>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.flex</groupId>
+				<artifactId>framework</artifactId>
+				<version>${flash.flexSdk.version}</version>
+				<type>pom</type>
+			</dependency>
+			<dependency>
+				<groupId>org.shypl.common</groupId>
+				<artifactId>common-flash</artifactId>
+				<version>1.0.0-SNAPSHOT</version>
+				<type>swc</type>
+			</dependency>
+			<dependency>
+				<groupId>org.shypl</groupId>
+				<artifactId>flexunit</artifactId>
+				<version>1.0.3</version>
+				<type>swc</type>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>net.flexmojos.oss</groupId>
+					<artifactId>flexmojos-maven-plugin</artifactId>
+					<version>7.1.0</version>
+					<extensions>true</extensions>
+
+					<configuration>
+						<debug>true</debug>
+					</configuration>
+
+					<dependencies>
+						<dependency>
+							<groupId>org.apache.flex</groupId>
+							<artifactId>compiler</artifactId>
+							<version>${flash.flexSdk.version}</version>
+							<type>pom</type>
+						</dependency>
+					</dependencies>
+
+					<executions>
+						<execution>
+							<phase>package</phase>
+							<goals>
+								<goal>sources</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>2.4</version>
+					<executions>
+						<execution>
+							<id>attach-sources</id>
+							<phase>package</phase>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>shnyaka</id>
+			<name>Alexey Chuprina</name>
+			<email>shnyaka@gmail.com</email>
+		</developer>
+	</developers>
 </project>
