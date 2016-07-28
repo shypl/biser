@@ -502,7 +502,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				buildClientServices(services);
 				CodeParameter api = cls.getField("api");
 				api.setType(pack.getClass("ClientServices"));
-				api.getModifier().add(CodeModifier.PUBLIC | CodeModifier.FINAL);
+				api.getModifier().add(CodeModifier.PUBLIC);
 				body.addStatement(new CodeExpressionWord("api").assign(new CodeExpressionNew(pack.getClass("ClientServices"), CodeExpressionWord.THIS)));
 			}
 		}
@@ -575,7 +575,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 		private void buildClientServices(List<ApiService> services) {
 			CodeClass cls = pack.getClass("ClientServices");
-			cls.getModifier().set(CodeModifier.FINAL | CodeModifier.PUBLIC);
+			cls.getModifier().set(CodeModifier.PUBLIC);
 			CodeMethod method = cls.addMethod(cls.getName());
 			method.getArgument("client").setType(clientClass);
 			CodeStatementBlock body = method.getBody();
@@ -592,7 +592,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 
 		private CodeClass buildClientService(ApiService service) {
 			CodeClass cls = pack.getClass("ClientService" + service.getCamelName());
-			cls.getModifier().add(CodeModifier.FINAL | CodeModifier.PUBLIC);
+			cls.getModifier().add(CodeModifier.PUBLIC);
 			cls.setParent(engine.getClass("org.shypl.biser.csi.server.ClientService"));
 
 			CodeMethod method = cls.addMethod(cls.getName());
