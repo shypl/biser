@@ -37,7 +37,7 @@ public abstract class AbstractClient {
 
 	private final Observers<Consumer<AbstractClient>> disconnectObservers = new Observers<>();
 	private final long   id;
-	private       Logger logger;
+	private       Logger logger = LOGGER;
 
 	private volatile boolean connected;
 	private volatile boolean active;
