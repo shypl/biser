@@ -585,7 +585,7 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 				CodeClass serviceClass = buildClientService(service);
 				CodeParameter field = cls.getField(service.getName());
 				field.setType(serviceClass);
-				field.getModifier().add(CodeModifier.PUBLIC | CodeModifier.FINAL);
+				field.getModifier().add(CodeModifier.PUBLIC);
 				body.addStatement(CodeExpressionWord.THIS.field(service.getName()).assign(new CodeExpressionNew(serviceClass, client)));
 			}
 		}
