@@ -517,14 +517,14 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 			// constructor1
 			CodeMethod method = cls.addMethod(cls.getName());
 			method.getModifier().set(CodeModifier.PUBLIC);
-			method.getArgument("clientFactory").setType(engine.getClass("java.util.function.Function").parametrize(primitiveString, c));
+			method.getArgument("clientFactory").setType(engine.getClass("org.shypl.biser.csi.server.ClientFactory").parametrize(c));
 			method.getBody().addStatement(new CodeExpressionMethod("this", new CodeExpressionString("main"), new CodeExpressionWord("clientFactory")));
 
 			// constructor2
 			method = cls.addMethod(cls.getName());
 			method.getModifier().set(CodeModifier.PUBLIC);
 			method.getArgument("name").setType(primitiveString);
-			method.getArgument("clientFactory").setType(engine.getClass("java.util.function.Function").parametrize(primitiveString, c));
+			method.getArgument("clientFactory").setType(engine.getClass("org.shypl.biser.csi.server.ClientFactory").parametrize(c));
 			method.getBody().addStatement(new CodeExpressionMethod("super", new CodeExpressionWord("name"), new CodeExpressionWord("clientFactory")));
 
 			// callService
