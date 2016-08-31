@@ -91,6 +91,7 @@ package org.shypl.biser.csi.client {
 
 		private function processDataBodyInternal(buffer:ByteArray):void {
 			if (_waitDataForServerShutdownTimeout) {
+				_waitDataForServerShutdownTimeout = false;
 				callDelayed(_connection.client.processDisconnectWarning, buffer.readInt());
 			}
 			else {

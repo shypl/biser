@@ -108,13 +108,12 @@ public class Server {
 
 	ChannelHandler acceptConnection(Channel channel) {
 		Connection connection = new Connection(this, channel);
-
+		
+		int i = connectionsAmount.incrementAndGet();
+		logger.debug("Accept connection #{} (connections: {})", connection.getId(), i);
+		
 		worker.addTask(() -> {
-			if (opened) {
-				int i = connectionsAmount.incrementAndGet();
-				logger.debug("Accept connection #{} (connections: {})", connection.getId(), i);
-			}
-			else {
+			if (!opened) {
 				connection.close(ConnectionCloseReason.SERVER_SHUTDOWN);
 			}
 		});

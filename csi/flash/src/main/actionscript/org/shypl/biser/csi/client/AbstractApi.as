@@ -6,6 +6,7 @@ package org.shypl.biser.csi.client {
 	import org.shypl.biser.io.DataReader;
 	import org.shypl.common.lang.AbstractMethodException;
 	import org.shypl.common.lang.IllegalStateException;
+	import org.shypl.common.logging.LogManager;
 	import org.shypl.common.logging.Logger;
 
 	[Abstract]
@@ -58,9 +59,11 @@ package org.shypl.biser.csi.client {
 
 		internal function sendMessage(data:ByteArray):void {
 			if (_connection === null) {
-				throw new IllegalStateException("Api is not connected");
+				LogManager.getLoggerByClass(AbstractApi).error("Api is not connected");
 			}
-			_connection.sendMessage(data);
+			else {
+				_connection.sendMessage(data);
+			}
 		}
 
 		internal function registerResultHandler(holder:ResultHandlerHolder):int {
