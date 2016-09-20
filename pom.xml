@@ -167,6 +167,7 @@
 					<mavenExecutorId>forked-path</mavenExecutorId>
 					<useReleaseProfile>false</useReleaseProfile>
 					<localCheckout>true</localCheckout>
+					<commitByProject>true</commitByProject>
 				</configuration>
 			</plugin>
 		</plugins>
