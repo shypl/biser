@@ -1,6 +1,7 @@
 ### JetBrains
 *.iml
 .idea/
+_dev/
 
 ### Maven
 target/
