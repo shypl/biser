@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.shypl.biser</groupId>
 		<artifactId>biser-parent</artifactId>
-		<version>1.0.2</version>
+		<version>1.0.4</version>
 	</parent>
 
 	<artifactId>biser-io</artifactId>
@@ -14,7 +14,15 @@
 	<packaging>pom</packaging>
 
 	<name>Biser IO</name>
-
+	
+	
+	<scm>
+		<url>https://github.com/shypl/biser</url>
+		<connection>scm:git:https://github.com/shypl/biser.git</connection>
+		<developerConnection>scm:git:https://github.com/shypl/biser.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+	
 	<modules>
 		<module>flash</module>
 		<module>java</module>
