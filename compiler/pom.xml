@@ -9,7 +9,7 @@
 	</parent>
 	
 	<artifactId>biser-compiler</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 	
 	<name>Biser Compiler</name>
@@ -62,4 +62,8 @@
 			</plugin>
 		</plugins>
 	</build>
+
+  <scm>
+    <tag>biser-compiler-1.0.1</tag>
+  </scm>
 </project>
