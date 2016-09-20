@@ -165,6 +165,8 @@
 				<version>2.5.3</version>
 				<configuration>
 					<mavenExecutorId>forked-path</mavenExecutorId>
+					<useReleaseProfile>false</useReleaseProfile>
+					<localCheckout>true</localCheckout>
 				</configuration>
 			</plugin>
 		</plugins>
