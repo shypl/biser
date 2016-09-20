@@ -23,7 +23,7 @@
 	</scm>
 
 	<properties>
-		<biser-io.version>1.0.0-SNAPSHOT</biser-io.version>
+		<biser-io.version>1.0.0</biser-io.version>
 	</properties>
 
 	<modules>
