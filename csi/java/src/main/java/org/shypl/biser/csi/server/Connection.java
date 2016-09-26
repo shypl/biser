@@ -199,7 +199,7 @@ class Connection implements ChannelHandler {
 			activity = false;
 		}
 		else {
-			logger.warn("Activity timeout expired");
+			logger.debug("Activity timeout expired");
 			activityTimeout.cancel();
 			writeToChannel(ConnectionCloseReason.getProtocolFlag(ConnectionCloseReason.ACTIVITY_TIMEOUT_EXPIRED));
 			channel.close();

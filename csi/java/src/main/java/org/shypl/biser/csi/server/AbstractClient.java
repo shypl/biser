@@ -195,7 +195,7 @@ public abstract class AbstractClient {
 				}
 			}
 			else {
-				logger.warn("Fail reconnect on disconnected");
+				logger.debug("Fail reconnect on disconnected");
 			}
 		});
 	}
@@ -245,7 +245,7 @@ public abstract class AbstractClient {
 				}
 			}
 			else {
-				logger.warn("Fail receive message on disconnected");
+				logger.debug("Fail receive message on disconnected");
 			}
 		});
 	}
@@ -259,7 +259,7 @@ public abstract class AbstractClient {
 				}
 			}
 			else {
-				logger.warn("Fail send message on disconnected");
+				logger.debug("Fail send message on disconnected");
 			}
 		});
 	}
@@ -270,7 +270,7 @@ public abstract class AbstractClient {
 				connection.send(bytes);
 			}
 			else {
-				logger.warn("Fail send data on disconnected");
+				logger.debug("Fail send data on disconnected");
 			}
 		});
 	}
