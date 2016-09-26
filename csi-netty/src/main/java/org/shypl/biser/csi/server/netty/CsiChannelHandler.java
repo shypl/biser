@@ -17,9 +17,9 @@ class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel,
 	private io.netty.channel.Channel channel;
 	private ChannelHandler           handler;
 
-	private boolean opened;
-	private int     writeCounter;
-	private boolean closeAfterWrites;
+	private volatile boolean opened;
+	private volatile int     writeCounter;
+	private volatile boolean closeAfterWrites;
 
 	CsiChannelHandler(ChannelAcceptor acceptor) {
 		this.acceptor = acceptor;
@@ -105,7 +105,7 @@ class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel,
 	@Override
 	public void operationComplete(ChannelFuture future) throws Exception {
 		--writeCounter;
-		if (closeAfterWrites && writeCounter == 0) {
+		if (closeAfterWrites && writeCounter == 0 && opened) {
 			channel.close();
 		}
 	}

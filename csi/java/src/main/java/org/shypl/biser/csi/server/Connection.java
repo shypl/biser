@@ -223,7 +223,7 @@ class Connection implements ChannelHandler {
 	private Runnable wrapWorkerTask(Runnable task) {
 		return () -> {
 			if (closed) {
-				logger.warn("Can't run task on closed connection");
+				logger.debug("Can't run task on closed connection");
 			}
 			else {
 				task.run();

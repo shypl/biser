@@ -97,7 +97,9 @@ public abstract class AbstractApi<C extends AbstractClient> {
 	}
 
 	public final void sendMessage(GlobalMessage message, Collection<? extends AbstractClient> clients) {
-		message.send(clients, logger);
+		if (!clients.isEmpty()) {
+			message.send(clients, logger);
+		}
 	}
 
 	public final Cancelable addClientConnectObserver(Consumer<C> observer) {

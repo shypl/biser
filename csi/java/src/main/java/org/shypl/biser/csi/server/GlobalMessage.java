@@ -31,19 +31,19 @@ public abstract class GlobalMessage {
 	protected abstract void make(DataWriter writer);
 
 	protected final void log() {
-		CommunicationLoggingUtils.logServerCall(logger, serviceName, methodName);
+		CommunicationLoggingUtils.logGlobalServerCall(logger, serviceName, methodName);
 	}
 
 	protected final void log(Object arg) {
-		CommunicationLoggingUtils.logServerCall(logger, serviceName, methodName, arg);
+		CommunicationLoggingUtils.logGlobalServerCall(logger, serviceName, methodName, arg);
 	}
 
 	protected final void log(Object arg1, Object arg2) {
-		CommunicationLoggingUtils.logServerCall(logger, serviceName, methodName, arg1, arg2);
+		CommunicationLoggingUtils.logGlobalServerCall(logger, serviceName, methodName, arg1, arg2);
 	}
 
 	protected final void log(Object... args) {
-		CommunicationLoggingUtils.logServerCall(logger, serviceName, methodName, args);
+		CommunicationLoggingUtils.logGlobalServerCall(logger, serviceName, methodName, args);
 	}
 
 	void send(Collection<? extends AbstractClient> clients, Logger logger) {

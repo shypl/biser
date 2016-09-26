@@ -31,7 +31,11 @@ public class Server {
 	private volatile boolean opened;
 
 	private Cancelable stopperChecker;
-
+	
+	private int stopConnections;
+	private int stopClients;
+	private int stopWaiting;
+	
 	public Server(ScheduledExecutorService serverExecutor, ScheduledExecutorService connectionsExecutor,
 		ChannelGate channelGate, ServerSettings settings, AbstractApi<?> api
 	) {
@@ -199,13 +203,17 @@ public class Server {
 			doStop1();
 		}
 		else {
-			for (AbstractClient client : api.getAllClients()) {
-				client.disconnect(ConnectionCloseReason.SERVER_SHUTDOWN);
-			}
+			disconnectAllClients();
 			stopperChecker = worker.scheduleTaskPeriodic(this::doStop1, 1, TimeUnit.SECONDS);
 		}
 	}
-
+	
+	private void disconnectAllClients() {
+		for (AbstractClient client : api.getAllClients()) {
+			client.disconnect(ConnectionCloseReason.SERVER_SHUTDOWN);
+		}
+	}
+	
 	private boolean isNotConnectionsAndClients() {
 		return connectionsAmount.get() == 0 && api.countClients() == 0;
 	}
@@ -214,7 +222,22 @@ public class Server {
 		int connections = connectionsAmount.get();
 		int clients = api.countClients();
 		if (connections > 0 || clients > 0) {
-			logger.debug("Wait stopping connections and clients (connections: {}, clients: {})", connections, clients);
+			logger.info("Wait stopping connections and clients (connections: {}, clients: {})", connections, clients);
+			
+			if (connections == stopConnections && clients == stopClients) {
+				++stopWaiting;
+				if (stopWaiting == 10) {
+					stopWaiting = 0;
+					logger.warn("Repeat disconnect all clients");
+					disconnectAllClients();
+				}
+			}
+			else {
+				stopWaiting = 0;
+			}
+			stopConnections = connections;
+			stopClients = clients;
+			
 		}
 		else {
 			if (stopperChecker != null) {
