@@ -21,79 +21,81 @@ import java.util.function.Consumer;
 public abstract class AbstractClient {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractClient.class);
 	private static final byte[] SID_SALT;
-
+	
 	private static final ThreadLocal<ByteBuffer> threadLocalMessageBuffer = new ThreadLocal<ByteBuffer>() {
 		@Override
 		protected ByteBuffer initialValue() {
 			return new ByteBuffer();
 		}
 	};
-
+	
 	static {
 		ThreadLocalRandom random = ThreadLocalRandom.current();
 		SID_SALT = new byte[random.nextInt(8, 17)];
 		random.nextBytes(SID_SALT);
 	}
-
+	
 	private final Observers<Consumer<AbstractClient>> disconnectObservers = new Observers<>();
-	private final long   id;
-	private       Logger logger = LOGGER;
-
+	private final long id;
+	private Logger logger = LOGGER;
+	
 	private volatile boolean connected;
 	private volatile boolean active;
-
+	
 	private Server     server;
 	private Connection connection;
 	private Worker     worker;
-
+	
 	private Connection connectionForRecovery;
 	private Cancelable connectionRecoveryTimeout;
-
+	
 	private boolean inputMessageEven;
 	private boolean outputMessageEven;
 	private boolean       outputMessageSendAvailable = true;
 	private Deque<byte[]> outputMessages             = new LinkedList<>();
-
-
+	
+	private boolean disconnectForceSecondAttempt;
+	
 	public AbstractClient(long id) {
 		this.id = id;
 	}
-
+	
 	public final long getId() {
 		return id;
 	}
-
+	
 	public final Worker getWorker() {
 		return worker;
 	}
-
+	
 	public boolean isConnected() {
 		return connected;
 	}
-
+	
 	public final Cancelable addDisconnectObserver(Consumer<AbstractClient> observer) {
 		return disconnectObservers.add(observer);
 	}
-
+	
 	public final void removeDisconnectObserver(Consumer<AbstractClient> observer) {
 		disconnectObservers.remove(observer);
 	}
-
+	
 	public final void disconnect() {
 		disconnect(ConnectionCloseReason.NONE);
 	}
-
+	
 	public final void disconnect(ConnectionCloseReason reason) {
 		disconnect(reason, (Consumer<AbstractClient>)null);
 	}
-
+	
 	public final void disconnect(ConnectionCloseReason reason, Consumer<AbstractClient> callback) {
 		worker.addTask(() -> {
 			if (connected) {
 				if (callback != null) {
 					disconnectObservers.add(callback);
 				}
-				if (active) {
+				if (!disconnectForceSecondAttempt && active) {
+					disconnectForceSecondAttempt = true;
 					connection.close(reason);
 				}
 				else {
@@ -105,42 +107,42 @@ public abstract class AbstractClient {
 			}
 		});
 	}
-
+	
 	public final void disconnect(ConnectionCloseReason reason, Runnable callback) {
 		disconnect(reason, client -> callback.run());
 	}
-
+	
 	protected void onConnect() {
 	}
-
+	
 	protected void onDisconnect() {
 	}
-
+	
 	void init(String apiName) {
 		logger = new PrefixedLoggerProxy(LOGGER, '[' + apiName + '#' + id + "] ");
 	}
-
+	
 	Logger getLogger() {
 		return logger;
 	}
-
+	
 	void connect(Server server, Connection connection) {
 		connected = true;
 		active = true;
-
+		
 		this.server = server;
 		this.connection = connection;
 		worker = new Worker(server.getConnectionsExecutor());
-
+		
 		worker.addTask(() -> {
 			byte[] sid = calculateSid();
-
+			
 			connection.setProcessor(new ConnectionProcessorMessaging(this));
-
+			
 			if (connection.getLogger().isTraceEnabled()) {
 				logger.debug("Connect (connectionId: {}, sid: {})", connection.getId(), Hex.encodeHexString(sid));
 			}
-
+			
 			connection.send(new ByteBuffer(1 + 4 + 4 + 1 + 8 + sid.length)
 				.writeByte(Protocol.AUTHORIZATION)
 				.writeInt(server.getSettings().getConnectionActivityTimeout())
@@ -150,7 +152,7 @@ public abstract class AbstractClient {
 				.writeBytes(sid)
 				.readBytes()
 			);
-
+			
 			try {
 				onConnect();
 			}
@@ -159,11 +161,11 @@ public abstract class AbstractClient {
 				disconnect(ConnectionCloseReason.SERVER_ERROR);
 				return;
 			}
-
+			
 			server.getApi().informClientConnectObservers(this);
 		});
 	}
-
+	
 	void reconnect(Connection connection) {
 		worker.addTask(() -> {
 			if (connected) {
@@ -173,17 +175,17 @@ public abstract class AbstractClient {
 				}
 				else {
 					cancelConnectionRecoveryTimeout();
-
+					
 					active = true;
 					this.connection = connection;
 					connection.setProcessor(new ConnectionProcessorMessaging(this));
-
+					
 					if (connection.getLogger().isTraceEnabled()) {
 						logger.debug("Reconnect (connectionId: {})", connection.getId());
 					}
-
+					
 					byte[] sid = calculateSid();
-
+					
 					connection.send(new ByteBuffer(1 + 1 + 8 + sid.length + 1)
 						.writeByte(Protocol.RECOVERY)
 						.writeByte((byte)(8 + sid.length))
@@ -199,11 +201,11 @@ public abstract class AbstractClient {
 			}
 		});
 	}
-
+	
 	void handleConnectionClosed() {
 		worker.addTask(this::handleDisconnect);
 	}
-
+	
 	void handleConnectionBreaking() {
 		worker.addTask(() -> {
 			active = false;
@@ -222,7 +224,7 @@ public abstract class AbstractClient {
 			}
 		});
 	}
-
+	
 	void receiveMessage(boolean even, byte[] bytes) {
 		worker.addTask(() -> {
 			if (connected) {
@@ -231,12 +233,12 @@ public abstract class AbstractClient {
 				}
 				inputMessageEven = even;
 				connection.send(inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
-
+				
 				try {
 					if (bytes.length == 0) {
 						throw new IllegalArgumentException("Received message is empty");
 					}
-
+					
 					server.getApi().processIncomingMessage(this, bytes);
 				}
 				catch (Throwable e) {
@@ -249,7 +251,7 @@ public abstract class AbstractClient {
 			}
 		});
 	}
-
+	
 	void sendMessage(byte[] bytes) {
 		worker.addTask(() -> {
 			if (connected) {
@@ -263,7 +265,7 @@ public abstract class AbstractClient {
 			}
 		});
 	}
-
+	
 	void sendData(byte[] bytes) {
 		worker.addTask(() -> {
 			if (connected) {
@@ -274,7 +276,7 @@ public abstract class AbstractClient {
 			}
 		});
 	}
-
+	
 	void processMessageReceived(boolean even) {
 		worker.addTask(() -> {
 			outputMessageSendAvailable = true;
@@ -291,7 +293,7 @@ public abstract class AbstractClient {
 			}
 		});
 	}
-
+	
 	byte[] calculateSid() {
 		return DigestUtils.sha1(
 			new ByteBuffer(8 + 8 + SID_SALT.length)
@@ -301,17 +303,17 @@ public abstract class AbstractClient {
 				.readBytes()
 		);
 	}
-
+	
 	private void sendMessage0(byte[] bytes) {
 		if (bytes.length == 0) {
 			throw new IllegalArgumentException("Outgoing message is empty");
 		}
-
+		
 		outputMessageSendAvailable = false;
 		outputMessageEven = !outputMessageEven;
-
+		
 		ByteBuffer buffer = threadLocalMessageBuffer.get();
-
+		
 		connection.send(buffer
 			.writeByte(outputMessageEven ? Protocol.MESSAGE_EVEN : Protocol.MESSAGE_ODD)
 			.writeInt(bytes.length)
@@ -319,28 +321,28 @@ public abstract class AbstractClient {
 			.readBytes()
 		);
 	}
-
+	
 	private void handleDisconnect() {
 		active = false;
 		connected = false;
-
+		
 		cancelConnectionRecoveryTimeout();
-
+		
 		server.disconnectClient(this);
 		server.getApi().informClientDisconnectObservers(this);
-
+		
 		disconnectObservers.inform(observer -> observer.accept(this));
-
+		
 		try {
 			onDisconnect();
 		}
 		catch (Throwable e) {
 			logger.error("Error on disconnect", e);
 		}
-
+		
 		disconnectObservers.removeAll();
 	}
-
+	
 	private void cancelConnectionRecoveryTimeout() {
 		if (connectionRecoveryTimeout != null) {
 			connectionRecoveryTimeout.cancel();
