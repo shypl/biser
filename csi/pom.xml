@@ -9,7 +9,7 @@
 	</parent>
 
 	<artifactId>biser-csi</artifactId>
-	<version>1.0.2-SNAPSHOT</version>
+	<version>1.0.2</version>
 	<packaging>pom</packaging>
 
 	<name>Biser CSI</name>
@@ -18,7 +18,7 @@
 		<url>https://github.com/shypl/biser</url>
 		<connection>scm:git:https://github.com/shypl/biser.git</connection>
 		<developerConnection>scm:git:https://github.com/shypl/biser.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>biser-csi-1.0.2</tag>
 	</scm>
 
 	<properties>
