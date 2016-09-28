@@ -10,44 +10,42 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Server {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
-
+	
 	private final Object stopper = new Object();
-	private final ScheduledExecutorService connectionsExecutor;
-	private final ChannelGate              channelGate;
-	private final ServerSettings           settings;
-	private final AbstractApi<?>           api;
-	private final Worker                   worker;
-	private final PrefixedLoggerProxy      logger;
-
+	private final ExecutorsProvider   executorsProvider;
+	private final ChannelGate         channelGate;
+	private final ServerSettings      settings;
+	private final AbstractApi<?>      api;
+	private final Worker              worker;
+	private final PrefixedLoggerProxy logger;
+	
 	private final AtomicInteger connectionsAmount = new AtomicInteger();
-
+	
+	
 	private volatile boolean running;
 	private volatile boolean opened;
-
+	
 	private Cancelable stopperChecker;
 	
 	private int stopConnections;
 	private int stopClients;
 	private int stopWaiting;
 	
-	public Server(ScheduledExecutorService serverExecutor, ScheduledExecutorService connectionsExecutor,
-		ChannelGate channelGate, ServerSettings settings, AbstractApi<?> api
-	) {
-		this.connectionsExecutor = connectionsExecutor;
+	public Server(ExecutorsProvider executorsProvider, ChannelGate channelGate, ServerSettings settings, AbstractApi<?> api) {
+		this.executorsProvider = executorsProvider;
 		this.channelGate = channelGate;
 		this.settings = settings;
 		this.api = api;
-
-		worker = new Worker(serverExecutor);
+		
+		worker = new Worker(executorsProvider.getServerExecutorService());
 		logger = new PrefixedLoggerProxy(LOGGER, '[' + api.getName() + "] ");
 	}
-
+	
 	public final void start() {
 		if (running) {
 			logger.error("Server already running");
@@ -57,21 +55,21 @@ public class Server {
 			running = true;
 			opened = true;
 			channelGate.open(settings.getAddress(), this::acceptConnection);
-
+			
 			logger.info("Started");
 		}
 	}
-
+	
 	public final void stop() {
 		stop(0);
 	}
-
+	
 	public final void stop(int timeout) {
 		worker.addTask(() -> {
 			if (running) {
 				opened = false;
 				logger.info("Stopping");
-
+				
 				if (timeout == 0 || isNotConnectionsAndClients()) {
 					doStop0();
 				}
@@ -87,7 +85,7 @@ public class Server {
 				logger.error("Server is not running");
 			}
 		});
-
+		
 		synchronized (stopper) {
 			try {
 				stopper.wait();
@@ -97,19 +95,19 @@ public class Server {
 			}
 		}
 	}
-
-	ScheduledExecutorService getConnectionsExecutor() {
-		return connectionsExecutor;
+	
+	ExecutorsProvider getExecutorsProvider() {
+		return executorsProvider;
 	}
-
+	
 	ServerSettings getSettings() {
 		return settings;
 	}
-
+	
 	AbstractApi<?> getApi() {
 		return api;
 	}
-
+	
 	ChannelHandler acceptConnection(Channel channel) {
 		Connection connection = new Connection(this, channel);
 		
@@ -121,15 +119,15 @@ public class Server {
 				connection.close(ConnectionCloseReason.SERVER_SHUTDOWN);
 			}
 		});
-
+		
 		return connection;
 	}
-
+	
 	void releaseConnection(Connection connection) {
 		int i = connectionsAmount.decrementAndGet();
 		logger.debug("Release connection #{} (connections: {})", connection.getId(), i);
 	}
-
+	
 	void connectClient(AbstractClient client, Connection connection) {
 		worker.addTask(() -> {
 			if (connection.isOpened()) {
@@ -137,7 +135,7 @@ public class Server {
 					AbstractClient oldClient = api.getClient(client.getId());
 					if (oldClient == null) {
 						logger.debug("Connect client #{} (clients: {})", client.getId(), api.countClients());
-
+						
 						client.connect(this, connection);
 						api.addClient(client);
 					}
@@ -151,11 +149,11 @@ public class Server {
 				}
 			}
 			else {
-				logger.warn("Fail connect client #{} by closed connection", client.getId());
+				logger.debug("Fail connect client #{} by closed connection", client.getId());
 			}
 		});
 	}
-
+	
 	void disconnectClient(AbstractClient client) {
 		worker.addTask(() -> {
 			AbstractClient oldClient = api.getClient(client.getId());
@@ -168,14 +166,14 @@ public class Server {
 			}
 		});
 	}
-
+	
 	void reconnectClient(long clientId, byte[] clientSid, Connection connection) {
 		worker.addTask(() -> {
 			if (opened) {
 				if (connection.isOpened()) {
 					if (running) {
 						AbstractClient client = api.getClient(clientId);
-
+						
 						if (client == null || !Arrays.equals(client.calculateSid(), clientSid)) {
 							connection.close(ConnectionCloseReason.RECOVERY_REJECT);
 						}
@@ -189,7 +187,7 @@ public class Server {
 					}
 				}
 				else {
-					logger.warn("Fail reconnect client #{} by closed connection", clientId);
+					logger.debug("Fail reconnect client #{} by closed connection", clientId);
 				}
 			}
 			else {
@@ -197,7 +195,7 @@ public class Server {
 			}
 		});
 	}
-
+	
 	private void doStop0() {
 		if (isNotConnectionsAndClients()) {
 			doStop1();
@@ -217,7 +215,7 @@ public class Server {
 	private boolean isNotConnectionsAndClients() {
 		return connectionsAmount.get() == 0 && api.countClients() == 0;
 	}
-
+	
 	private void doStop1() {
 		int connections = connectionsAmount.get();
 		int clients = api.countClients();
@@ -244,12 +242,12 @@ public class Server {
 				stopperChecker.cancel();
 				stopperChecker = null;
 			}
-
+			
 			channelGate.close();
 			running = false;
-
+			
 			logger.info("Stopped");
-
+			
 			synchronized (stopper) {
 				stopper.notifyAll();
 			}

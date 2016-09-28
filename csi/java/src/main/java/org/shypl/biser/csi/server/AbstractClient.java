@@ -132,7 +132,7 @@ public abstract class AbstractClient {
 		
 		this.server = server;
 		this.connection = connection;
-		worker = new Worker(server.getConnectionsExecutor());
+		worker = new Worker(server.getExecutorsProvider().getClientExecutorService());
 		
 		worker.addTask(() -> {
 			byte[] sid = calculateSid();
