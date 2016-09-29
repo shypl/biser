@@ -229,7 +229,8 @@ public abstract class AbstractClient {
 		worker.addTask(() -> {
 			if (connected) {
 				if (inputMessageEven == even) {
-					logger.error("Violation of the Message Queuing");
+					//TODO Violation of the Message Queuing
+					logger.debug("Violation of the Message Queuing");
 				}
 				inputMessageEven = even;
 				connection.send(inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
