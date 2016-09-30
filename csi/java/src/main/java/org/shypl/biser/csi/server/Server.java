@@ -16,13 +16,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Server {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
 	
-	private final Object stopper = new Object();
 	private final ExecutorsProvider   executorsProvider;
 	private final ChannelGate         channelGate;
 	private final ServerSettings      settings;
 	private final AbstractApi<?>      api;
 	private final Worker              worker;
 	private final PrefixedLoggerProxy logger;
+	private final Object stoppedLock = new Object();
 	
 	private final AtomicInteger connectionsAmount = new AtomicInteger();
 	
@@ -86,12 +86,21 @@ public class Server {
 			}
 		});
 		
-		synchronized (stopper) {
+		boolean wait;
+		
+		synchronized (stoppedLock) {
+			wait = running;
+		}
+		
+		while (wait) {
+			synchronized (stoppedLock) {
+				wait = running;
+			}
 			try {
-				stopper.wait();
+				Thread.sleep(100);
 			}
 			catch (InterruptedException e) {
-				logger.error("Stop is interrupted", e);
+				logger.error("Stop interrupted", e);
 			}
 		}
 	}
@@ -244,12 +253,10 @@ public class Server {
 			}
 			
 			channelGate.close();
-			running = false;
-			
 			logger.info("Stopped");
 			
-			synchronized (stopper) {
-				stopper.notifyAll();
+			synchronized (stoppedLock) {
+				running = false;
 			}
 		}
 	}

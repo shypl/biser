@@ -69,22 +69,24 @@ package org.shypl.biser.csi.client.standard {
 			if (_socket != null) {
 				_socket.removeEventListener(Event.CONNECT, onConnect);
 				_socket.removeEventListener(Event.CLOSE, onClose);
-				_socket.removeEventListener(IOErrorEvent.IO_ERROR, onError);
-				_socket.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 				_socket.removeEventListener(ProgressEvent.SOCKET_DATA, onData);
-
+				
+				var s:Socket = _socket;
+				_socket = null;
+				
 				try {
-					_socket.close();
+					s.close();
 				}
 				catch (e:Error) {
 				}
-				_socket = null;
+				
+				s.removeEventListener(IOErrorEvent.IO_ERROR, onError);
+				s.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, onError);
 			}
 		}
 
 		private function free():void {
 			freeSocket();
-			_socket = null;
 			_acceptor = null;
 			_handler = null;
 		}
@@ -99,16 +101,18 @@ package org.shypl.biser.csi.client.standard {
 		}
 
 		private function onError(event:ErrorEvent):void {
-			var e:ErrorEventException = new ErrorEventException(event);
-
-			if (_opened) {
-				_opened = false;
-				_handler.handleChannelError(e);
-				close();
-			}
-			else {
-				_acceptor.failOpenChannel(e);
-				free();
+			if (_socket !== null) {
+				var e:ErrorEventException = new ErrorEventException(event);
+				
+				if (_opened) {
+					_opened = false;
+					_handler.handleChannelError(e);
+					close();
+				}
+				else {
+					_acceptor.failOpenChannel(e);
+					free();
+				}
 			}
 		}
 
