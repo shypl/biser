@@ -35,6 +35,7 @@ public class Server {
 	private int stopConnections;
 	private int stopClients;
 	private int stopWaiting;
+	private int stopWaiting2;
 	
 	public Server(ExecutorsProvider executorsProvider, ChannelGate channelGate, ServerSettings settings, AbstractApi<?> api) {
 		this.executorsProvider = executorsProvider;
@@ -234,9 +235,14 @@ public class Server {
 			if (connections == stopConnections && clients == stopClients) {
 				++stopWaiting;
 				if (stopWaiting == 10) {
+					++stopWaiting2;
 					stopWaiting = 0;
 					logger.warn("Repeat disconnect all clients");
 					disconnectAllClients();
+					if (clients == 0 && connections > 0 && stopWaiting2 == 10) {
+						logger.warn("Set connections counter to 0");
+						connectionsAmount.set(0);
+					}
 				}
 			}
 			else {
