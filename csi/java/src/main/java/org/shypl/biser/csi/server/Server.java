@@ -75,7 +75,7 @@ public class Server {
 					doStop0();
 				}
 				else {
-					byte[] bytes = new ByteBuffer(2).writeByte(Protocol.SERVER_SHUTDOWN_TIMEOUT).writeInt(timeout).readBytes();
+					byte[] bytes = new ByteBuffer(5).writeByte(Protocol.SERVER_SHUTDOWN_TIMEOUT).writeInt(timeout).readBytes();
 					for (AbstractClient client : api.getAllClients()) {
 						client.sendData(bytes);
 					}

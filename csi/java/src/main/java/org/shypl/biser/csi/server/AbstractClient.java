@@ -321,6 +321,7 @@ public abstract class AbstractClient {
 			.writeBytes(bytes)
 			.readBytes()
 		);
+		buffer.clear();
 	}
 	
 	private void handleDisconnect() {
