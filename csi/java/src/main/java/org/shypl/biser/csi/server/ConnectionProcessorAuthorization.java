@@ -41,7 +41,7 @@ class ConnectionProcessorAuthorization extends ConnectionProcessor {
 		AbstractClient client = server.getApi().makeClient(key);
 
 		if (client == null) {
-			connection.getLogger().warn("Authorization: Reject", key);
+			connection.getLogger().debug("Authorization: Reject", key);
 			connection.syncClose(ConnectionCloseReason.AUTHORIZATION_REJECT);
 		}
 		else {

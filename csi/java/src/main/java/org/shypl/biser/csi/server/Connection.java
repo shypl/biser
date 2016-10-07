@@ -97,7 +97,7 @@ class Connection implements ChannelHandler {
 					processor.processData();
 				}
 				catch (ProtocolException e) {
-					logger.error("Protocol broken", e);
+					logger.debug("Protocol broken", e);
 					syncClose(ConnectionCloseReason.PROTOCOL_BROKEN);
 				}
 				catch (Throwable e) {
