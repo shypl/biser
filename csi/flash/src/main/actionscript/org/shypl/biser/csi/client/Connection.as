@@ -304,7 +304,6 @@ package org.shypl.biser.csi.client {
 		private function free():void {
 			_client = null;
 			_address = null;
-			_logger = null;
 			_processor = null;
 			_channel = null;
 			_closeReason = null;
