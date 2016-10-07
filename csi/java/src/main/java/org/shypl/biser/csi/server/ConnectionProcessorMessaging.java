@@ -71,7 +71,7 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 				break;
 			
 			default:
-				throw new ProtocolException("Messaging: Invalid flag 0x" + Integer.toString(flag, 16) + " (" + (char)(flag & 0xFF) + ")");
+				throw new ProtocolException(String.format("Messaging: Invalid flag  0x%s (%s)", Integer.toString(flag & 0xFF, 16), (char)(flag & 0xFF)));
 		}
 	}
 	

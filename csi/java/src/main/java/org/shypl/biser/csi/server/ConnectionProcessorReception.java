@@ -21,7 +21,7 @@ class ConnectionProcessorReception extends ConnectionProcessor {
 				switchProcessor(new ConnectionProcessorRecovery());
 				break;
 			default:
-				throw new ProtocolException(String.format("Reception: Invalid flag %02x (%c)", flag, flag));
+				throw new ProtocolException(String.format("Reception: Invalid flag 0x%s (%s)", Integer.toString(flag & 0xFF, 16), (char)(flag & 0xFF)));
 		}
 	}
 }

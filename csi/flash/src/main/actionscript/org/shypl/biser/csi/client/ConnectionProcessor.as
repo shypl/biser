@@ -102,7 +102,7 @@ package org.shypl.biser.csi.client {
 		private function closeConnection(flag:uint):void {
 			var reason:ConnectionCloseReason = ConnectionCloseReason.getReason(flag);
 			if (reason == null) {
-				_connection.logger.error("ConnectionProcessor: Undefined flag {}", flag);
+				_connection.logger.error("ConnectionProcessor: Undefined flag {}", flag );
 				reason = ConnectionCloseReason.PROTOCOL_BROKEN;
 			}
 			_connection.close(reason);
