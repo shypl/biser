@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 
 public abstract class AbstractApi<C extends AbstractClient> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractApi.class);
-
+	
 	private static final ThreadLocal<ByteArrayInputData>  threadLocalInputData  = new ThreadLocal<ByteArrayInputData>() {
 		@Override
 		protected ByteArrayInputData initialValue() {
@@ -33,33 +33,35 @@ public abstract class AbstractApi<C extends AbstractClient> {
 			return new ByteArrayOutputData();
 		}
 	};
-
+	
 	private final Map<Long, C> clients = new ConcurrentHashMap<>();
 	private final String           name;
 	private final ClientFactory<C> clientFactory;
 	private final Logger           logger;
-
+	
 	private final Observers<Consumer<C>> clientConnectObservers    = new Observers<>();
 	private final Observers<Consumer<C>> clientDisconnectObservers = new Observers<>();
-
+	
+	private volatile CommunicationMeter communicationMeter = CommunicationMeterFake.INSTANCE;
+	
 	protected AbstractApi(String name, ClientFactory<C> clientFactory) {
 		this.name = name;
 		this.clientFactory = clientFactory;
 		logger = new PrefixedLoggerProxy(LOGGER, '[' + name + "] ");
 	}
-
+	
 	public final String getName() {
 		return name;
 	}
-
+	
 	public final int countClients() {
 		return clients.size();
 	}
-
+	
 	public final Collection<C> getAllClients() {
 		return clients.values();
 	}
-
+	
 	public final Collection<C> getClients(Collection<Long> ids) {
 		LinkedList<C> result = new LinkedList<>();
 		for (Long id : ids) {
@@ -68,14 +70,14 @@ public abstract class AbstractApi<C extends AbstractClient> {
 		}
 		return result;
 	}
-
+	
 	public final C getClient(long id) {
 		return clients.get(id);
 	}
-
+	
 	public final void processClient(long id, ClientProcessor<C> receiver) {
 		C client = clients.get(id);
-
+		
 		if (client != null && client.isConnected()) {
 			client.getWorker().addTask(() -> {
 				if (client.isConnected()) {
@@ -89,57 +91,73 @@ public abstract class AbstractApi<C extends AbstractClient> {
 		else {
 			receiver.processNotConnectedClient(id);
 		}
-
+		
 	}
-
+	
 	public final void sendMessage(GlobalMessage message) {
 		sendMessage(message, clients.values());
 	}
-
+	
 	public final void sendMessage(GlobalMessage message, Collection<? extends AbstractClient> clients) {
 		if (!clients.isEmpty()) {
 			message.send(clients, logger);
 		}
 	}
-
+	
 	public final Cancelable addClientConnectObserver(Consumer<C> observer) {
 		return clientConnectObservers.add(observer);
 	}
-
+	
 	public final void removeClientConnectObserver(Consumer<C> observer) {
 		clientConnectObservers.remove(observer);
 	}
-
+	
 	public final Cancelable addClientDisconnectObserver(Consumer<C> observer) {
 		return clientDisconnectObservers.add(observer);
 	}
-
+	
 	public final void removeClientDisconnectObserver(Consumer<C> observer) {
 		clientDisconnectObservers.remove(observer);
 	}
-
+	
+	public final void setCommunicationMeter(CommunicationMeter meter) {
+		communicationMeter = meter == null ? CommunicationMeterFake.INSTANCE : meter;
+	}
+	
+	public final boolean hasCommunicationMeter() {
+		return communicationMeter != CommunicationMeterFake.INSTANCE;
+	}
+	
 	protected abstract void callService(C client, int serviceId, int methodId, DataReader reader, DataWriter writer) throws Throwable;
-
+	
 	protected final void logCall(AbstractClient client, String serviceName, String methodName) {
 		CommunicationLoggingUtils.logClientCall(client.getLogger(), serviceName, methodName);
 	}
-
+	
 	protected final void logCall(AbstractClient client, String serviceName, String methodName, Object arg) {
 		CommunicationLoggingUtils.logClientCall(client.getLogger(), serviceName, methodName, arg);
 	}
-
+	
 	protected final void logCall(AbstractClient client, String serviceName, String methodName, Object arg1, Object arg2) {
 		CommunicationLoggingUtils.logClientCall(client.getLogger(), serviceName, methodName, arg1, arg2);
 	}
-
+	
 	protected final void logCall(AbstractClient client, String serviceName, String methodName, Object... args) {
 		CommunicationLoggingUtils.logClientCall(client.getLogger(), serviceName, methodName, args);
 	}
-
+	
 	protected final void logResponse(AbstractClient client, String serviceName, String methodName, Object result) {
 		CommunicationLoggingUtils.logServerResponse(client.getLogger(), serviceName, methodName, result);
 	}
-
+	
+	protected final ServerCallMeter registerServerCall(String service, String method) {
+		return communicationMeter.registerServerCall(service, method);
+	}
+	
+	final void registerClientCall(String service, String method) {
+		communicationMeter.registerClientCall(service, method);
+	}
+	
 	AbstractClient makeClient(String key) {
 		AbstractClient client = clientFactory.factoryClient(key);
 		if (client != null) {
@@ -147,44 +165,44 @@ public abstract class AbstractApi<C extends AbstractClient> {
 		}
 		return client;
 	}
-
+	
 	void addClient(AbstractClient client) {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clients.put(client.getId(), c);
 	}
-
+	
 	void removeClient(AbstractClient client) {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clients.remove(client.getId());
 	}
-
+	
 	void informClientConnectObservers(AbstractClient client) {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clientConnectObservers.inform(observer -> observer.accept(c));
 	}
-
+	
 	void informClientDisconnectObservers(AbstractClient client) {
 		@SuppressWarnings("unchecked")
 		C c = (C)client;
 		clientDisconnectObservers.inform(observer -> observer.accept(c));
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	void processIncomingMessage(AbstractClient client, byte[] message) throws Throwable {
 		ByteArrayInputData inputData = threadLocalInputData.get();
 		ByteArrayOutputData outputData = threadLocalOutputData.get();
-
+		
 		inputData.reset(message);
 		outputData.clear();
-
+		
 		DataReader reader = inputData.getReader();
 		DataWriter writer = outputData.getWriter();
-
+		
 		callService((C)client, reader.readInt(), reader.readInt(), reader, writer);
-
+		
 		if (outputData.isNotEmpty()) {
 			client.sendMessage(outputData.getArray());
 		}

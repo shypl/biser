@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -216,7 +215,10 @@ public class Server {
 	
 	void processBackdoorCommand(BackdoorConnection connection, String command, String[] arguments) {
 		BackdoorCommandHandler handler = backdoorCommandHandlers.get(command);
-		if (handler != null) {
+		if (handler == null) {
+			connection.writeLine("<undefined command : " + command + ">");
+		}
+		else {
 			handler.handleBackdoorCommand(connection, command, arguments);
 		}
 	}

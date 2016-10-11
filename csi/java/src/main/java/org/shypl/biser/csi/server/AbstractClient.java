@@ -305,6 +305,10 @@ public abstract class AbstractClient {
 		);
 	}
 	
+	Server getServer() {
+		return server;
+	}
+	
 	private void sendMessage0(byte[] bytes) {
 		if (bytes.length == 0) {
 			throw new IllegalArgumentException("Outgoing message is empty");
