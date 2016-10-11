@@ -16,9 +16,9 @@ class ConnectionProcessorRecovery extends ConnectionProcessor {
 		else {
 			int capacity = buffer.getCapacity();
 
-			connection.read(buffer, capacity - buffer.getReadableBytes());
+			connection.read(buffer, capacity - buffer.getReadableBytesLength());
 
-			if (capacity == buffer.getReadableBytes()) {
+			if (capacity == buffer.getReadableBytesLength()) {
 				long clientId = buffer.readLong();
 				byte[] clientSid = buffer.readBytes();
 

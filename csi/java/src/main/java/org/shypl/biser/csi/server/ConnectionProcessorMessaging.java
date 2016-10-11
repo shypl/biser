@@ -82,8 +82,8 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 	}
 	
 	private void readMessageSize() {
-		connection.read(buffer, 4 - buffer.getReadableBytes());
-		if (4 == buffer.getReadableBytes()) {
+		connection.read(buffer, 4 - buffer.getReadableBytesLength());
+		if (4 == buffer.getReadableBytesLength()) {
 			state = State.MESSAGE_BODY;
 			messageLen = buffer.readInt();
 			buffer.clear();
@@ -91,8 +91,8 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 	}
 	
 	private void readMessageBody() {
-		connection.read(buffer, messageLen - buffer.getReadableBytes());
-		if (messageLen == buffer.getReadableBytes()) {
+		connection.read(buffer, messageLen - buffer.getReadableBytesLength());
+		if (messageLen == buffer.getReadableBytesLength()) {
 			state = State.FLAG;
 			client.receiveMessage(messageEven, buffer.readBytes());
 		}

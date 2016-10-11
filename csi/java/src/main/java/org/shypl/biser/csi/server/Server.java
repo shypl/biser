@@ -10,6 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -26,7 +29,6 @@ public class Server {
 	
 	private final AtomicInteger connectionsAmount = new AtomicInteger();
 	
-	
 	private volatile boolean running;
 	private volatile boolean opened;
 	
@@ -36,6 +38,8 @@ public class Server {
 	private int stopClients;
 	private int stopWaiting;
 	private int stopWaiting2;
+	
+	private Map<String, BackdoorCommandHandler> backdoorCommandHandlers = new ConcurrentHashMap<>();
 	
 	public Server(ExecutorsProvider executorsProvider, ChannelGate channelGate, ServerSettings settings, AbstractApi<?> api) {
 		this.executorsProvider = executorsProvider;
@@ -104,6 +108,10 @@ public class Server {
 				logger.error("Stop interrupted", e);
 			}
 		}
+	}
+	
+	public final void addBackdoorCommandHandler(String command, BackdoorCommandHandler handler) {
+		backdoorCommandHandlers.put(command, handler);
 	}
 	
 	ExecutorsProvider getExecutorsProvider() {
@@ -204,6 +212,13 @@ public class Server {
 				connection.close(ConnectionCloseReason.SERVER_SHUTDOWN);
 			}
 		});
+	}
+	
+	void processBackdoorCommand(BackdoorConnection connection, String command, String[] arguments) {
+		BackdoorCommandHandler handler = backdoorCommandHandlers.get(command);
+		if (handler != null) {
+			handler.handleBackdoorCommand(connection, command, arguments);
+		}
 	}
 	
 	private void doStop0() {

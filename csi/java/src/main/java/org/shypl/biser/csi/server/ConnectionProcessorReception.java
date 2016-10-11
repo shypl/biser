@@ -20,6 +20,10 @@ class ConnectionProcessorReception extends ConnectionProcessor {
 				connection.getLogger().debug("Reception: Switch to Recovery");
 				switchProcessor(new ConnectionProcessorRecovery());
 				break;
+			case Protocol.BACKDOOR:
+				connection.getLogger().debug("Reception: Switch to Backdoor");
+				switchProcessor(new ConnectionProcessorBackdoorAuthorization());
+				break;
 			default:
 				throw new ProtocolException(String.format("Reception: Invalid flag 0x%s (%s)", Integer.toString(flag & 0xFF, 16), (char)(flag & 0xFF)));
 		}

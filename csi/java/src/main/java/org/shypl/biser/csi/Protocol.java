@@ -20,6 +20,8 @@ public final class Protocol {
 	public static final byte CLOSE_PROTOCOL_BROKEN          = 0x16;
 	public static final byte CLOSE_SERVER_ERROR             = 0x17;
 
+	public static final byte BACKDOOR = 0x23; // #
+	
 	private Protocol() {
 	}
 }
