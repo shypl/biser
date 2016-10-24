@@ -20,7 +20,7 @@ package org.shypl.biser.csi.client {
 
 		override public function init(connection:Connection):void {
 			super.init(connection);
-			_timeout = connection.activityTimeout * 2 + connection.recoveryTimeout;
+			_timeout = connection.recoveryTimeout;
 			_timer.start();
 			scheduleConnect();
 		}

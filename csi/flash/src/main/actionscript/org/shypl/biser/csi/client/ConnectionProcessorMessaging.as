@@ -2,6 +2,8 @@ package org.shypl.biser.csi.client {
 	import flash.utils.ByteArray;
 	import flash.utils.IDataInput;
 	
+	import org.shypl.biser.csi.ConnectionCloseReason;
+	
 	import org.shypl.biser.csi.Protocol;
 	import org.shypl.common.timeline.GlobalTimeline;
 	import org.shypl.common.util.Cancelable;
@@ -35,8 +37,14 @@ package org.shypl.biser.csi.client {
 		}
 		
 		override public function processClose():void {
-			connection.logger.debug("Messaging: Interrupted, switch to Recovery");
-			connection.setProcessor(new ConnectionProcessorRecovery());
+			if (connection.recoveryTimeout <= 0) {
+				connection.logger.debug("Messaging: Interrupted, close");
+				connection.close(ConnectionCloseReason.RECOVERY_REJECT);
+			}
+			else {
+				connection.logger.debug("Messaging: Interrupted, switch to Recovery");
+				connection.setProcessor(new ConnectionProcessorRecovery());
+			}
 		}
 		
 		override public function processData(data:IDataInput):void {
