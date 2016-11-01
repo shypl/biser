@@ -3,7 +3,6 @@ package org.shypl.biser.csi.client {
 	import flash.utils.IDataInput;
 	
 	import org.shypl.biser.csi.ConnectionCloseReason;
-	
 	import org.shypl.biser.csi.Protocol;
 	import org.shypl.common.timeline.GlobalTimeline;
 	import org.shypl.common.util.Cancelable;
@@ -15,7 +14,6 @@ package org.shypl.biser.csi.client {
 		private var _activityTimeout:int;
 		private var _activityChecker:Cancelable;
 		
-		private var _messageEven:Boolean;
 		private var _messageSizeMode:Boolean;
 		
 		public function ConnectionProcessorMessaging() {
@@ -61,18 +59,8 @@ package org.shypl.biser.csi.client {
 				case Protocol.PING:
 					break;
 				
-				case Protocol.MESSAGE_ODD:
-					prepareMessage(false);
-					break;
-				case Protocol.MESSAGE_EVEN:
-					prepareMessage(true);
-					break;
-				
-				case Protocol.MESSAGE_ODD_RECEIVED:
-					connection.processMessageReceived(false);
-					break;
-				case Protocol.MESSAGE_EVEN_RECEIVED:
-					connection.processMessageReceived(true);
+				case Protocol.MESSAGE:
+					prepareMessage();
 					break;
 				
 				default:
@@ -90,12 +78,11 @@ package org.shypl.biser.csi.client {
 			else {
 				var message:ByteArray = new ByteArray();
 				buffer.readBytes(message);
-				connection.receiveMessage(_messageEven, message);
+				connection.receiveMessage(message);
 			}
 		}
 		
-		private function prepareMessage(even:Boolean):void {
-			_messageEven = even;
+		private function prepareMessage():void {
 			_messageSizeMode = true;
 			setDataExpectBody(4);
 		}

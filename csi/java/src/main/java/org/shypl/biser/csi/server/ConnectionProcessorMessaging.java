@@ -9,8 +9,7 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 	
 	private State      state  = State.FLAG;
 	private ByteBuffer buffer = new ByteBuffer();
-	private int     messageLen;
-	private boolean messageEven;
+	private int messageLen;
 	
 	public ConnectionProcessorMessaging(AbstractClient client) {
 		super();
@@ -52,18 +51,8 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 				connection.syncSend(Protocol.PING);
 				break;
 			
-			case Protocol.MESSAGE_ODD:
-				prepareMessage(false);
-				break;
-			case Protocol.MESSAGE_EVEN:
-				prepareMessage(true);
-				break;
-			
-			case Protocol.MESSAGE_ODD_RECEIVED:
-				client.processMessageReceived(false);
-				break;
-			case Protocol.MESSAGE_EVEN_RECEIVED:
-				client.processMessageReceived(true);
+			case Protocol.MESSAGE:
+				prepareMessage();
 				break;
 			
 			case Protocol.CLOSE:
@@ -75,9 +64,8 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 		}
 	}
 	
-	private void prepareMessage(boolean even) {
+	private void prepareMessage() {
 		state = State.MESSAGE_SIZE;
-		messageEven = even;
 		buffer.clear();
 	}
 	
@@ -94,7 +82,7 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 		connection.read(buffer, messageLen - buffer.getReadableBytesLength());
 		if (messageLen == buffer.getReadableBytesLength()) {
 			state = State.FLAG;
-			client.receiveMessage(messageEven, buffer.readBytes());
+			client.receiveMessage(buffer.readBytes());
 		}
 	}
 	

@@ -12,8 +12,6 @@ import org.shypl.common.util.Observers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Deque;
-import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -48,11 +46,6 @@ public abstract class AbstractClient {
 	
 	private Connection connectionForRecovery;
 	private Cancelable connectionRecoveryTimeout;
-	
-	private boolean inputMessageEven;
-	private boolean outputMessageEven;
-	private boolean       outputMessageSendAvailable = true;
-	private Deque<byte[]> outputMessages             = new LinkedList<>();
 	
 	private boolean disconnectForceSecondAttempt;
 	
@@ -167,39 +160,42 @@ public abstract class AbstractClient {
 	}
 	
 	void reconnect(Connection connection) {
-		worker.addTask(() -> {
-			if (connected) {
-				if (active) {
-					connectionForRecovery = connection;
-					this.connection.send(Protocol.PING);
-				}
-				else {
-					cancelConnectionRecoveryTimeout();
-					
-					active = true;
-					this.connection = connection;
-					connection.setProcessor(new ConnectionProcessorMessaging(this));
-					
-					if (connection.getLogger().isTraceEnabled()) {
-						logger.debug("Reconnect (connectionId: {})", connection.getId());
-					}
-					
-					byte[] sid = calculateSid();
-					
-					connection.send(new ByteBuffer(1 + 1 + 8 + sid.length + 1)
-						.writeByte(Protocol.RECOVERY)
-						.writeByte((byte)(8 + sid.length))
-						.writeLong(id)
-						.writeBytes(sid)
-						.writeByte(inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED)
-						.readBytes()
-					);
-				}
-			}
-			else {
-				logger.debug("Fail reconnect on disconnected");
-			}
-		});
+		logger.warn("Reconnect not supported now");
+		connection.close(ConnectionCloseReason.RECOVERY_REJECT);
+
+//		worker.addTask(() -> {
+//			if (connected) {
+//				if (active) {
+//					connectionForRecovery = connection;
+//					this.connection.send(Protocol.PING);
+//				}
+//				else {
+//					cancelConnectionRecoveryTimeout();
+//
+//					active = true;
+//					this.connection = connection;
+//					connection.setProcessor(new ConnectionProcessorMessaging(this));
+//
+//					if (connection.getLogger().isTraceEnabled()) {
+//						logger.debug("Reconnect (connectionId: {})", connection.getId());
+//					}
+//
+//					byte[] sid = calculateSid();
+//
+//					connection.send(new ByteBuffer(1 + 1 + 8 + sid.length + 1)
+//						.writeByte(Protocol.RECOVERY)
+//						.writeByte((byte)(8 + sid.length))
+//						.writeLong(id)
+//						.writeBytes(sid)
+//						.writeByte(inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED)
+//						.readBytes()
+//					);
+//				}
+//			}
+//			else {
+//				logger.debug("Fail reconnect on disconnected");
+//			}
+//		});
 	}
 	
 	void handleConnectionClosed() {
@@ -225,16 +221,9 @@ public abstract class AbstractClient {
 		});
 	}
 	
-	void receiveMessage(boolean even, byte[] bytes) {
+	void receiveMessage(byte[] bytes) {
 		worker.addTask(() -> {
 			if (connected) {
-				if (inputMessageEven == even) {
-					//TODO Violation of the Message Queuing
-					logger.debug("Violation of the Message Queuing");
-				}
-				inputMessageEven = even;
-				connection.send(inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
-				
 				try {
 					if (bytes.length == 0) {
 						throw new IllegalArgumentException("Received message is empty");
@@ -256,8 +245,7 @@ public abstract class AbstractClient {
 	void sendMessage(byte[] bytes) {
 		worker.addTask(() -> {
 			if (connected) {
-				outputMessages.addLast(bytes);
-				if (active && outputMessageSendAvailable) {
+				if (active) {
 					sendMessage0(bytes);
 				}
 			}
@@ -274,23 +262,6 @@ public abstract class AbstractClient {
 			}
 			else {
 				logger.debug("Fail send data on disconnected");
-			}
-		});
-	}
-	
-	void processMessageReceived(boolean even) {
-		worker.addTask(() -> {
-			outputMessageSendAvailable = true;
-			if (active) {
-				if (outputMessageEven != even) {
-					sendMessage0(outputMessages.getFirst());
-				}
-				else {
-					outputMessages.pollFirst();
-					if (!outputMessages.isEmpty()) {
-						sendMessage0(outputMessages.getFirst());
-					}
-				}
 			}
 		});
 	}
@@ -314,13 +285,10 @@ public abstract class AbstractClient {
 			throw new IllegalArgumentException("Outgoing message is empty");
 		}
 		
-		outputMessageSendAvailable = false;
-		outputMessageEven = !outputMessageEven;
-		
 		ByteBuffer buffer = threadLocalMessageBuffer.get();
 		
 		connection.send(buffer
-			.writeByte(outputMessageEven ? Protocol.MESSAGE_EVEN : Protocol.MESSAGE_ODD)
+			.writeByte(Protocol.MESSAGE)
 			.writeInt(bytes.length)
 			.writeBytes(bytes)
 			.readBytes()

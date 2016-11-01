@@ -1,10 +1,7 @@
 package org.shypl.biser.csi {
 	public final class Protocol {
 		public static const AUTHORIZATION:int = 0x01;
-		public static const MESSAGE_ODD:int = 0x02;
-		public static const MESSAGE_EVEN:int = 0x03;
-		public static const MESSAGE_ODD_RECEIVED:int = 0x04;
-		public static const MESSAGE_EVEN_RECEIVED:int = 0x05;
+		public static const MESSAGE:int = 0x02;
 		public static const PING:int = 0x06;
 		public static const RECOVERY:int = 0x07;
 		public static const SERVER_SHUTDOWN_TIMEOUT:int = 0x08;
