@@ -13,7 +13,7 @@ package org.shypl.biser.csi.client {
 	public class AbstractApi {
 		private var _name:String;
 		private var _resultHandlers:Object = {};
-		private var _resultHandlerIdCounter:uint;
+		private var _resultHandlerIdCounter:int;
 		private var _connection:Connection;
 
 		public function AbstractApi(name:String) {
@@ -46,7 +46,7 @@ package org.shypl.biser.csi.client {
 
 		internal function processIncomingMessage(message:IDataInput):void {
 			var reader:DataReader = new DataReader(message);
-			var resultHandlerId:uint = reader.readUint();
+			var resultHandlerId:int = reader.readInt();
 			if (resultHandlerId != 0) {
 				var resultHandler:ResultHandlerHolder = _resultHandlers[resultHandlerId];
 				delete _resultHandlers[resultHandlerId];
@@ -68,6 +68,9 @@ package org.shypl.biser.csi.client {
 
 		internal function registerResultHandler(holder:ResultHandlerHolder):int {
 			++_resultHandlerIdCounter;
+			if (_resultHandlerIdCounter == 0) {
+				++_resultHandlerIdCounter;
+			}
 			_resultHandlers[_resultHandlerIdCounter] = holder;
 			return _resultHandlerIdCounter;
 		}
