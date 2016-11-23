@@ -11,6 +11,7 @@ import org.shypl.common.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
 class Connection implements ChannelHandler {
@@ -60,6 +61,10 @@ class Connection implements ChannelHandler {
 	
 	public long getId() {
 		return id;
+	}
+	
+	public SocketAddress getRemoteAddress() {
+		return channel.getRemoteAddress();
 	}
 	
 	public Server getServer() {

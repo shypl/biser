@@ -12,6 +12,7 @@ import org.shypl.common.util.Observers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketAddress;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -55,6 +56,10 @@ public abstract class AbstractClient {
 	
 	public final long getId() {
 		return id;
+	}
+	
+	public final SocketAddress getRemoteAddress() {
+		return connection.getRemoteAddress();
 	}
 	
 	public final Worker getWorker() {
