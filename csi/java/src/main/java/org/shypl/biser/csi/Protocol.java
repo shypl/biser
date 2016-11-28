@@ -4,6 +4,7 @@ public final class Protocol {
 	public static final byte CROSS_DOMAIN_POLICY     = 0x3c; // <
 	public static final byte AUTHORIZATION           = 0x01;
 	public static final byte MESSAGE                 = 0x02;
+	public static final byte MESSAGE_RECEIVED        = 0x03;
 	public static final byte PING                    = 0x06;
 	public static final byte RECOVERY                = 0x07;
 	public static final byte SERVER_SHUTDOWN_TIMEOUT = 0x08;

@@ -5,7 +5,6 @@ package org.shypl.biser.csi.client {
 	import org.shypl.biser.csi.Address;
 	import org.shypl.biser.csi.ConnectionCloseReason;
 	import org.shypl.biser.csi.Protocol;
-	import org.shypl.common.collection.LinkedList;
 	import org.shypl.common.lang.IllegalArgumentException;
 	import org.shypl.common.logging.LogManager;
 	import org.shypl.common.logging.Logger;
@@ -33,8 +32,10 @@ package org.shypl.biser.csi.client {
 		private var _activityTimeout:int;
 		private var _recoveryTimeout:int;
 		
-		private var _outputMessages:LinkedList = new LinkedList();
-		private var _outputMessageBuffer:ByteArray = new ByteArray();
+		private var _outgoingMessages:OutgoingMessages = new OutgoingMessages();
+		private var _outgoingMessageBuffer:ByteArray = new ByteArray();
+		private var _lastIncomingMessageId:int;
+		private var _recoverMessageId:int;
 		
 		public function Connection(client:Client, address:Address, authorizationKey:String) {
 			_client = client;
@@ -42,8 +43,6 @@ package org.shypl.biser.csi.client {
 			_logger = new PrefixedLoggerProxy(LOGGER, "[" + client.api.name + "] ");
 			
 			_opened = true;
-			_alive = false;
-			_messaging = false;
 			
 			setProcessor(new ConnectionProcessorAuthorization(authorizationKey));
 			openChannel();
@@ -71,6 +70,10 @@ package org.shypl.biser.csi.client {
 		
 		internal function get recoveryTimeout():int {
 			return _recoveryTimeout;
+		}
+		
+		internal function get lastIncomingMessageId():int {
+			return _lastIncomingMessageId;
 		}
 		
 		public function close(reason:ConnectionCloseReason):void {
@@ -115,7 +118,6 @@ package org.shypl.biser.csi.client {
 		
 		public function handleChannelClose():void {
 			_logger.debug("Channel closed (alive: {})", _alive);
-			
 			
 			_messaging = false;
 			_alive = false;
@@ -175,11 +177,10 @@ package org.shypl.biser.csi.client {
 			callDelayed(beginSessionDelayed);
 		}
 		
-		internal function recoverSession(sid:ByteArray):void {
+		internal function recoverSession(sid:ByteArray, messageId:int):void {
 			_logger.debug("Recover session (sid: {})", sid);
 			_sid = sid;
-
-//			writeByteToChannel(_inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED);
+			_recoverMessageId = messageId;
 			
 			callDelayed(recoverSessionDelayed);
 		}
@@ -202,13 +203,15 @@ package org.shypl.biser.csi.client {
 			}
 		}
 		
-		internal function sendMessage(message:ByteArray):void {
+		internal function sendMessage(data:ByteArray):void {
+			if (data.length == 0) {
+				throw new IllegalArgumentException("Outgoing message is empty");
+			}
+			
 			if (_opened) {
+				var message:OutgoingMessage = _outgoingMessages.create(data);
 				if (_messaging) {
 					sendMessage0(message);
-				}
-				else {
-					_outputMessages.addLast(message);
 				}
 			}
 			else {
@@ -216,7 +219,10 @@ package org.shypl.biser.csi.client {
 			}
 		}
 		
-		internal function receiveMessage(message:IDataInput):void {
+		internal function receiveMessage(messageId:int, message:IDataInput):void {
+			_lastIncomingMessageId = messageId;
+			sendByte(Protocol.MESSAGE_RECEIVED);
+			
 			if (message.bytesAvailable == 0) {
 				throw new IllegalArgumentException("Received message is empty");
 			}
@@ -224,37 +230,43 @@ package org.shypl.biser.csi.client {
 			_client.api.processIncomingMessage(message);
 		}
 		
+		internal function processOutgoingMessageReceived():void {
+			_outgoingMessages.releaseFirst();
+		}
+		
 		private function beginSessionDelayed():void {
 			_messaging = true;
+			
+			sendQueuedMessages();
+			
 			_client.processConnected();
-			if (_messaging) {
-				sendNextMessageIfExists();
-			}
 		}
 		
 		private function recoverSessionDelayed():void {
 			_messaging = true;
+			
+			_outgoingMessages.releaseTo(_recoverMessageId);
+			sendQueuedMessages();
+			
 			_client.processConnectionEstablished();
 		}
 		
-		private function sendNextMessageIfExists():void {
-			if (!_outputMessages.isEmpty()) {
-				sendMessage0(ByteArray(_outputMessages.getFirst()));
+		private function sendQueuedMessages():void {
+			for each (var message:OutgoingMessage in _outgoingMessages.getQueue()) {
+				sendMessage0(message);
 			}
 		}
 		
-		private function sendMessage0(message:ByteArray):void {
-			if (message.length == 0) {
-				throw new IllegalArgumentException("Outgoing message is empty");
-			}
+		private function sendMessage0(message:OutgoingMessage):void {
 			
-			_outputMessageBuffer.writeByte(Protocol.MESSAGE);
-			_outputMessageBuffer.writeInt(message.length);
-			_outputMessageBuffer.writeBytes(message);
+			_outgoingMessageBuffer.writeByte(Protocol.MESSAGE);
+			_outgoingMessageBuffer.writeInt(message.id);
+			_outgoingMessageBuffer.writeInt(message.data.length);
+			_outgoingMessageBuffer.writeBytes(message.data);
 			
-			sendBytes(_outputMessageBuffer);
+			sendBytes(_outgoingMessageBuffer);
 			
-			_outputMessageBuffer.clear();
+			_outgoingMessageBuffer.clear();
 		}
 		
 		private function writeByteToChannel(byte:int):void {

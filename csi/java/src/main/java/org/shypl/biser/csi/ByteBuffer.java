@@ -74,6 +74,12 @@ public class ByteBuffer {
 		}
 	}
 	
+	public byte[] readBytesAndClear() {
+		byte[] bytes = readBytes();
+		clear();
+		return bytes;
+	}
+	
 	public int readInt() {
 		int i = BytesUtils.readInt(array, readerCursor);
 		readerCursor += 4;

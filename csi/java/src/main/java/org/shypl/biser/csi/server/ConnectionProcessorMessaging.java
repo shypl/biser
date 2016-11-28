@@ -9,7 +9,8 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 	
 	private State      state  = State.FLAG;
 	private ByteBuffer buffer = new ByteBuffer();
-	private int messageLen;
+	private int messageId;
+	private int messageSize;
 	
 	public ConnectionProcessorMessaging(AbstractClient client) {
 		super();
@@ -22,6 +23,9 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 			switch (state) {
 				case FLAG:
 					readFlag();
+					break;
+				case MESSAGE_ID:
+					readMessageId();
 					break;
 				case MESSAGE_SIZE:
 					readMessageSize();
@@ -55,6 +59,10 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 				prepareMessage();
 				break;
 			
+			case Protocol.MESSAGE_RECEIVED:
+				client.processOutgoingMessageReceived();
+				break;
+			
 			case Protocol.CLOSE:
 				connection.syncClose();
 				break;
@@ -65,28 +73,37 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 	}
 	
 	private void prepareMessage() {
-		state = State.MESSAGE_SIZE;
+		state = State.MESSAGE_ID;
 		buffer.clear();
+	}
+	
+	private void readMessageId() {
+		connection.read(buffer, 4 - buffer.getReadableBytesLength());
+		if (4 == buffer.getReadableBytesLength()) {
+			state = State.MESSAGE_SIZE;
+			messageId = buffer.readInt();
+			buffer.clear();
+		}
 	}
 	
 	private void readMessageSize() {
 		connection.read(buffer, 4 - buffer.getReadableBytesLength());
 		if (4 == buffer.getReadableBytesLength()) {
 			state = State.MESSAGE_BODY;
-			messageLen = buffer.readInt();
+			messageSize = buffer.readInt();
 			buffer.clear();
 		}
 	}
 	
 	private void readMessageBody() {
-		connection.read(buffer, messageLen - buffer.getReadableBytesLength());
-		if (messageLen == buffer.getReadableBytesLength()) {
+		connection.read(buffer, messageSize - buffer.getReadableBytesLength());
+		if (messageSize == buffer.getReadableBytesLength()) {
 			state = State.FLAG;
-			client.receiveMessage(buffer.readBytes());
+			client.receiveMessage(messageId, buffer.readBytes());
 		}
 	}
 	
 	private enum State {
-		FLAG, MESSAGE_SIZE, MESSAGE_BODY
+		FLAG, MESSAGE_ID, MESSAGE_SIZE, MESSAGE_BODY
 	}
 }

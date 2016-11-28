@@ -9,12 +9,17 @@ package org.shypl.biser.csi.client {
 	import org.shypl.common.util.TimeMeter;
 	
 	internal class ConnectionProcessorMessaging extends ConnectionProcessor {
+		private static const STATE_MESSAGE_ID:int = 0;
+		private static const STATE_MESSAGE_SIZE:int = 1;
+		private static const STATE_MESSAGE_BODY:int = 2;
+		
 		private var _activity:Boolean;
 		private var _activityTimer:TimeMeter = new TimeMeter();
 		private var _activityTimeout:int;
 		private var _activityChecker:Cancelable;
 		
-		private var _messageSizeMode:Boolean;
+		private var _state:int;
+		private var _messageId:int;
 		
 		public function ConnectionProcessorMessaging() {
 		}
@@ -63,6 +68,10 @@ package org.shypl.biser.csi.client {
 					prepareMessage();
 					break;
 				
+				case Protocol.MESSAGE_RECEIVED:
+					connection.processOutgoingMessageReceived();
+					break;
+				
 				default:
 					super.processDataFlag(flag);
 					break;
@@ -71,19 +80,26 @@ package org.shypl.biser.csi.client {
 		}
 		
 		override protected function processDataBody(buffer:ByteArray):void {
-			if (_messageSizeMode) {
-				_messageSizeMode = false;
-				setDataExpectBody(buffer.readInt());
-			}
-			else {
-				var message:ByteArray = new ByteArray();
-				buffer.readBytes(message);
-				connection.receiveMessage(message);
+			switch (_state) {
+				case STATE_MESSAGE_ID:
+					_messageId = buffer.readInt();
+					_state = STATE_MESSAGE_SIZE;
+					setDataExpectBody(4);
+					break;
+				case STATE_MESSAGE_SIZE:
+					_state = STATE_MESSAGE_BODY;
+					setDataExpectBody(buffer.readInt());
+					break;
+				case STATE_MESSAGE_BODY:
+					var data:ByteArray = new ByteArray();
+					buffer.readBytes(data);
+					connection.receiveMessage(_messageId, data);
+					break;
 			}
 		}
 		
 		private function prepareMessage():void {
-			_messageSizeMode = true;
+			_state = STATE_MESSAGE_ID;
 			setDataExpectBody(4);
 		}
 		

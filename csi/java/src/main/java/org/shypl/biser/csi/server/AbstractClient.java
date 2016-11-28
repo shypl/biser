@@ -21,12 +21,7 @@ public abstract class AbstractClient {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractClient.class);
 	private static final byte[] SID_SALT;
 	
-	private static final ThreadLocal<ByteBuffer> threadLocalMessageBuffer = new ThreadLocal<ByteBuffer>() {
-		@Override
-		protected ByteBuffer initialValue() {
-			return new ByteBuffer();
-		}
-	};
+	private static final ThreadLocal<ByteBuffer> threadLocalMessageBuffer = ThreadLocal.withInitial(ByteBuffer::new);
 	
 	static {
 		ThreadLocalRandom random = ThreadLocalRandom.current();
@@ -36,6 +31,8 @@ public abstract class AbstractClient {
 	
 	private final Observers<Consumer<AbstractClient>> disconnectObservers = new Observers<>();
 	private final long id;
+	private final OutgoingMessages outgoingMessages = new OutgoingMessages();
+	
 	private Logger logger = LOGGER;
 	
 	private volatile boolean connected;
@@ -45,10 +42,13 @@ public abstract class AbstractClient {
 	private Connection connection;
 	private Worker     worker;
 	
-	private Connection connectionForRecovery;
-	private Cancelable connectionRecoveryTimeout;
+	private Cancelable recoveryTimeout;
+	private Connection recoveryConnection;
+	private int        recoveryLastMessageId;
 	
 	private boolean disconnectForceSecondAttempt;
+	private int     lastIncomingMessageId;
+	
 	
 	public AbstractClient(long id) {
 		this.id = id;
@@ -164,43 +164,46 @@ public abstract class AbstractClient {
 		});
 	}
 	
-	void reconnect(Connection connection) {
-		logger.warn("Reconnect not supported now");
-		connection.close(ConnectionCloseReason.RECOVERY_REJECT);
-
-//		worker.addTask(() -> {
-//			if (connected) {
-//				if (active) {
-//					connectionForRecovery = connection;
-//					this.connection.send(Protocol.PING);
-//				}
-//				else {
-//					cancelConnectionRecoveryTimeout();
-//
-//					active = true;
-//					this.connection = connection;
-//					connection.setProcessor(new ConnectionProcessorMessaging(this));
-//
-//					if (connection.getLogger().isTraceEnabled()) {
-//						logger.debug("Reconnect (connectionId: {})", connection.getId());
-//					}
-//
-//					byte[] sid = calculateSid();
-//
-//					connection.send(new ByteBuffer(1 + 1 + 8 + sid.length + 1)
-//						.writeByte(Protocol.RECOVERY)
-//						.writeByte((byte)(8 + sid.length))
-//						.writeLong(id)
-//						.writeBytes(sid)
-//						.writeByte(inputMessageEven ? Protocol.MESSAGE_EVEN_RECEIVED : Protocol.MESSAGE_ODD_RECEIVED)
-//						.readBytes()
-//					);
-//				}
-//			}
-//			else {
-//				logger.debug("Fail reconnect on disconnected");
-//			}
-//		});
+	void reconnect(Connection connection, int lastMessageId) {
+		worker.addTask(() -> {
+			if (connected) {
+				if (active) {
+					recoveryConnection = connection;
+					recoveryLastMessageId = lastMessageId;
+					this.connection.send(Protocol.PING);
+				}
+				else {
+					cancelRecoveryTimeout();
+					
+					active = true;
+					this.connection = connection;
+					connection.setProcessor(new ConnectionProcessorMessaging(this));
+					
+					if (connection.getLogger().isTraceEnabled()) {
+						logger.debug("Reconnect (connectionId: {})", connection.getId());
+					}
+					
+					byte[] sid = calculateSid();
+					
+					connection.send(new ByteBuffer(1 + 1 + 4 + 8 + sid.length)
+						.writeByte(Protocol.RECOVERY)
+						.writeByte((byte)(4 + 8 + sid.length))
+						.writeInt(lastIncomingMessageId)
+						.writeLong(id)
+						.writeBytes(sid)
+						.readBytes()
+					);
+					
+					outgoingMessages.releaseTo(lastMessageId);
+					for (OutgoingMessage message : outgoingMessages.getQueue()) {
+						sendMessage0(message);
+					}
+				}
+			}
+			else {
+				logger.debug("Fail reconnect on disconnected");
+			}
+		});
 	}
 	
 	void handleConnectionClosed() {
@@ -215,20 +218,23 @@ public abstract class AbstractClient {
 				handleDisconnect();
 			}
 			else {
-				if (connectionForRecovery == null) {
-					connectionRecoveryTimeout = worker.scheduleTask(this::handleDisconnect, time, TimeUnit.SECONDS);
+				if (recoveryConnection == null) {
+					recoveryTimeout = worker.scheduleTask(this::handleDisconnect, time, TimeUnit.SECONDS);
 				}
 				else {
-					reconnect(connectionForRecovery);
-					connectionForRecovery = null;
+					reconnect(recoveryConnection, recoveryLastMessageId);
+					recoveryConnection = null;
 				}
 			}
 		});
 	}
 	
-	void receiveMessage(byte[] bytes) {
+	void receiveMessage(int messageId, byte[] bytes) {
 		worker.addTask(() -> {
+			lastIncomingMessageId = messageId;
 			if (connected) {
+				
+				connection.send(Protocol.MESSAGE_RECEIVED);
 				try {
 					if (bytes.length == 0) {
 						throw new IllegalArgumentException("Received message is empty");
@@ -248,16 +254,25 @@ public abstract class AbstractClient {
 	}
 	
 	void sendMessage(byte[] bytes) {
+		if (bytes.length == 0) {
+			throw new IllegalArgumentException("Outgoing message is empty");
+		}
+		
 		worker.addTask(() -> {
 			if (connected) {
+				OutgoingMessage message = outgoingMessages.create(bytes);
 				if (active) {
-					sendMessage0(bytes);
+					sendMessage0(message);
 				}
 			}
 			else {
 				logger.debug("Fail send message on disconnected");
 			}
 		});
+	}
+	
+	void processOutgoingMessageReceived() {
+		worker.addTask(outgoingMessages::releaseFirst);
 	}
 	
 	void sendData(byte[] bytes) {
@@ -285,27 +300,21 @@ public abstract class AbstractClient {
 		return server;
 	}
 	
-	private void sendMessage0(byte[] bytes) {
-		if (bytes.length == 0) {
-			throw new IllegalArgumentException("Outgoing message is empty");
-		}
-		
-		ByteBuffer buffer = threadLocalMessageBuffer.get();
-		
-		connection.send(buffer
+	private void sendMessage0(OutgoingMessage message) {
+		connection.send(threadLocalMessageBuffer.get()
 			.writeByte(Protocol.MESSAGE)
-			.writeInt(bytes.length)
-			.writeBytes(bytes)
-			.readBytes()
+			.writeInt(message.id)
+			.writeInt(message.data.length)
+			.writeBytes(message.data)
+			.readBytesAndClear()
 		);
-		buffer.clear();
 	}
 	
 	private void handleDisconnect() {
 		active = false;
 		connected = false;
 		
-		cancelConnectionRecoveryTimeout();
+		cancelRecoveryTimeout();
 		
 		server.disconnectClient(this);
 		server.getApi().informClientDisconnectObservers(this);
@@ -322,10 +331,10 @@ public abstract class AbstractClient {
 		disconnectObservers.removeAll();
 	}
 	
-	private void cancelConnectionRecoveryTimeout() {
-		if (connectionRecoveryTimeout != null) {
-			connectionRecoveryTimeout.cancel();
-			connectionRecoveryTimeout = null;
+	private void cancelRecoveryTimeout() {
+		if (recoveryTimeout != null) {
+			recoveryTimeout.cancel();
+			recoveryTimeout = null;
 		}
 	}
 }

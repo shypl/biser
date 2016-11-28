@@ -41,7 +41,8 @@ package org.shypl.biser.csi.client {
 
 			var data:ByteArray = new ByteArray();
 			data.writeByte(Protocol.RECOVERY);
-			data.writeByte(sid.length);
+			data.writeByte(4 + sid.length);
+			data.writeInt(connection.lastIncomingMessageId);
 			data.writeBytes(sid);
 
 			connection.sendBytes(data);
@@ -77,9 +78,10 @@ package org.shypl.biser.csi.client {
 				setDataExpectBody(buffer.readUnsignedByte());
 			}
 			else {
+				var messageId:int = buffer.readInt();
 				var sid:ByteArray = new ByteArray();
 				buffer.readBytes(sid);
-				connection.recoverSession(sid);
+				connection.recoverSession(sid, messageId);
 
 				connection.logger.debug("Recovery: Switch to Messaging");
 				connection.setProcessor(new ConnectionProcessorMessaging());
@@ -87,7 +89,7 @@ package org.shypl.biser.csi.client {
 		}
 
 		private function scheduleConnect():void {
-			var ms:int = _attempt == 0 ? 100 : 1000;
+			var ms:int =_attempt == 0 ? 200 : 1000;
 
 			connection.logger.debug("Recovery: Schedule connect after {} ms", ms);
 

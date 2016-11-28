@@ -184,7 +184,7 @@ public class Server {
 		});
 	}
 	
-	void reconnectClient(long clientId, byte[] clientSid, Connection connection) {
+	void reconnectClient(long clientId, byte[] clientSid, Connection connection, int lastMessageId) {
 		worker.addTask(() -> {
 			if (opened) {
 				if (connection.isOpened()) {
@@ -196,7 +196,7 @@ public class Server {
 						}
 						else {
 							logger.debug("Reconnect client #{}", client.getId());
-							client.reconnect(connection);
+							client.reconnect(connection, lastMessageId);
 						}
 					}
 					else {
