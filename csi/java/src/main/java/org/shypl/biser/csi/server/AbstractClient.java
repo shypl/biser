@@ -316,11 +316,6 @@ public abstract class AbstractClient {
 		
 		cancelRecoveryTimeout();
 		
-		server.disconnectClient(this);
-		server.getApi().informClientDisconnectObservers(this);
-		
-		disconnectObservers.inform(observer -> observer.accept(this));
-		
 		try {
 			onDisconnect();
 		}
@@ -328,6 +323,10 @@ public abstract class AbstractClient {
 			logger.error("Error on disconnect", e);
 		}
 		
+		server.disconnectClient(this);
+		server.getApi().informClientDisconnectObservers(this);
+		
+		disconnectObservers.inform(observer -> observer.accept(this));
 		disconnectObservers.removeAll();
 	}
 	
