@@ -53,6 +53,7 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 		switch (flag) {
 			case Protocol.PING:
 				connection.syncSend(Protocol.PING);
+				client.sendMessageReceivedFlags();
 				break;
 			
 			case Protocol.MESSAGE:

@@ -48,6 +48,7 @@ public abstract class AbstractClient {
 	
 	private boolean disconnectForceSecondAttempt;
 	private int     lastIncomingMessageId;
+	private int     receivedMessageCounter;
 	
 	
 	public AbstractClient(long id) {
@@ -234,7 +235,8 @@ public abstract class AbstractClient {
 			lastIncomingMessageId = messageId;
 			if (connected) {
 				
-				connection.send(Protocol.MESSAGE_RECEIVED);
+				++receivedMessageCounter;
+				
 				try {
 					if (bytes.length == 0) {
 						throw new IllegalArgumentException("Received message is empty");
@@ -251,6 +253,10 @@ public abstract class AbstractClient {
 				logger.debug("Fail receive message on disconnected");
 			}
 		});
+	}
+	
+	void processOutgoingMessageReceived() {
+		worker.addTask(outgoingMessages::releaseFirst);
 	}
 	
 	void sendMessage(byte[] bytes) {
@@ -271,17 +277,31 @@ public abstract class AbstractClient {
 		});
 	}
 	
-	void processOutgoingMessageReceived() {
-		worker.addTask(outgoingMessages::releaseFirst);
-	}
-	
 	void sendData(byte[] bytes) {
 		worker.addTask(() -> {
 			if (connected) {
-				connection.send(bytes);
+				if (receivedMessageCounter == 0) {
+					connection.send(bytes);
+				}
+				else {
+					connection.syncSend(getBufferWithMessageReceivedFlags()
+						.writeBytes(bytes)
+						.readBytesAndClear()
+					);
+				}
 			}
 			else {
 				logger.debug("Fail send data on disconnected");
+			}
+		});
+	}
+	
+	void sendMessageReceivedFlags() {
+		worker.addTask(() -> {
+			if (connected) {
+				if (receivedMessageCounter > 0) {
+					connection.send(getBufferWithMessageReceivedFlags().readBytesAndClear());
+				}
 			}
 		});
 	}
@@ -301,13 +321,22 @@ public abstract class AbstractClient {
 	}
 	
 	private void sendMessage0(OutgoingMessage message) {
-		connection.send(threadLocalMessageBuffer.get()
+		connection.send(getBufferWithMessageReceivedFlags()
 			.writeByte(Protocol.MESSAGE)
 			.writeInt(message.id)
 			.writeInt(message.data.length)
 			.writeBytes(message.data)
 			.readBytesAndClear()
 		);
+	}
+	
+	private ByteBuffer getBufferWithMessageReceivedFlags() {
+		ByteBuffer buffer = threadLocalMessageBuffer.get();
+		while (receivedMessageCounter > 0) {
+			--receivedMessageCounter;
+			buffer.writeByte(Protocol.MESSAGE_RECEIVED);
+		}
+		return buffer;
 	}
 	
 	private void handleDisconnect() {

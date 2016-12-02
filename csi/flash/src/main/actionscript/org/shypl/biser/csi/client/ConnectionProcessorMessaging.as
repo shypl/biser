@@ -107,7 +107,7 @@ package org.shypl.biser.csi.client {
 			if (_activity) {
 				if (_activityTimer.seconds >= _activityTimeout) {
 					_activity = false;
-					connection.sendByte(Protocol.PING);
+					connection.sendPing();
 				}
 			}
 			else {

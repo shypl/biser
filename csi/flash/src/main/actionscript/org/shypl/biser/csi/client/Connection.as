@@ -36,6 +36,7 @@ package org.shypl.biser.csi.client {
 		private var _outgoingMessageBuffer:ByteArray = new ByteArray();
 		private var _lastIncomingMessageId:int;
 		private var _recoverMessageId:int;
+		private var _receivedMessageCounter:int;
 		
 		public function Connection(client:Client, address:Address, authorizationKey:String) {
 			_client = client;
@@ -221,7 +222,7 @@ package org.shypl.biser.csi.client {
 		
 		internal function receiveMessage(messageId:int, message:IDataInput):void {
 			_lastIncomingMessageId = messageId;
-			sendByte(Protocol.MESSAGE_RECEIVED);
+			++_receivedMessageCounter;
 			
 			if (message.bytesAvailable == 0) {
 				throw new IllegalArgumentException("Received message is empty");
@@ -232,6 +233,18 @@ package org.shypl.biser.csi.client {
 		
 		internal function processOutgoingMessageReceived():void {
 			_outgoingMessages.releaseFirst();
+		}
+		
+		internal function sendPing():void {
+			if (_receivedMessageCounter == 0) {
+				sendByte(Protocol.PING);
+			}
+			else {
+				_outgoingMessageBuffer.writeByte(Protocol.PING);
+				writeMessageReceivedFlagsToOutgoingMessageBuffer();
+				sendBytes(_outgoingMessageBuffer);
+				_outgoingMessageBuffer.clear();
+			}
 		}
 		
 		private function beginSessionDelayed():void {
@@ -259,6 +272,8 @@ package org.shypl.biser.csi.client {
 		
 		private function sendMessage0(message:OutgoingMessage):void {
 			
+			writeMessageReceivedFlagsToOutgoingMessageBuffer();
+			
 			_outgoingMessageBuffer.writeByte(Protocol.MESSAGE);
 			_outgoingMessageBuffer.writeInt(message.id);
 			_outgoingMessageBuffer.writeInt(message.data.length);
@@ -267,6 +282,13 @@ package org.shypl.biser.csi.client {
 			sendBytes(_outgoingMessageBuffer);
 			
 			_outgoingMessageBuffer.clear();
+		}
+		
+		private function writeMessageReceivedFlagsToOutgoingMessageBuffer():void {
+			while (_receivedMessageCounter > 0) {
+				--_receivedMessageCounter;
+				_outgoingMessageBuffer.writeByte(Protocol.MESSAGE_RECEIVED);
+			}
 		}
 		
 		private function writeByteToChannel(byte:int):void {
