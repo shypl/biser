@@ -17,7 +17,9 @@ public class OutgoingMessages {
 	}
 	
 	public void releaseFirst() {
-		lastReleasedId = list.removeFirst().id;
+		if (!list.isEmpty()) {
+			lastReleasedId = list.removeFirst().id;
+		}
 	}
 	
 	public void releaseTo(int id) {
