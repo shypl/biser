@@ -33,6 +33,9 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 				case MESSAGE_BODY:
 					readMessageBody();
 					break;
+				case OUTGOING_MESSAGE_RECEIVED:
+					readOutgoingMessageReceived();
+					break;
 			}
 		}
 		while (connection.isReadable());
@@ -53,7 +56,7 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 		switch (flag) {
 			case Protocol.PING:
 				connection.syncSend(Protocol.PING);
-				client.sendMessageReceivedFlags();
+				client.sendLastMessageReceivedFlag();
 				break;
 			
 			case Protocol.MESSAGE:
@@ -61,7 +64,7 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 				break;
 			
 			case Protocol.MESSAGE_RECEIVED:
-				client.processOutgoingMessageReceived();
+				prepareOutgoingMessageReceived();
 				break;
 			
 			case Protocol.CLOSE:
@@ -70,6 +73,21 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 			
 			default:
 				throw new ProtocolException(String.format("Messaging: Invalid flag  0x%s (%s)", Integer.toString(flag & 0xFF, 16), (char)(flag & 0xFF)));
+		}
+	}
+	
+	private void prepareOutgoingMessageReceived() {
+		state = State.OUTGOING_MESSAGE_RECEIVED;
+		buffer.clear();
+	}
+	
+	private void readOutgoingMessageReceived() {
+		connection.read(buffer, 4 - buffer.getReadableBytesLength());
+		if (4 == buffer.getReadableBytesLength()) {
+			state = State.FLAG;
+			messageId = buffer.readInt();
+			buffer.clear();
+			client.processOutgoingMessageReceived(messageId);
 		}
 	}
 	
@@ -105,6 +123,6 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 	}
 	
 	private enum State {
-		FLAG, MESSAGE_ID, MESSAGE_SIZE, MESSAGE_BODY
+		FLAG, MESSAGE_ID, MESSAGE_SIZE, MESSAGE_BODY, OUTGOING_MESSAGE_RECEIVED
 	}
 }

@@ -48,7 +48,6 @@ public abstract class AbstractClient {
 	
 	private boolean disconnectForceSecondAttempt;
 	private int     lastIncomingMessageId;
-	private int     receivedMessageCounter;
 	
 	
 	public AbstractClient(long id) {
@@ -235,8 +234,6 @@ public abstract class AbstractClient {
 			lastIncomingMessageId = messageId;
 			if (connected) {
 				
-				++receivedMessageCounter;
-				
 				try {
 					if (bytes.length == 0) {
 						throw new IllegalArgumentException("Received message is empty");
@@ -255,8 +252,8 @@ public abstract class AbstractClient {
 		});
 	}
 	
-	void processOutgoingMessageReceived() {
-		worker.addTask(outgoingMessages::releaseFirst);
+	void processOutgoingMessageReceived(int messageId) {
+		worker.addTask(() -> outgoingMessages.releaseTo(messageId));
 	}
 	
 	void sendMessage(byte[] bytes) {
@@ -280,15 +277,10 @@ public abstract class AbstractClient {
 	void sendData(byte[] bytes) {
 		worker.addTask(() -> {
 			if (connected) {
-				if (receivedMessageCounter == 0) {
-					connection.send(bytes);
-				}
-				else {
-					connection.syncSend(getBufferWithMessageReceivedFlags()
-						.writeBytes(bytes)
-						.readBytesAndClear()
-					);
-				}
+				connection.syncSend(getBufferWithLastMessageReceivedFlag()
+					.writeBytes(bytes)
+					.readBytesAndClear()
+				);
 			}
 			else {
 				logger.debug("Fail send data on disconnected");
@@ -296,12 +288,10 @@ public abstract class AbstractClient {
 		});
 	}
 	
-	void sendMessageReceivedFlags() {
+	void sendLastMessageReceivedFlag() {
 		worker.addTask(() -> {
 			if (connected) {
-				if (receivedMessageCounter > 0) {
-					connection.send(getBufferWithMessageReceivedFlags().readBytesAndClear());
-				}
+				connection.send(getBufferWithLastMessageReceivedFlag().readBytesAndClear());
 			}
 		});
 	}
@@ -321,7 +311,7 @@ public abstract class AbstractClient {
 	}
 	
 	private void sendMessage0(OutgoingMessage message) {
-		connection.send(getBufferWithMessageReceivedFlags()
+		connection.send(getBufferWithLastMessageReceivedFlag()
 			.writeByte(Protocol.MESSAGE)
 			.writeInt(message.id)
 			.writeInt(message.data.length)
@@ -330,12 +320,10 @@ public abstract class AbstractClient {
 		);
 	}
 	
-	private ByteBuffer getBufferWithMessageReceivedFlags() {
+	private ByteBuffer getBufferWithLastMessageReceivedFlag() {
 		ByteBuffer buffer = threadLocalMessageBuffer.get();
-		while (receivedMessageCounter > 0) {
-			--receivedMessageCounter;
-			buffer.writeByte(Protocol.MESSAGE_RECEIVED);
-		}
+		buffer.writeByte(Protocol.MESSAGE_RECEIVED);
+		buffer.writeInt(lastIncomingMessageId);
 		return buffer;
 	}
 	

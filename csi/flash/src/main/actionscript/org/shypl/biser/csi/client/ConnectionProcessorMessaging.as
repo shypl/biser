@@ -12,6 +12,7 @@ package org.shypl.biser.csi.client {
 		private static const STATE_MESSAGE_ID:int = 0;
 		private static const STATE_MESSAGE_SIZE:int = 1;
 		private static const STATE_MESSAGE_BODY:int = 2;
+		private static const STATE_OUTGOING_MESSAGE_RECEIVED:int = 3;
 		
 		private var _activity:Boolean;
 		private var _activityTimer:TimeMeter = new TimeMeter();
@@ -69,7 +70,7 @@ package org.shypl.biser.csi.client {
 					break;
 				
 				case Protocol.MESSAGE_RECEIVED:
-					connection.processOutgoingMessageReceived();
+					prepareOutgoingMessageReceived();
 					break;
 				
 				default:
@@ -95,7 +96,15 @@ package org.shypl.biser.csi.client {
 					buffer.readBytes(data);
 					connection.receiveMessage(_messageId, data);
 					break;
+				case STATE_OUTGOING_MESSAGE_RECEIVED:
+					connection.processOutgoingMessageReceived(buffer.readInt());
+					break;
 			}
+		}
+		
+		private function prepareOutgoingMessageReceived():void {
+			_state = STATE_OUTGOING_MESSAGE_RECEIVED;
+			setDataExpectBody(4);
 		}
 		
 		private function prepareMessage():void {

@@ -6,6 +6,7 @@ package org.shypl.biser.csi.client {
 	import org.shypl.biser.csi.ConnectionCloseReason;
 	import org.shypl.biser.csi.Protocol;
 	import org.shypl.common.lang.IllegalArgumentException;
+	import org.shypl.common.lang.notNull;
 	import org.shypl.common.logging.LogManager;
 	import org.shypl.common.logging.Logger;
 	import org.shypl.common.logging.PrefixedLoggerProxy;
@@ -36,7 +37,6 @@ package org.shypl.biser.csi.client {
 		private var _outgoingMessageBuffer:ByteArray = new ByteArray();
 		private var _lastIncomingMessageId:int;
 		private var _recoverMessageId:int;
-		private var _receivedMessageCounter:int;
 		
 		public function Connection(client:Client, address:Address, authorizationKey:String) {
 			_client = client;
@@ -118,19 +118,21 @@ package org.shypl.biser.csi.client {
 		}
 		
 		public function handleChannelClose():void {
-			_logger.debug("Channel closed (alive: {})", _alive);
-			
-			_messaging = false;
-			_alive = false;
-			_channel = null;
-			if (_opened) {
-				callDelayed(_client.processConnectionInterrupted);
-				_processor.processClose();
-			}
-			else {
-				_processor.destroy();
-				callDelayed(_client.processDisconnected, _closeReason);
-				free();
+			if (notNull(_client)) {
+				_logger.debug("Channel closed (alive: {})", _alive);
+				
+				_messaging = false;
+				_alive = false;
+				_channel = null;
+				if (_opened) {
+					callDelayed(_client.processConnectionInterrupted);
+					_processor.processClose();
+				}
+				else {
+					_processor.destroy();
+					callDelayed(_client.processDisconnected, _closeReason);
+					free();
+				}
 			}
 		}
 		
@@ -222,7 +224,6 @@ package org.shypl.biser.csi.client {
 		
 		internal function receiveMessage(messageId:int, message:IDataInput):void {
 			_lastIncomingMessageId = messageId;
-			++_receivedMessageCounter;
 			
 			if (message.bytesAvailable == 0) {
 				throw new IllegalArgumentException("Received message is empty");
@@ -231,20 +232,15 @@ package org.shypl.biser.csi.client {
 			_client.api.processIncomingMessage(message);
 		}
 		
-		internal function processOutgoingMessageReceived():void {
-			_outgoingMessages.releaseFirst();
+		internal function processOutgoingMessageReceived(messageId:int):void {
+			_outgoingMessages.releaseTo(messageId);
 		}
 		
 		internal function sendPing():void {
-			if (_receivedMessageCounter == 0) {
-				sendByte(Protocol.PING);
-			}
-			else {
-				_outgoingMessageBuffer.writeByte(Protocol.PING);
-				writeMessageReceivedFlagsToOutgoingMessageBuffer();
-				sendBytes(_outgoingMessageBuffer);
-				_outgoingMessageBuffer.clear();
-			}
+			_outgoingMessageBuffer.writeByte(Protocol.PING);
+			writeMessageReceivedFlagsToOutgoingMessageBuffer();
+			sendBytes(_outgoingMessageBuffer);
+			_outgoingMessageBuffer.clear();
 		}
 		
 		private function beginSessionDelayed():void {
@@ -285,10 +281,8 @@ package org.shypl.biser.csi.client {
 		}
 		
 		private function writeMessageReceivedFlagsToOutgoingMessageBuffer():void {
-			while (_receivedMessageCounter > 0) {
-				--_receivedMessageCounter;
-				_outgoingMessageBuffer.writeByte(Protocol.MESSAGE_RECEIVED);
-			}
+			_outgoingMessageBuffer.writeByte(Protocol.MESSAGE_RECEIVED);
+			_outgoingMessageBuffer.writeInt(_lastIncomingMessageId);
 		}
 		
 		private function writeByteToChannel(byte:int):void {

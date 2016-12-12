@@ -18,16 +18,10 @@ package org.shypl.biser.csi.client {
 			return message;
 		}
 		
-		public function releaseFirst():void {
-			if (!list.isEmpty()) {
-				var first:OutgoingMessage = list.removeFirst();
-				lastReleasedId = first.id;
-			}
-		}
-		
 		public function releaseTo(id:int):void {
 			while (lastReleasedId != id && !list.isEmpty()) {
-				releaseFirst();
+				var first:OutgoingMessage = list.removeFirst();
+				lastReleasedId = first.id;
 			}
 		}
 		
