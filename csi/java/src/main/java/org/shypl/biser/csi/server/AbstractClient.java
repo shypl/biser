@@ -116,6 +116,10 @@ public abstract class AbstractClient {
 	protected void onDisconnect() {
 	}
 	
+	protected void handleErrorInProcessingIncomingMessages(Throwable e) {
+		logger.error("Error on process message", e);
+	}
+	
 	void init(String apiName) {
 		logger = new PrefixedLoggerProxy(LOGGER, '[' + apiName + '#' + id + "] ");
 	}
@@ -242,7 +246,13 @@ public abstract class AbstractClient {
 					server.getApi().processIncomingMessage(this, bytes);
 				}
 				catch (Throwable e) {
-					logger.error("Error on process message", e);
+					try {
+						handleErrorInProcessingIncomingMessages(e);
+					}
+					catch (Throwable e2) {
+						logger.error("Error on process message", e);
+						logger.error("Error in handle error in processing incoming messages", e2);
+					}
 					connection.close(ConnectionCloseReason.SERVER_ERROR);
 				}
 			}
