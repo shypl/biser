@@ -12,17 +12,17 @@ public abstract class Entity {
 		_toString(fields);
 		return StringUtils.toString(fields);
 	}
-
-	protected int _id() {
+	
+	public int getBiserEntityClassId() {
 		return 0;
 	}
-
+	
 	protected void _encode(DataWriter writer) {
 	}
-
+	
 	protected void _decode(DataReader reader) {
 	}
-
+	
 	protected void _toString(Map<String, String> fields) {
 	}
 }

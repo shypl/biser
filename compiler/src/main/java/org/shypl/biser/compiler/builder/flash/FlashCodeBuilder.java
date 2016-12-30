@@ -185,12 +185,15 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 
 
 		// biser id
-		if (type.getId() != 0) {
-			method = cls.addMethod("_id");
-			method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
-			method.setReturnType(primitiveInt);
-			method.getBody().addStatement(new CodeStatementReturn(String.valueOf(type.getId())));
-		}
+		CodeParameter fieldClassId = cls.getField("BISER_ENTITY_CLASS_ID");
+		fieldClassId.getModifier().set(CodeModifier.PUBLIC | CodeModifier.STATIC | CodeModifier.FINAL);
+		fieldClassId.setType(primitiveInt);
+		fieldClassId.setValue(new CodeExpressionWord(type.getId()));
+		
+		method = cls.addMethod("biserEntityClassId");
+		method.getModifier().set(CodeModifier.PUBLIC | CodeModifier.OVERRIDE | CodeModifier.GETTER);
+		method.setReturnType(primitiveInt);
+		method.getBody().addStatement(new CodeStatementReturn("BISER_ENTITY_CLASS_ID"));
 
 		// biser encode decode
 		if (type.hasFields()) {
