@@ -136,9 +136,9 @@ package org.shypl.biser.io {
 				throw new RuntimeException("Сan not create Entity by class " + getQualifiedClassName(type), e);
 			}
 			
-			if (entity.biserEntityClassId !== id) {
+			if (entity._id !== id) {
 				throw new RuntimeException("Сan not create Entity by class " + getQualifiedClassName(type)
-					+ " (Class id " + entity.biserEntityClassId + " differs from the received " + id + ")");
+					+ " (Class id " + entity._id + " differs from the received " + id + ")");
 			}
 			
 			entity._decode0(this);

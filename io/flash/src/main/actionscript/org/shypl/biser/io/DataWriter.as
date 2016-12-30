@@ -132,7 +132,7 @@ package org.shypl.biser.io {
 				writeInt(-1);
 			}
 			else {
-				writeInt(value.biserEntityClassId);
+				writeInt(value._id);
 				value._encode0(this);
 			}
 		}

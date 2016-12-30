@@ -13,7 +13,7 @@ public abstract class Entity {
 		return StringUtils.toString(fields);
 	}
 	
-	public int getBiserEntityClassId() {
+	public int _id() {
 		return 0;
 	}
 	

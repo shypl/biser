@@ -10,7 +10,7 @@ package org.shypl.biser.io {
 			return fields.toString();
 		}
 		
-		public function get biserEntityClassId():int {
+		public function get _id():int {
 			return 0;
 		}
 		

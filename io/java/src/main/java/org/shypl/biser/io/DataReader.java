@@ -143,9 +143,9 @@ public class DataReader {
 			throw new RuntimeException("Сan not read Entity by class " + type.getName(), e);
 		}
 
-		if (entity.getBiserEntityClassId() != id) {
+		if (entity._id() != id) {
 			throw new RuntimeException(
-				"Сan not read Entity by class " + type.getName() + " (Entity class id " + entity.getBiserEntityClassId() + " differs from the received " + id + ")");
+				"Сan not read Entity by class " + type.getName() + " (Entity class id " + entity._id() + " differs from the received " + id + ")");
 		}
 
 		entity._decode(this);

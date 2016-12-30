@@ -126,7 +126,7 @@ public class DataWriter {
 			writeInt(-1);
 		}
 		else {
-			writeInt(value.getBiserEntityClassId());
+			writeInt(value._id());
 			value._encode(this);
 		}
 	}

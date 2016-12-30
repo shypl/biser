@@ -5,6 +5,7 @@ import org.shypl.biser.compiler.builder.OopCodeBuilder;
 import org.shypl.biser.compiler.code.CodeClass;
 import org.shypl.biser.compiler.code.CodeEngine;
 import org.shypl.biser.compiler.code.CodeExpression;
+import org.shypl.biser.compiler.code.CodeExpressionField;
 import org.shypl.biser.compiler.code.CodeExpressionLambda;
 import org.shypl.biser.compiler.code.CodeExpressionMethod;
 import org.shypl.biser.compiler.code.CodeExpressionNew;
@@ -193,22 +194,24 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		CodeStatementSwitch swt = new CodeStatementSwitch(method.getArgument("id").getVariable());
 		method.getBody().addStatement(swt);
 		swt.getDefaultCase().addStatement(new CodeStatementReturn(CodeExpressionWord.NULL));
-		swt.addCase(String.valueOf(type.getId())).addStatement(new CodeStatementReturn(new CodeExpressionNew(cls)));
+		swt.addCase(new CodeExpressionField(cls, "_ID"))
+			.addStatement(new CodeStatementReturn(new CodeExpressionNew(cls)));
 		for (EntityType childType : type.getChildren()) {
-			swt.addCase(String.valueOf(childType.getId())).addStatement(new CodeStatementReturn(new CodeExpressionNew(getType(childType))));
+			swt.addCase(new CodeExpressionField(modulePackage.getClass(childType.getName()), "_ID"))
+				.addStatement(new CodeStatementReturn(new CodeExpressionNew(getType(childType))));
 		}
 		
 		
 		// biser id
-		CodeParameter fieldClassId = cls.getField("BISER_ENTITY_CLASS_ID");
+		CodeParameter fieldClassId = cls.getField("_ID");
 		fieldClassId.getModifier().set(CodeModifier.PUBLIC | CodeModifier.STATIC | CodeModifier.FINAL);
 		fieldClassId.setType(primitiveInt);
 		fieldClassId.setValue(new CodeExpressionWord(type.getId()));
 		
-		method = cls.addMethod("getBiserEntityClassId");
+		method = cls.addMethod("_id");
 		method.getModifier().set(CodeModifier.PUBLIC | CodeModifier.OVERRIDE);
 		method.setReturnType(primitiveInt);
-		method.getBody().addStatement(new CodeStatementReturn("BISER_ENTITY_CLASS_ID"));
+		method.getBody().addStatement(new CodeStatementReturn("_ID"));
 		
 		// biser encode decode
 		if (type.hasFields()) {
