@@ -5,12 +5,14 @@ import org.shypl.biser.compiler.builder.OopCodeBuilder;
 import org.shypl.biser.compiler.code.CodeClass;
 import org.shypl.biser.compiler.code.CodeEngine;
 import org.shypl.biser.compiler.code.CodeExpression;
+import org.shypl.biser.compiler.code.CodeExpressionBinaryOperator;
 import org.shypl.biser.compiler.code.CodeExpressionField;
 import org.shypl.biser.compiler.code.CodeExpressionLambda;
 import org.shypl.biser.compiler.code.CodeExpressionMethod;
 import org.shypl.biser.compiler.code.CodeExpressionNew;
 import org.shypl.biser.compiler.code.CodeExpressionString;
 import org.shypl.biser.compiler.code.CodeExpressionStringConcat;
+import org.shypl.biser.compiler.code.CodeExpressionTernaryOperator;
 import org.shypl.biser.compiler.code.CodeExpressionVar;
 import org.shypl.biser.compiler.code.CodeExpressionWord;
 import org.shypl.biser.compiler.code.CodeGeneric;
@@ -191,14 +193,23 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		method.setReturnType(cls);
 		method.getArgument("id").setType(primitiveInt);
 		
-		CodeStatementSwitch swt = new CodeStatementSwitch(method.getArgument("id").getVariable());
-		method.getBody().addStatement(swt);
-		swt.getDefaultCase().addStatement(new CodeStatementReturn(CodeExpressionWord.NULL));
-		swt.addCase(new CodeExpressionField(cls, "_ID"))
-			.addStatement(new CodeStatementReturn(new CodeExpressionNew(cls)));
-		for (EntityType childType : type.getChildren()) {
-			swt.addCase(new CodeExpressionField(modulePackage.getClass(childType.getName()), "_ID"))
-				.addStatement(new CodeStatementReturn(new CodeExpressionNew(getType(childType))));
+		if (type.hasChildren()) {
+			CodeStatementSwitch swt = new CodeStatementSwitch(method.getArgument("id").getVariable());
+			method.getBody().addStatement(swt);
+			swt.getDefaultCase().addStatement(new CodeStatementReturn(CodeExpressionWord.NULL));
+			swt.addCase(new CodeExpressionField(cls, "_ID"))
+				.addStatement(new CodeStatementReturn(new CodeExpressionNew(cls)));
+			for (EntityType childType : type.getChildren()) {
+				swt.addCase(new CodeExpressionField(modulePackage.getClass(childType.getName()), "_ID"))
+					.addStatement(new CodeStatementReturn(new CodeExpressionNew(getType(childType))));
+			}
+		}
+		else {
+			method.getBody().addStatement(new CodeStatementReturn(new CodeExpressionTernaryOperator(
+				new CodeExpressionBinaryOperator("==", method.getArgument("id").getVariable(), new CodeExpressionField(cls, "_ID")),
+				new CodeExpressionNew(cls),
+				CodeExpressionWord.NULL
+			)));
 		}
 		
 		
@@ -242,22 +253,24 @@ public class JavaCodeBuilder extends OopCodeBuilder {
 		}
 		
 		// to string
-		method = cls.addMethod("_toString");
-		method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
-		method.setReturnType(primitiveVoid);
-		method.getArgument("fields").setType(engine.getClass("java.util.Map").parametrize(primitiveString, primitiveString));
-		methodBody = method.getBody();
-		CodeExpressionWord fields = new CodeExpressionWord("fields");
-		
-		if (type.hasParent()) {
-			methodBody.addStatement(new CodeExpressionMethod("super._toString", fields));
-		}
-		
-		CodeClass stringUtils = engine.getClass("org.shypl.common.util.StringUtils");
-		
-		for (Parameter field : type.getFields()) {
-			methodBody.addStatement(fields.method("put",
-				new CodeExpressionString(field.getName()), stringUtils.method("toString", CodeExpressionWord.THIS.field(field.getName()))));
+		if (type.hasFields()) {
+			method = cls.addMethod("_toString");
+			method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
+			method.setReturnType(primitiveVoid);
+			method.getArgument("fields").setType(engine.getClass("java.util.Map").parametrize(primitiveString, primitiveString));
+			methodBody = method.getBody();
+			CodeExpressionWord fields = new CodeExpressionWord("fields");
+			
+			if (type.hasParent()) {
+				methodBody.addStatement(new CodeExpressionMethod("super._toString", fields));
+			}
+			
+			CodeClass stringUtils = engine.getClass("org.shypl.common.util.StringUtils");
+			
+			for (Parameter field : type.getFields()) {
+				methodBody.addStatement(fields.method("put",
+					new CodeExpressionString(field.getName()), stringUtils.method("toString", CodeExpressionWord.THIS.field(field.getName()))));
+			}
 		}
 	}
 	

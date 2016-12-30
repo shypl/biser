@@ -175,14 +175,23 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 		method.setReturnType(engine.getClass("org.shypl.biser.io.Entity"));
 		method.getArgument("id").setType(primitiveInt);
 
-		CodeStatementSwitch swt = new CodeStatementSwitch(method.getArgument("id").getVariable());
-		method.getBody().addStatement(swt);
-		swt.getDefaultCase().addStatement(new CodeStatementReturn(CodeExpressionWord.NULL));
-		swt.addCase(new CodeExpressionField(cls, "_ID"))
-			.addStatement(new CodeStatementReturn(new CodeExpressionNew(cls)));
-		for (EntityType childType : type.getChildren()) {
-			swt.addCase(new CodeExpressionField(modulePackage.getClass(childType.getName()), "_ID"))
-				.addStatement(new CodeStatementReturn(new CodeExpressionNew(getType(childType))));
+		if (type.hasChildren()) {
+			CodeStatementSwitch swt = new CodeStatementSwitch(method.getArgument("id").getVariable());
+			method.getBody().addStatement(swt);
+			swt.getDefaultCase().addStatement(new CodeStatementReturn(CodeExpressionWord.NULL));
+			swt.addCase(new CodeExpressionField(cls, "_ID"))
+				.addStatement(new CodeStatementReturn(new CodeExpressionNew(cls)));
+			for (EntityType childType : type.getChildren()) {
+				swt.addCase(new CodeExpressionField(modulePackage.getClass(childType.getName()), "_ID"))
+					.addStatement(new CodeStatementReturn(new CodeExpressionNew(getType(childType))));
+			}
+		}
+		else {
+			method.getBody().addStatement(new CodeStatementReturn(new CodeExpressionTernaryOperator(
+				new CodeExpressionBinaryOperator("===", method.getArgument("id").getVariable(), new CodeExpressionField(cls, "_ID")),
+				new CodeExpressionNew(cls),
+				CodeExpressionWord.NULL
+			)));
 		}
 
 
@@ -226,22 +235,24 @@ public class FlashCodeBuilder extends OopCodeBuilder {
 		}
 
 		// to string
-		method = cls.addMethod("_toString");
-		method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
-		method.setReturnType(primitiveVoid);
-		method.getArgument("fields").setType(engine.getClass("org.shypl.common.collection.Map"));
-		methodBody = method.getBody();
-		CodeExpressionWord fields = new CodeExpressionWord("fields");
-
-		if (type.hasParent()) {
-			methodBody.addStatement(new CodeExpressionMethod("super._toString", fields));
-		}
-
-		CodeClass stringUtils = engine.getClass("org.shypl.common.util.StringUtils");
-
-		for (Parameter field : type.getFields()) {
-			methodBody.addStatement(fields.method("put",
-				new CodeExpressionString(field.getName()), stringUtils.method("toString", CodeExpressionWord.THIS.field(field.getName()))));
+		if (type.hasFields()) {
+			method = cls.addMethod("_toString");
+			method.getModifier().set(CodeModifier.PROTECTED | CodeModifier.OVERRIDE);
+			method.setReturnType(primitiveVoid);
+			method.getArgument("fields").setType(engine.getClass("org.shypl.common.collection.Map"));
+			methodBody = method.getBody();
+			CodeExpressionWord fields = new CodeExpressionWord("fields");
+			
+			if (type.hasParent()) {
+				methodBody.addStatement(new CodeExpressionMethod("super._toString", fields));
+			}
+			
+			CodeClass stringUtils = engine.getClass("org.shypl.common.util.StringUtils");
+			
+			for (Parameter field : type.getFields()) {
+				methodBody.addStatement(fields.method("put",
+					new CodeExpressionString(field.getName()), stringUtils.method("toString", CodeExpressionWord.THIS.field(field.getName()))));
+			}
 		}
 	}
 

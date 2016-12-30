@@ -80,6 +80,10 @@ public class EntityType extends StructureType {
 		return new ArrayList<>(children);
 	}
 	
+	public boolean hasChildren() {
+		return !children.isEmpty();
+	}
+	
 	private void addChild(EntityType child) {
 		children.add(child);
 	}
