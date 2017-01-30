@@ -86,5 +86,8 @@ public class EntityType extends StructureType {
 	
 	private void addChild(EntityType child) {
 		children.add(child);
+		if (hasParent()) {
+			parent.addChild(child);
+		}
 	}
 }

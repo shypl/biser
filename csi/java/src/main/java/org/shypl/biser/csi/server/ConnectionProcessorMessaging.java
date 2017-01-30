@@ -19,7 +19,13 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 	
 	@Override
 	public void processData() throws ProtocolException {
+		int readLoopCounter = 0;
 		do {
+			++readLoopCounter;
+			if (readLoopCounter == 1000) {
+				throw new ProtocolException("Messaging: Read loop (state: " + state + ")");
+			}
+			
 			switch (state) {
 				case FLAG:
 					readFlag();
@@ -37,6 +43,7 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 					readOutgoingMessageReceived();
 					break;
 			}
+			
 		}
 		while (connection.isReadable());
 	}
@@ -105,12 +112,15 @@ class ConnectionProcessorMessaging extends ConnectionProcessor {
 		}
 	}
 	
-	private void readMessageSize() {
+	private void readMessageSize() throws ProtocolException {
 		connection.read(buffer, 4 - buffer.getReadableBytesLength());
 		if (4 == buffer.getReadableBytesLength()) {
 			state = State.MESSAGE_BODY;
 			messageSize = buffer.readInt();
 			buffer.clear();
+			if (messageSize <= 0) {
+				throw new ProtocolException("Messaging: Invalid message size (" + messageSize + ")");
+			}
 		}
 	}
 	
