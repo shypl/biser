@@ -104,7 +104,7 @@ package org.shypl.biser.csi.client {
 		}
 
 		internal function processDisconnectWarning(timeout:int):void {
-			_logger.info("warning to disconnect after {} seconds", timeout);
+			_logger.info("Waiting to disconnect after {} seconds", timeout);
 			dispatchEvent(new ClientDisconnectWarningEvent(timeout));
 		}
 	}
