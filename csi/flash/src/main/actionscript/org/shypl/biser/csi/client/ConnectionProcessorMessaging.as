@@ -16,7 +16,7 @@ package org.shypl.biser.csi.client {
 		
 		private var _activity:Boolean;
 		private var _activityTimer:TimeMeter = new TimeMeter();
-		private var _activityTimeout:int;
+//		private var _activityTimeout:int;
 		private var _activityChecker:Cancelable;
 		
 		private var _state:int;
@@ -28,10 +28,11 @@ package org.shypl.biser.csi.client {
 		override public function init(connection:Connection):void {
 			super.init(connection);
 			_activity = true;
-			_activityTimer.start();
+//			_activityTimer.start();
 			
-			_activityTimeout = connection.activityTimeout / 2;
-			_activityChecker = GlobalTimeline.scheduleRepeatable(_activityTimeout * 1000 / 2, checkActivity);
+//			_activityTimeout = connection.activityTimeout / 2;
+//			_activityChecker = GlobalTimeline.scheduleRepeatable(_activityTimeout * 1000 / 2, checkActivity);
+			_activityChecker = GlobalTimeline.scheduleRepeatable(connection.activityTimeout * 1000 / 2, checkActivity);
 		}
 		
 		override public function destroy():void {
@@ -53,7 +54,7 @@ package org.shypl.biser.csi.client {
 		
 		override public function processData(data:IDataInput):void {
 			_activity = true;
-			_activityTimer.restart();
+//			_activityTimer.restart();
 			do {
 				super.processData(data);
 			}
@@ -114,10 +115,10 @@ package org.shypl.biser.csi.client {
 		
 		private function checkActivity():void {
 			if (_activity) {
-				if (_activityTimer.seconds >= _activityTimeout) {
+//				if (_activityTimer.seconds >= _activityTimeout) {
 					_activity = false;
 					connection.sendPing();
-				}
+//				}
 			}
 			else {
 				_activityChecker.cancel();
