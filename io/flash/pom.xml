@@ -29,16 +29,10 @@
 			<artifactId>common-flash</artifactId>
 			<type>swc</type>
 		</dependency>
-		<dependency>
-			<groupId>org.shypl</groupId>
-			<artifactId>flexunit</artifactId>
-			<type>swc</type>
-		</dependency>
 	</dependencies>
 
 	<build>
 		<sourceDirectory>src/main/actionscript</sourceDirectory>
-		<testSourceDirectory>src/test/actionscript</testSourceDirectory>
 		<plugins>
 			<plugin>
 				<groupId>net.flexmojos.oss</groupId>
