@@ -7,7 +7,6 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="biser-compiler" />
-        <module name="biser-csi-flash" />
         <module name="biser-csi-java" />
         <module name="biser-csi-netty" />
         <module name="biser-io-flash" />
@@ -23,8 +22,14 @@
       <module name="biser-io" target="1.8" />
       <module name="biser-io-flash" target="1.8" />
       <module name="biser-io-java" target="1.8" />
+      <module name="biser-kotlin-js_main" target="1.8" />
+      <module name="biser-kotlin-js_test" target="1.8" />
       <module name="biser-legacy" target="1.8" />
       <module name="biser-parent" target="1.8" />
+      <module name="client_main" target="1.8" />
+      <module name="client_test" target="1.8" />
+      <module name="server_main" target="1.8" />
+      <module name="server_test" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

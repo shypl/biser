@@ -32,11 +32,6 @@ public class Address {
 		return webSocket;
 	}
 
-	@Deprecated
-	public boolean isSocket() {
-		return socket != null;
-	}
-
 	public SocketAddress getSocket() {
 		return socket;
 	}
