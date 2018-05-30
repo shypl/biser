@@ -119,18 +119,18 @@
 	<distributionManagement>
 		<repository>
 			<id>capjack</id>
-			<url>http://artifactory.capjack.ru/private-releases</url>
+			<url>http://artifactory.capjack.ru/public-releases</url>
 		</repository>
 		<snapshotRepository>
 			<id>capjack</id>
-			<url>http://artifactory.capjack.ru/private-snapshots</url>
+			<url>http://artifactory.capjack.ru/public-snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 	
 	<repositories>
 		<repository>
 			<id>capjack</id>
-			<url>http://artifactory.capjack.ru/private</url>
+			<url>http://artifactory.capjack.ru/public</url>
 		</repository>
 	</repositories>
 	
