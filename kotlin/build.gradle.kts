@@ -7,7 +7,7 @@ plugins {
 
 subprojects {
 	group = "org.shypl.biser"
-	version = "1.0.0-SHAPSHOT"
+	version = "1.0.0-SNAPSHOT"
 	
 	repositories {
 		mavenLocal()
