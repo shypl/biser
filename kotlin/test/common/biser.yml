@@ -1,0 +1,11 @@
+source: src
+
+server:
+  lang: java
+  pack: test.csi
+  target: ../server/src/main/java
+
+client:
+  lang: kotlin-js
+  pack: test.csi
+  target: ../client/src/main/kotlin

@@ -194,4 +194,8 @@ public interface CodeVisitor {
 	default void visitExpressionLambda(CodeExpressionLambda expression) {
 		expression.getBody().visit(this);
 	}
+	
+	default void visitExpressionStatement(CodeExpressionStatement expression) {
+		expression.getStatement().visit(this);
+	}
 }
