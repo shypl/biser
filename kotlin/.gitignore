@@ -1,0 +1,8 @@
+.gradle/
+.idea/
+build/
+out/
+.DS_Store
+
+test/client/src/main/kotlin/test/csi
+test/server/src/main/java/test/csi

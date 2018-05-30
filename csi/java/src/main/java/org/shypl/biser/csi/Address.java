@@ -14,12 +14,23 @@ public class Address {
 		self.socket = address;
 		return self;
 	}
+	
+	public static Address factoryWebSocket(String address) {
+		Address a = factorySocket(address);
+		a.webSocket = true;
+		return a;
+	}
 
 	private SocketAddress socket;
+	private Boolean webSocket;
 
 	private Address() {
 	}
-
+	
+	public boolean isWebSocket() {
+		return webSocket && isSocket();
+	}
+	
 	public boolean isSocket() {
 		return socket != null;
 	}
