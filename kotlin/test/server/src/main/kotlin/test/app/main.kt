@@ -25,16 +25,9 @@ fun main(args: Array<String>) {
 		override fun getConnectionExecutorService(): ScheduledExecutorService = service
 	}
 	
-	val api = Api<TestClient>(TestClientFactory())
-	
-	api.setServiceSession(object : ServiceSession<TestClient> {
-		override fun getUser(client: TestClient): SessionUser {
-			return SessionUser().apply {
-				id = 777
-				balance = Long.MAX_VALUE // 9_223_372_036_854_775_807
-			}
-		}
-	})
+	val api = Api<TestClient>(TestClientFactory()).apply {
+		setServiceSession(ServiceSessionImpl())
+	}
 	
 	val server = Server(
 		executorsProvider,
@@ -45,7 +38,12 @@ fun main(args: Array<String>) {
 	
 	server.start()
 	
-	Runtime.getRuntime().addShutdownHook(Thread(Runnable { server.stop() }, "shutdown"))
+	Runtime.getRuntime().addShutdownHook(
+		Thread(
+			Runnable(server::stop),
+			"shutdown"
+		)
+	)
 }
 
 
@@ -57,4 +55,13 @@ class TestClientFactory : ClientFactory<TestClient> {
 
 class TestClient(id: Long) : Client(id) {
 
+}
+
+class ServiceSessionImpl : ServiceSession<TestClient> {
+	override fun getUser(client: TestClient): SessionUser {
+		return SessionUser().apply {
+			id = 777
+			balance = Long.MAX_VALUE // 9_223_372_036_854_775_807
+		}
+	}
 }
