@@ -17,7 +17,7 @@ abstract class ServerService {
 		_serviceName = serviceName
 	}
 	
-	protected fun _prepareMessage(methodId: Int, holder: ResultHandlerHolder?): DataWriter {
+	protected fun _prepareMessage(methodId: Int, holder: ResultHandlerHolder? = null): DataWriter {
 		_message = ByteArrayOutputData()
 		val writer = DataWriter(_message!!)
 		writer.writeInt(_serviceId)

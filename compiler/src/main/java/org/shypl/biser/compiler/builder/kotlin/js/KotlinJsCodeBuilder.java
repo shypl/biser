@@ -80,7 +80,7 @@ public class KotlinJsCodeBuilder extends OopCodeBuilder {
 		typeDefaults.put(PrimitiveType.DOUBLE, new CodeExpressionWord("0.0"));
 		
 		primitiveCamelNames.put(PrimitiveType.BYTE, "Byte");
-		primitiveCamelNames.put(PrimitiveType.BOOL, "Bool");
+		primitiveCamelNames.put(PrimitiveType.BOOL, "Boolean");
 		primitiveCamelNames.put(PrimitiveType.INT, "Int");
 		primitiveCamelNames.put(PrimitiveType.LONG, "Long");
 		primitiveCamelNames.put(PrimitiveType.DOUBLE, "Double");
