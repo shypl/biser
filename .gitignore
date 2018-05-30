@@ -1,6 +1,10 @@
 ### JetBrains
 *.iml
-.idea/
+.idea/*
+!.idea/dictionaries/
+!.idea/encodings.xml
+!.idea/compiler.xml
+!.idea/vcs.xml
 _dev/
 
 ### Maven

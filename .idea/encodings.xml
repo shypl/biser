@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/compiler" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/csi" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/csi-netty" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/csi/flash" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/csi/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/io" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/io/flash" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/io/java" charset="UTF-8" />
+  </component>
+</project>

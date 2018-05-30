@@ -1,11 +1,7 @@
 package org.shypl.biser.csi.server.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
+import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
@@ -19,10 +15,11 @@ import org.slf4j.LoggerFactory;
 public class NettyChannelGate implements ChannelGate {
 	private final EventLoopGroup bossGroup;
 	private final EventLoopGroup workerGroup;
-	private final LogLevel       logLevel;
+	private final LogLevel logLevel;
+	private boolean useWebSocket = false;
 
 	private volatile boolean opened;
-	private          Channel channel;
+	private Channel channel;
 
 	public NettyChannelGate(EventLoopGroup bossGroup, EventLoopGroup workerGroup) {
 		this(bossGroup, workerGroup, null);
@@ -46,7 +43,7 @@ public class NettyChannelGate implements ChannelGate {
 			channelClass = EpollServerSocketChannel.class;
 		}
 
-		ChannelHandler childHandler = new CsiChannelInitializer(acceptor, logLevel);
+		ChannelHandler childHandler = useWebSocket ? new CsiWebSocketChannelInitializer(acceptor, logLevel) : new CsiChannelInitializer(acceptor, logLevel);
 
 		ServerBootstrap bootstrap = new ServerBootstrap()
 			.group(bossGroup, workerGroup)
@@ -58,8 +55,7 @@ public class NettyChannelGate implements ChannelGate {
 
 		try {
 			channel = bootstrap.bind(address.getSocket()).sync().channel();
-		}
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			throw new RuntimeException("Bind is interrupted", e);
 		}
 	}
@@ -72,11 +68,18 @@ public class NettyChannelGate implements ChannelGate {
 
 		try {
 			channel.close().sync();
-		}
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			LoggerFactory.getLogger(NettyChannelGate.class).error("Close is interrupted", e);
 		}
 
 		opened = false;
+	}
+
+	public NettyChannelGate setUseWebSocket(boolean useWebSocket) throws IllegalStateException {
+		if (opened) {
+			throw new IllegalStateException("Gate is opened");
+		}
+		this.useWebSocket = useWebSocket;
+		return this;
 	}
 }

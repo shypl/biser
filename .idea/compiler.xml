@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="biser-compiler" />
+        <module name="biser-csi-flash" />
+        <module name="biser-csi-java" />
+        <module name="biser-csi-netty" />
+        <module name="biser-io-flash" />
+        <module name="biser-io-java" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="biser-compiler" target="1.8" />
+      <module name="biser-csi" target="1.8" />
+      <module name="biser-csi-flash" target="1.8" />
+      <module name="biser-csi-java" target="1.8" />
+      <module name="biser-csi-netty" target="1.8" />
+      <module name="biser-io" target="1.8" />
+      <module name="biser-io-flash" target="1.8" />
+      <module name="biser-io-java" target="1.8" />
+      <module name="biser-parent" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
