@@ -3,34 +3,36 @@ package org.shypl.biser.csi;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
+@SuppressWarnings("WeakerAccess")
 public class Address {
+	@Deprecated
 	public static Address factorySocket(String address) {
 		int p = address.indexOf(":");
 		return factorySocket(new InetSocketAddress(address.substring(0, p), Integer.parseInt(address.substring(p + 1))));
 	}
 
 	public static Address factorySocket(SocketAddress address) {
-		Address self = new Address();
-		self.socket = address;
-		return self;
-	}
-	
-	public static Address factoryWebSocket(String address) {
-		Address a = factorySocket(address);
-		a.webSocket = true;
-		return a;
+		return new Address(address, false);
 	}
 
-	private SocketAddress socket;
-	private Boolean webSocket;
-
-	private Address() {
+	@SuppressWarnings("unused")
+	public static Address factoryWebSocket(SocketAddress address) {
+		return new Address(address, true);
 	}
-	
+
+	private final SocketAddress socket;
+	private final boolean webSocket;
+
+	private Address(SocketAddress socket, boolean webSocket) {
+		this.socket = socket;
+		this.webSocket = webSocket;
+	}
+
 	public boolean isWebSocket() {
-		return webSocket && isSocket();
+		return webSocket;
 	}
-	
+
+	@Deprecated
 	public boolean isSocket() {
 		return socket != null;
 	}

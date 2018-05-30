@@ -15,6 +15,8 @@ import io.netty.handler.logging.LoggingHandler;
 import org.shypl.biser.csi.Address;
 import org.shypl.biser.csi.server.ChannelAcceptor;
 import org.shypl.biser.csi.server.ChannelGate;
+import org.shypl.biser.csi.server.netty.socket.CsiChannelInitializer;
+import org.shypl.biser.csi.server.netty.websocket.CsiWebSocketChannelInitializer;
 import org.slf4j.LoggerFactory;
 
 public class NettyChannelGate implements ChannelGate {

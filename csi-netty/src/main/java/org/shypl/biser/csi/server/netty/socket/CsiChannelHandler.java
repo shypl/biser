@@ -1,4 +1,4 @@
-package org.shypl.biser.csi.server.netty;
+package org.shypl.biser.csi.server.netty.socket;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
@@ -11,7 +11,7 @@ import org.shypl.biser.csi.server.ChannelHandler;
 
 import java.net.SocketAddress;
 
-class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel, ChannelFutureListener {
+public class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel, ChannelFutureListener {
 	
 	private final Object lock = new Object();
 	
@@ -23,7 +23,7 @@ class CsiChannelHandler extends ChannelInboundHandlerAdapter implements Channel,
 	private int     writeCounter;
 	private boolean closeAfterWrites;
 	
-	CsiChannelHandler(ChannelAcceptor acceptor) {
+	public CsiChannelHandler(ChannelAcceptor acceptor) {
 		this.acceptor = acceptor;
 	}
 	

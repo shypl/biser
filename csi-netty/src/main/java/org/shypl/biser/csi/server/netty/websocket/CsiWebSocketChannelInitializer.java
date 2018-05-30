@@ -1,4 +1,4 @@
-package org.shypl.biser.csi.server.netty;
+package org.shypl.biser.csi.server.netty.websocket;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -10,12 +10,13 @@ import io.netty.handler.codec.http.websocketx.extensions.compression.WebSocketSe
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import org.shypl.biser.csi.server.ChannelAcceptor;
+import org.shypl.biser.csi.server.netty.socket.CsiChannelHandler;
 
 public class CsiWebSocketChannelInitializer extends ChannelInitializer<SocketChannel> {
 	
 	private final ChannelAcceptor acceptor;
 	
-	CsiWebSocketChannelInitializer(ChannelAcceptor acceptor) {
+	public CsiWebSocketChannelInitializer(ChannelAcceptor acceptor) {
 		this.acceptor = acceptor;
 	}
 	

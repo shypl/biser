@@ -1,4 +1,4 @@
-package org.shypl.biser.csi.server.netty;
+package org.shypl.biser.csi.server.netty.websocket;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
