@@ -23,6 +23,7 @@
       <module name="biser-io" target="1.8" />
       <module name="biser-io-flash" target="1.8" />
       <module name="biser-io-java" target="1.8" />
+      <module name="biser-legacy" target="1.8" />
       <module name="biser-parent" target="1.8" />
     </bytecodeTargetLevel>
   </component>
