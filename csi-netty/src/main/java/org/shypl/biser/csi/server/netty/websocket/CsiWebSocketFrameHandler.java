@@ -6,7 +6,6 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import org.shypl.biser.csi.server.Channel;
 import org.shypl.biser.csi.server.ChannelAcceptor;
 import org.shypl.biser.csi.server.ChannelHandler;
@@ -14,7 +13,7 @@ import org.shypl.biser.csi.server.ChannelHandler;
 import java.net.SocketAddress;
 
 @SuppressWarnings("Duplicates")
-public class CsiWebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocketFrame> implements Channel, ChannelFutureListener {
+public class CsiWebSocketFrameHandler extends SimpleChannelInboundHandler<BinaryWebSocketFrame> implements Channel, ChannelFutureListener {
 	private final Object lock = new Object();
 	
 	private ChannelAcceptor          acceptor;
@@ -118,7 +117,7 @@ public class CsiWebSocketFrameHandler extends SimpleChannelInboundHandler<WebSoc
 	}
 	
 	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) throws Exception {
+	protected void channelRead0(ChannelHandlerContext ctx, BinaryWebSocketFrame frame) throws Exception {
 		synchronized (lock) {
 			if (opened) {
 				ByteBuf buf = frame.content();
