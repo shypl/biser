@@ -7,10 +7,9 @@ plugins {
 
 subprojects {
 	group = "org.shypl.biser"
-	version = "1.0.0-SNAPSHOT"
+	version = "1.0.1-SNAPSHOT"
 	
 	repositories {
-		mavenLocal()
 		maven("http://artifactory.capjack.ru/public")
 	}
 	
