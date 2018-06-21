@@ -15,13 +15,13 @@ object StringUtils {
 	private const val MAP_OPEN = "{"
 	private const val MAP_CLOSE = "}"
 	
-	private val DIGITS = arrayOf("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f")
-	
 	fun toString(v: Any?): String {
 		return when (v) {
 			null             -> NULL
 			is Boolean       -> toString(v)
 			is Byte          -> toString(v)
+			is Int           -> toString(v)
+			is Long          -> toString(v)
 			is Array<*>      -> toString(v)
 			is Collection<*> -> toString(v)
 			is Map<*, *>     -> toString(v)
@@ -43,8 +43,16 @@ object StringUtils {
 	}
 	
 	fun toString(v: Byte): String {
-		val i = v.toUint()
-		return DIGITS[i.ushr(4)] + DIGITS[i.and(0x0F)]
+		val s = v.toUint().toString(16)
+		return if (s.length == 1) "0$s" else s
+	}
+	
+	fun toString(v: Int): String {
+		return v.toString()
+	}
+	
+	fun toString(v: Long): String {
+		return v.toString()
 	}
 	
 	fun toString(a: BooleanArray): String {
