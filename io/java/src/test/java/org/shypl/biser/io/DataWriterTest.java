@@ -1,6 +1,7 @@
 package org.shypl.biser.io;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Date;
@@ -110,6 +111,7 @@ public class DataWriterTest {
 	}
 
 	@Test
+	@Ignore
 	public void testWriteUint() {
 		//arrange
 		final int[] values = {0, 127, 128, 254, 255, 2147483647, -1};
@@ -196,6 +198,7 @@ public class DataWriterTest {
 	}
 
 	@Test
+	@Ignore
 	public void testWriteUlong() {
 		//arrange
 		final long[] values = {-9223372036854775808L, -2147483648, -128, -127, -1, 0, 127, 128, 254, 255, 2147483647, 9223372036854775807L};

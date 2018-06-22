@@ -19,20 +19,10 @@ object StringUtils {
 		return when (v) {
 			null             -> NULL
 			is Boolean       -> toString(v)
-			is Byte          -> toString(v)
-			is Int           -> toString(v)
-			is Long          -> toString(v)
-			is Array<*>      -> toString(v)
+			is ByteArray     -> toString(v)
 			is Collection<*> -> toString(v)
 			is Map<*, *>     -> toString(v)
-			is BooleanArray  -> toString(v)
-			is ByteArray     -> toString(v)
-			is CharArray     -> toString(v)
-			is ShortArray    -> toString(v)
-			is IntArray      -> toString(v)
-			is LongArray     -> toString(v)
-			is FloatArray    -> toString(v)
-			is DoubleArray   -> toString(v)
+			is Array<*>      -> toString(v)
 			else             -> v.toString()
 		}
 		
@@ -47,64 +37,7 @@ object StringUtils {
 		return if (s.length == 1) "0$s" else s
 	}
 	
-	fun toString(v: Int): String {
-		return v.toString()
-	}
-	
-	fun toString(v: Long): String {
-		return v.toString()
-	}
-	
-	fun toString(a: BooleanArray): String {
-		return when {
-			a.isEmpty() -> LIST_EMPTY
-			else        -> a.joinToString(SEQUENCE_SEPARATOR, LIST_OPEN, LIST_CLOSE, transform = this::toString)
-		}
-	}
-	
 	fun toString(a: ByteArray): String {
-		return when {
-			a.isEmpty() -> LIST_EMPTY
-			else        -> a.joinToString(SEQUENCE_SEPARATOR, LIST_OPEN, LIST_CLOSE, transform = this::toString)
-		}
-	}
-	
-	fun toString(a: CharArray): String {
-		return when {
-			a.isEmpty() -> LIST_EMPTY
-			else        -> a.joinToString(SEQUENCE_SEPARATOR, LIST_OPEN, LIST_CLOSE, transform = this::toString)
-		}
-	}
-	
-	fun toString(a: ShortArray): String {
-		return when {
-			a.isEmpty() -> LIST_EMPTY
-			else        -> a.joinToString(SEQUENCE_SEPARATOR, LIST_OPEN, LIST_CLOSE, transform = this::toString)
-		}
-	}
-	
-	fun toString(a: IntArray): String {
-		return when {
-			a.isEmpty() -> LIST_EMPTY
-			else        -> a.joinToString(SEQUENCE_SEPARATOR, LIST_OPEN, LIST_CLOSE, transform = this::toString)
-		}
-	}
-	
-	fun toString(a: LongArray): String {
-		return when {
-			a.isEmpty() -> LIST_EMPTY
-			else        -> a.joinToString(SEQUENCE_SEPARATOR, LIST_OPEN, LIST_CLOSE, transform = this::toString)
-		}
-	}
-	
-	fun toString(a: FloatArray): String {
-		return when {
-			a.isEmpty() -> LIST_EMPTY
-			else        -> a.joinToString(SEQUENCE_SEPARATOR, LIST_OPEN, LIST_CLOSE, transform = this::toString)
-		}
-	}
-	
-	fun toString(a: DoubleArray): String {
 		return when {
 			a.isEmpty() -> LIST_EMPTY
 			else        -> a.joinToString(SEQUENCE_SEPARATOR, LIST_OPEN, LIST_CLOSE, transform = this::toString)

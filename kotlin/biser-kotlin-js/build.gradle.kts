@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 
+version = "1.0.2-SNAPSHOT"
+
 plugins {
 	id("kotlin2js")
 	id("ru.capjack.degos.publish")

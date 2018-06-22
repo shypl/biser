@@ -59,8 +59,8 @@ class DataReader(
 	fun <E> readList(decoder: Decoder<E>): List<E> {
 		val size = readInt()
 		return when (size) {
-			0    -> emptyList()
-			else -> List(size) { decoder.invoke(this) }
+			-1, 0 -> emptyList()
+			else  -> List(size) { decoder.invoke(this) }
 		}
 	}
 	

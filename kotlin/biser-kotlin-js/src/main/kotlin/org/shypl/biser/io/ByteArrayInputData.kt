@@ -14,10 +14,17 @@ class ByteArrayInputData(
 	}
 	
 	override fun readByte(): Byte {
+		if (!isReadable()) {
+			throw IndexOutOfBoundsException("cursor = $cursor, size = ${array.size}");
+		}
 		return array[cursor++]
 	}
 	
 	override fun readInt(): Int {
+		if (cursor + 4 > array.size) {
+			throw IndexOutOfBoundsException("cursor = ${cursor + 4}, size = ${array.size}");
+		}
+		
 		val v = array[cursor + 0].toUint().shl(24) +
 			array[cursor + 1].toUint().shl(16) +
 			array[cursor + 2].toUint().shl(8) +
@@ -29,6 +36,10 @@ class ByteArrayInputData(
 	}
 	
 	override fun readBytes(target: ByteArray, len: Int) {
+		if (cursor + len > array.size) {
+			throw IndexOutOfBoundsException("cursor = ${cursor + len}, size = ${array.size}");
+		}
+		
 		PlatformUtils.copyByteArray(array, cursor, target, 0, len)
 		cursor += len
 	}

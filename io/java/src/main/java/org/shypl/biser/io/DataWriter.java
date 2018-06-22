@@ -39,17 +39,7 @@ public class DataWriter {
 	}
 
 	public void writeUint(int value) {
-		if (value >= 0 && value <= 254) {
-			stream.write((byte)value);
-		}
-		else {
-			buffer[0] = (byte)0xFF;
-			buffer[1] = (byte)(value >>> 24);
-			buffer[2] = (byte)(value >>> 16);
-			buffer[3] = (byte)(value >>> 8);
-			buffer[4] = (byte)value;
-			stream.write(buffer, 0, 5);
-		}
+		writeInt(value);
 	}
 
 	public void writeLong(long value) {
@@ -74,21 +64,7 @@ public class DataWriter {
 	}
 
 	public void writeUlong(long value) {
-		if (value >= 0 && value <= 254) {
-			stream.write((byte)value);
-		}
-		else {
-			buffer[0] = (byte)0xFF;
-			buffer[1] = (byte)(value >>> 56);
-			buffer[2] = (byte)(value >>> 48);
-			buffer[3] = (byte)(value >>> 40);
-			buffer[4] = (byte)(value >>> 32);
-			buffer[5] = (byte)(value >>> 24);
-			buffer[6] = (byte)(value >>> 16);
-			buffer[7] = (byte)(value >>> 8);
-			buffer[8] = (byte)value;
-			stream.write(buffer, 0, 9);
-		}
+		writeLong(value);
 	}
 
 	public void writeDouble(double value) {

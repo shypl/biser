@@ -39,14 +39,7 @@ public class DataReader {
 	}
 
 	public int readUint() {
-		int b = readByte() & 0xFF;
-
-		switch (b) {
-			case 0xFF:
-				return readRawInt();
-			default:
-				return b;
-		}
+		return readInt();
 	}
 
 	public long readLong() {
@@ -63,14 +56,7 @@ public class DataReader {
 	}
 
 	public long readUlong() {
-		int b = readByte() & 0xFF;
-
-		switch (b) {
-			case 0xFF:
-				return readRawLong();
-			default:
-				return b;
-		}
+		return readLong();
 	}
 
 	public double readDouble() {

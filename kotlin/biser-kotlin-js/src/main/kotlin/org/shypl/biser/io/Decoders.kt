@@ -23,11 +23,12 @@ object Decoders {
 		return enum(T::class)
 	}
 	
-	fun <T: Entity> entity(factory: (id: Int) -> T): Decoder<T> {
+	fun <T : Entity> entity(factory: (id: Int) -> T): Decoder<T> {
 		return {
-			factory(it.readInt()).apply {
-				_decode(it)
-			}
+			val i = it.readInt()
+			val t = factory(i)
+			if (i != -1) t._decode(it)
+			t
 		}
 	}
 }
