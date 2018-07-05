@@ -1,3 +1,4 @@
+/*
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinJsDce
 
@@ -59,3 +60,4 @@ task("web") {
 	group = "build"
 }
 
+*/

@@ -1,5 +1,6 @@
 include(
-	"biser-kotlin-js",
+	"biser-compiler",
+//	"biser-kotlin-js",
 	
 	"test:common",
 	"test:client",

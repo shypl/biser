@@ -6,6 +6,6 @@ server:
   target: ../server/src/main/java
 
 client:
-  lang: kotlin-js
-  pack: test.csi
-  target: ../client/src/main/kotlin
+  lang: cpp
+  pack: none
+  target: ../client/src

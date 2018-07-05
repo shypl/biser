@@ -2,6 +2,19 @@
 	> getUser: SessionUser
 }
 
-SessionUser User {
-	balance: long
+SessionUser {
+	fieldInt: int
+	fieldLong: long
+	fieldBool: bool
+	fieldDouble: double
+	fieldString: string
+
+	fieldKaka: Kaka
+
+	fieldArrayInt: *int
+	fieldArrayKaka: *Kaka
+}
+
+Kaka {
+	id: int
 }

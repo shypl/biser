@@ -1,7 +1,8 @@
+import org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	id("kotlin") version "1.2.50" apply false
+	id("kotlin") version "1.2.51" apply false
 	id("ru.capjack.degos.publish") version "1.5.0" apply false
 }
 
@@ -12,7 +13,7 @@ subprojects {
 		maven("http://artifactory.capjack.ru/public")
 	}
 	
-	plugins.withId("java") {
+	plugins.withType<KotlinPluginWrapper>() {
 		configure<JavaPluginConvention> {
 			sourceCompatibility = JavaVersion.VERSION_1_8
 		}

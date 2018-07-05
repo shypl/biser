@@ -6,7 +6,6 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="biser-compiler" />
         <module name="biser-csi-java" />
         <module name="biser-csi-netty" />
         <module name="biser-io-flash" />
@@ -15,6 +14,8 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="biser-compiler" target="1.8" />
+      <module name="biser-compiler_main" target="1.8" />
+      <module name="biser-compiler_test" target="1.8" />
       <module name="biser-csi" target="1.8" />
       <module name="biser-csi-flash" target="1.8" />
       <module name="biser-csi-java" target="1.8" />

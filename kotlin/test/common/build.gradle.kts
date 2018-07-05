@@ -1,7 +1,7 @@
 val tool = configurations.create("tool")
 
 dependencies {
-	tool("org.shypl.biser:biser-compiler:1.3.0-SNAPSHOT")
+	tool(project(":biser-compiler"))
 }
 
 task<JavaExec>("compile") {
