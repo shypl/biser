@@ -23,14 +23,39 @@ class CppModuleBuilder : ModuleBuilder {
 		val api = model.api
 		if (api.hasServices()) {
 			when (module.side) {
-				ApiSide.CLIENT -> buildClientApi(api)
+				ApiSide.CLIENT -> buildApi(module.target, api)
 				else           -> RuntimeException()
 			}
 		}
 	}
 	
-	private fun buildClientApi(api: Api) {
+	private fun buildApi(dir: Path, api: Api) {
+		buildApiDesc(api.services).save(dir.resolve("_api.txt"))
+	}
 	
+	private fun buildApiDesc(services: Collection<ApiService>): CodeFile {
+		val file = CodeFile()
+		
+		services.forEach {
+			file.writeLine("${it.name} : ${it.id} {")
+				.addTab()
+			
+			it.serverActions.forEach {
+				file.writeLine(" > ${it.name} : ${it.id}")
+			}
+			
+			file.writeLine()
+			
+			it.clientActions.forEach {
+				file.writeLine(" < ${it.name} : ${it.id}")
+			}
+			
+			file.removeTab()
+				.writeLine("}")
+				.writeLine()
+		}
+		
+		return file
 	}
 	
 	private fun buildEntity(dir: Path, type: EntityType) {

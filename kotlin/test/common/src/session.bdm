@@ -1,5 +1,7 @@
 ^ session {
 	> getUser: SessionUser
+
+	< kaka
 }
 
 SessionUser {
