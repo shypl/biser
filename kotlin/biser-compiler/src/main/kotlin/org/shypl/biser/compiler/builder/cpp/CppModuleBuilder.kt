@@ -70,10 +70,38 @@ class CppModuleBuilder : ModuleBuilder {
 		
 		file
 			.writeLines(
+				"#pragma once",
+				"",
+				"#include \"Biser.h\"",
+				"",
 				"USING_NS_CC;",
 				"USING_NS_BISER_IO;",
 				"using namespace std;",
-				"",
+				""
+			)
+		
+		type.fields.apply {
+			val representer = object : TypeRepresenter<Unit> {
+				private val added = mutableSetOf<EntityType>()
+				
+				override fun representPrimitive(type: PrimitiveType) {}
+				
+				override fun representEntity(type: EntityType) {
+					if (added.add(type)) {
+						file.writeLine("class ${type.name};")
+					}
+				}
+				
+				override fun representArray(type: ArrayType) {
+					type.elementType.represent(this)
+				}
+			}
+			
+			forEach { it.type.represent(representer) }
+		}
+		
+		file
+			.writeLines(
 				"class $name public Entity",
 				"{",
 				"public:"
@@ -129,8 +157,28 @@ class CppModuleBuilder : ModuleBuilder {
 		
 		val name = type.name
 		
+		file.writeLine("#include \"$name.h\"")
+		
+		type.fields.apply {
+			val representer = object : TypeRepresenter<Unit> {
+				private val added = mutableSetOf<EntityType>()
+				
+				override fun representPrimitive(type: PrimitiveType) {}
+				
+				override fun representEntity(type: EntityType) {
+					if (added.add(type)) {
+						file.writeLine("#include \"${type.name}.h\"")
+					}
+				}
+				
+				override fun representArray(type: ArrayType) {
+					type.elementType.represent(this)
+				}
+			}
+			forEach { it.type.represent(representer) }
+		}
+		
 		file.writeLines(
-			"#include \"$name.h\"",
 			"",
 			"$name::$name() :"
 		)
@@ -334,7 +382,7 @@ class CppModuleBuilder : ModuleBuilder {
 			/// getter
 			file
 				.writeLines(
-					"${t.presentOutput()} get$m()",
+					"${t.presentOutput()} $name::get$m()",
 					"{"
 				)
 				.addTab()
@@ -358,14 +406,6 @@ class CppModuleBuilder : ModuleBuilder {
 			PrimitiveType.STRING -> "Value::Type::STRING"
 			else                 -> throw UnsupportedOperationException()
 		}
-		
-		override fun representEntity(type: EntityType) = throw UnsupportedOperationException()
-		
-		override fun representEnum(type: EnumType) = throw UnsupportedOperationException()
-		
-		override fun representArray(type: ArrayType) = throw UnsupportedOperationException()
-		
-		override fun representMap(type: MapType) = throw UnsupportedOperationException()
 	}
 	
 	private fun DataType.presentValueType(): String {
@@ -384,15 +424,11 @@ class CppModuleBuilder : ModuleBuilder {
 		
 		override fun representEntity(type: EntityType) = "Entity"
 		
-		override fun representEnum(type: EnumType) = throw UnsupportedOperationException()
-		
 		override fun representArray(type: ArrayType) = when (type.elementType) {
 			is PrimitiveType -> "RawArray"
 			is StructureType -> "ObjectArray"
 			else             -> throw IllegalArgumentException()
 		}
-		
-		override fun representMap(type: MapType) = throw UnsupportedOperationException()
 	}
 	
 	private fun DataType.presentCodec(): String {
@@ -410,12 +446,6 @@ class CppModuleBuilder : ModuleBuilder {
 		}
 		
 		override fun representEntity(type: EntityType) = "nullptr"
-		
-		override fun representEnum(type: EnumType) = throw UnsupportedOperationException()
-		
-		override fun representArray(type: ArrayType) = throw UnsupportedOperationException()
-		
-		override fun representMap(type: MapType) = throw UnsupportedOperationException()
 	}
 	
 	private fun DataType.presentDefault(): String {
@@ -434,15 +464,11 @@ class CppModuleBuilder : ModuleBuilder {
 		
 		override fun representEntity(type: EntityType) = "${type.name}*"
 		
-		override fun representEnum(type: EnumType) = throw UnsupportedOperationException()
-		
 		override fun representArray(type: ArrayType) = when (type.elementType) {
 			is PrimitiveType -> "vector<Value>&"
 			is StructureType -> "__Array*"
 			else             -> throw UnsupportedOperationException()
 		}
-		
-		override fun representMap(type: MapType) = throw UnsupportedOperationException()
 	}
 	
 	private fun DataType.presentInput(): String {

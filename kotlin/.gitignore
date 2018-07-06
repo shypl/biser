@@ -4,5 +4,5 @@ build/
 out/
 .DS_Store
 
-test/client/src/main/kotlin/test/csi
+test/client/src/
 test/server/src/main/java/test/csi

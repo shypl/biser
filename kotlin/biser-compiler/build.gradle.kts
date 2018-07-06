@@ -1,6 +1,6 @@
 import org.gradle.jvm.tasks.Jar
 
-version = "1.4.0-SNAPSHOT"
+version = "1.4.1"
 
 plugins {
 	kotlin("jvm")
@@ -12,7 +12,6 @@ dependencies {
 	implementation("org.apache.commons:commons-lang3:3.4")
 	implementation("org.shypl.common:common-java:1.0.5-SNAPSHOT")
 }
-
 tasks.withType<Jar> {
 	manifest {
 		attributes["Main-Class"] = "org.shypl.biser.compiler.Main"
