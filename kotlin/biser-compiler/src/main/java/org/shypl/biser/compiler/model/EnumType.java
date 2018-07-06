@@ -1,5 +1,7 @@
 package org.shypl.biser.compiler.model;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -24,5 +26,15 @@ public class EnumType extends StructureType {
 
 	public Set<String> getValues() {
 		return new LinkedHashSet<>(values);
+	}
+	
+	public boolean isEnum() {
+		return true;
+	}
+	
+	@NotNull
+	@Override
+	public EnumType asEnumType() {
+		return this;
 	}
 }

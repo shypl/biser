@@ -12,13 +12,19 @@ class CppModuleBuilder : ModuleBuilder {
 	
 	override fun build(module: Module, model: Model) {
 		
+		val enumsFile = CodeFile()
+		
+		enumsFile.writeLines("#pragma once", "")
+		
 		for (type in model.structures) {
 			if (type is EntityType) {
 				buildEntity(module.target, type)
 			} else if (type is EnumType) {
-				TODO()
+				buildEnum(enumsFile, type)
 			}
 		}
+		
+		enumsFile.save(module.target.resolve("CsiEnums.h"))
 		
 		val api = model.api
 		if (api.hasServices()) {
@@ -27,6 +33,29 @@ class CppModuleBuilder : ModuleBuilder {
 				else           -> RuntimeException()
 			}
 		}
+	}
+	
+	private fun buildEnum(file: CodeFile, type: EnumType) {
+		file.writeLine("enum class ${type.name}")
+			.writeLine("{")
+			.addTab()
+		
+		type.values.forEachIndexed { i, s ->
+			file.write(s)
+			if (i == 0) {
+				file.write(" = 0")
+			}
+			if (i == type.values.size - 1) {
+				file.writeLine()
+			} else {
+				file.writeLine(",")
+			}
+		}
+		
+		file
+			.removeTab()
+			.writeLine("};")
+			.writeLine()
 	}
 	
 	private fun buildApi(dir: Path, api: Api) {
@@ -66,13 +95,23 @@ class CppModuleBuilder : ModuleBuilder {
 	private fun buildEntityFileH(type: EntityType): CodeFile {
 		val file = CodeFile()
 		
+		type.children
+		
 		val name = type.name
 		
 		file
 			.writeLines(
 				"#pragma once",
 				"",
-				"#include \"Biser.h\"",
+				"#include \"Biser.h\""
+			)
+		
+		if (type.fields.any { it.type.isEnum }) {
+			file.writeLine("#include \"CsiEnums.h\"")
+		}
+		
+		file
+			.writeLines(
 				"",
 				"USING_NS_CC;",
 				"USING_NS_BISER_IO;",
@@ -82,15 +121,17 @@ class CppModuleBuilder : ModuleBuilder {
 		
 		type.fields.apply {
 			val representer = object : TypeRepresenter<Unit> {
-				private val added = mutableSetOf<EntityType>()
+				private val added = mutableSetOf<String>()
 				
 				override fun representPrimitive(type: PrimitiveType) {}
 				
 				override fun representEntity(type: EntityType) {
-					if (added.add(type)) {
+					if (added.add(type.name)) {
 						file.writeLine("class ${type.name};")
 					}
 				}
+				
+				override fun representEnum(type: EnumType) {}
 				
 				override fun representArray(type: ArrayType) {
 					type.elementType.represent(this)
@@ -102,7 +143,7 @@ class CppModuleBuilder : ModuleBuilder {
 		
 		file
 			.writeLines(
-				"class $name public Entity",
+				"class $name : public Entity",
 				"{",
 				"public:"
 			)
@@ -143,7 +184,7 @@ class CppModuleBuilder : ModuleBuilder {
 		
 		// fields private
 		type.fields.forEach {
-			file.writeLine("${it.type.presentInput()} _${it.name};")
+			file.writeLine("${it.type.presentInput().replace("&", "")} _${it.name};")
 		}
 		
 		file.removeTab()
@@ -161,33 +202,38 @@ class CppModuleBuilder : ModuleBuilder {
 		
 		type.fields.apply {
 			val representer = object : TypeRepresenter<Unit> {
-				private val added = mutableSetOf<EntityType>()
+				private val added = mutableSetOf<String>()
 				
 				override fun representPrimitive(type: PrimitiveType) {}
 				
-				override fun representEntity(type: EntityType) {
-					if (added.add(type)) {
-						file.writeLine("#include \"${type.name}.h\"")
-					}
-				}
+				override fun representEntity(type: EntityType) {}
 				
 				override fun representArray(type: ArrayType) {
 					type.elementType.represent(this)
 				}
+				
+				override fun representEnum(type: EnumType) {}
 			}
 			forEach { it.type.represent(representer) }
 		}
 		
-		file.writeLines(
-			"",
-			"$name::$name() :"
-		)
+		file.writeLine("")
+			.write("$name::$name()")
 		
 		// constructor fields
-		file.writeSeparated(type.fields.filterNot { it.type is ArrayType }, {
-			file.write("_${it.name}(${it.type.presentDefault()})")
-		}, ",\n")
-		
+		val list = type.fields.filterNot { it.type is ArrayType }
+		if (list.isEmpty()) {
+			file.writeLine()
+		} else {
+			file.writeLine(" :")
+			file.writeSeparated(list, {
+				if (it.type.isEnum) {
+					file.write("_${it.name}(${it.type.name}::${it.type.asEnumType().values.first()})")
+				} else {
+					file.write("_${it.name}(${it.type.presentDefault()})")
+				}
+			}, ",\n")
+		}
 		file
 			.writeLines(
 				"",
@@ -195,7 +241,7 @@ class CppModuleBuilder : ModuleBuilder {
 			)
 			.addTab()
 		// constructor safe fields
-		type.fields.filter { it.type.let { it is ArrayType && it.elementType is StructureType } }
+		type.fields.filter { it.type.let { it is ArrayType && it.isEntity } }
 			.forEach {
 				file.writeLine("_${it.name} = __Array::create();")
 				file.writeLine("CC_SAFE_RETAIN(_${it.name});")
@@ -213,7 +259,7 @@ class CppModuleBuilder : ModuleBuilder {
 			.writeLine("clear();")
 			.writeLine()
 		// clear safe fields
-		type.fields.filter { it.type.let { it is ArrayType && it.elementType is StructureType } }
+		type.fields.filter { it.type.let { it is ArrayType && it.elementType.isEntity } }
 			.forEach {
 				file.writeLine("CC_SAFE_RELEASE(_${it.name});")
 			}
@@ -260,17 +306,18 @@ class CppModuleBuilder : ModuleBuilder {
 			.addTab()
 		// clear fields
 		type.fields.forEach {
-			when (it.type) {
-				is PrimitiveType -> file.writeLine("_${it.name} = ${it.type.presentDefault()};")
-				is StructureType -> file.writeLine("CC_SAFE_RELEASE_NULL(_${it.name});")
-				is ArrayType     -> {
+			when {
+				it.type is PrimitiveType -> file.writeLine("_${it.name} = ${it.type.presentDefault()};")
+				it.type.isEntity         -> file.writeLine("CC_SAFE_RELEASE_NULL(_${it.name});")
+				it.type.isEnum           -> file.writeLine("_${it.name}(${it.type.name}::${it.type.asEnumType().values.first()})")
+				it.type is ArrayType     -> {
 					when ((it.type as ArrayType).elementType) {
 						is PrimitiveType -> file.writeLine("_${it.name}.clear();")
 						is StructureType -> file.writeLine("_${it.name}->removeAllObjects();")
 						else             -> throw IllegalArgumentException()
 					}
 				}
-				else             -> throw IllegalArgumentException()
+				else                     -> throw IllegalArgumentException()
 			}
 		}
 		file
@@ -286,10 +333,14 @@ class CppModuleBuilder : ModuleBuilder {
 		type.fields.forEach {
 			val t = it.type
 			
-			file.write("writer->write${t.presentCodec()}(_${it.name}")
-			
-			if (t is ArrayType && t.elementType is PrimitiveType) {
-				file.write(", ${t.elementType.presentValueType()}")
+			if (t.isEnum) {
+				file.write("writer->writeEnum((int)_${it.name}")
+			} else {
+				file.write("writer->write${t.presentCodec()}(_${it.name}")
+				
+				if (t is ArrayType && t.elementType is PrimitiveType) {
+					file.write(", ${t.elementType.presentValueType()}")
+				}
 			}
 			
 			file.writeLine(");")
@@ -314,7 +365,7 @@ class CppModuleBuilder : ModuleBuilder {
 						"_${it.name}.clear();",
 						"reader->readRawArray(_${it.name}, ${elementType.presentValueType()});"
 					)
-				} else if (elementType is StructureType) {
+				} else if (elementType.isEntity) {
 					file.writeLines(
 						"_${it.name}->removeAllObjects();",
 						"reader->readObjectArray(_${it.name}, ${elementType.id});"
@@ -322,12 +373,14 @@ class CppModuleBuilder : ModuleBuilder {
 				} else {
 					throw IllegalArgumentException()
 				}
-			} else if (t is StructureType) {
+			} else if (t.isEntity) {
 				file.writeLines(
 					"CC_SAFE_RELEASE(_${it.name});",
 					"_${it.name} = reader->readEntity(${t.id});",
 					"CC_SAFE_RETAIN(_${it.name});"
 				)
+			} else if (t.isEnum) {
+				file.writeLine("_${it.name} = (${it.type.name})reader->readEnum();")
 			} else {
 				file.writeLine("_${it.name} = reader->read${t.presentCodec()}();")
 			}
@@ -351,14 +404,14 @@ class CppModuleBuilder : ModuleBuilder {
 					"{"
 				)
 				.addTab()
-			when (t) {
-				is PrimitiveType -> file.writeLine("_$n = val;")
-				is StructureType -> file.writeLines(
+			when {
+				t is PrimitiveType || t.isEnum -> file.writeLine("_$n = val;")
+				t.isEntity                     -> file.writeLines(
 					"CC_SAFE_RELEASE(_$n);",
 					"_$n = val;",
 					"CC_SAFE_RETAIN(_$n);"
 				)
-				is ArrayType     -> when (t.elementType) {
+				t is ArrayType                 -> when (t.elementType) {
 					is PrimitiveType -> file.writeLines(
 						"_$n.clear();",
 						"copy(val.begin(), val.end(), std::back_inserter(_$n));"
@@ -370,7 +423,7 @@ class CppModuleBuilder : ModuleBuilder {
 					else             -> throw IllegalArgumentException()
 				}
 				
-				else             -> throw IllegalArgumentException()
+				else                           -> throw IllegalArgumentException()
 			}
 			file
 				.removeTab()
@@ -429,6 +482,8 @@ class CppModuleBuilder : ModuleBuilder {
 			is StructureType -> "ObjectArray"
 			else             -> throw IllegalArgumentException()
 		}
+		
+		override fun representEnum(type: EnumType) = "Enum"
 	}
 	
 	private fun DataType.presentCodec(): String {
@@ -446,6 +501,8 @@ class CppModuleBuilder : ModuleBuilder {
 		}
 		
 		override fun representEntity(type: EntityType) = "nullptr"
+		
+		override fun representEnum(type: EnumType) = "0"
 	}
 	
 	private fun DataType.presentDefault(): String {
@@ -469,6 +526,8 @@ class CppModuleBuilder : ModuleBuilder {
 			is StructureType -> "__Array*"
 			else             -> throw UnsupportedOperationException()
 		}
+		
+		override fun representEnum(type: EnumType) = type.name
 	}
 	
 	private fun DataType.presentInput(): String {

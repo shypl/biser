@@ -24,8 +24,4 @@ public abstract class StructureType extends DataType {
 	public String getFullName() {
 		return hasPackageName() ? packageName + '.' + getName() : getName();
 	}
-	
-	public int getId() {
-		throw new UnsupportedOperationException();
-	}
 }

@@ -91,4 +91,8 @@ public class EntityType extends StructureType {
 			parent.addChild(child);
 		}
 	}
+	
+	public boolean isEntity() {
+		return true;
+	}
 }
