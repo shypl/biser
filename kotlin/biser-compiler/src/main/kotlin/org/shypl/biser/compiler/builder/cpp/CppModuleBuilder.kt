@@ -309,7 +309,7 @@ class CppModuleBuilder : ModuleBuilder {
 			when {
 				it.type is PrimitiveType -> file.writeLine("_${it.name} = ${it.type.presentDefault()};")
 				it.type.isEntity         -> file.writeLine("CC_SAFE_RELEASE_NULL(_${it.name});")
-				it.type.isEnum           -> file.writeLine("_${it.name}(${it.type.name}::${it.type.asEnumType().values.first()})")
+				it.type.isEnum           -> file.writeLine("_${it.name} = ${it.type.name}::${it.type.asEnumType().values.first()};")
 				it.type is ArrayType     -> {
 					when ((it.type as ArrayType).elementType) {
 						is PrimitiveType -> file.writeLine("_${it.name}.clear();")
