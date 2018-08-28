@@ -1,0 +1,34 @@
+^ world {
+	> selectLocation(regionId: int, locationId: int): CsiLocation
+
+	> dig(cell: int): CsiArtifact
+
+	> solveLocation: *CsiArtifact
+
+	< updateLocationKes(value: *bool)
+	< updateLocationCells(value: *bool)
+}
+
+CsiLocation {
+	id: int
+	solved: bool
+	keys: *bool
+	cells: *bool
+}
+
+CsiArtifact {
+	type: CsiArtifactType
+	value: int
+}
+
+CsiArtifactType [
+	NONE
+	KEY
+	COINS
+	COINS_BET
+	GEMS
+	GEMS_BET
+	BONUS_GAME
+	REGULAR_BONUS
+	OFFER
+]

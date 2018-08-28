@@ -13,18 +13,75 @@ class CppModuleBuilder : ModuleBuilder {
 	override fun build(module: Module, model: Model) {
 		
 		val enumsFile = CodeFile()
+		val entityFile = CodeFile()
 		
 		enumsFile.writeLines("#pragma once", "")
 		
+		entityFile.writeLines(
+			"#include \"Entity.h\"",
+			"#include \"DataWriter.h\"",
+			"#include \"DataReader.h\"",
+			"")
+		
 		for (type in model.structures) {
 			if (type is EntityType) {
+				entityFile.writeLine("#include \"${type.name}.h\"")
+			}
+		}
+		
+		entityFile.writeLines(
+			"",
+			"NS_BISER_IO_BEGIN",
+			"",
+			"Entity::Entity() : _id(-1)",
+			"{",
+			"}",
+			"",
+			"Entity::~Entity()",
+			"{",
+			"}",
+			"",
+			"Entity* Entity::create(int eId)",
+			"{"
+		)
+			.addTab()
+		
+		for (type in model.structures) {
+			if (type is EntityType) {
+				entityFile.writeLine("if (eId == ${type.name}::ID())")
+					.addTab()
+					.writeLine("return ${type.name}::create();")
+					.removeTab()
+					.writeLine()
+				
 				buildEntity(module.target, type)
+				
 			} else if (type is EnumType) {
 				buildEnum(enumsFile, type)
 			}
 		}
 		
-		enumsFile.save(module.target.resolve("CsiEnums.h"))
+		entityFile
+			.writeLine("return nullptr;")
+			.removeTab()
+			.writeLines(
+				"}",
+				"",
+				"void Entity::setId(int value)",
+				"{",
+				"    _id = value;",
+				"}",
+				"",
+				"int Entity::getId()",
+				"{",
+				"    return _id;",
+				"}",
+				"",
+				"NS_BISER_IO_END"
+			)
+		
+		enumsFile.save(module.target.resolve("csi/Objects/CsiEnums.h"))
+		entityFile.save(module.target.resolve("io/Entity.cpp"))
 		
 		val api = model.api
 		if (api.hasServices()) {
@@ -59,37 +116,51 @@ class CppModuleBuilder : ModuleBuilder {
 	}
 	
 	private fun buildApi(dir: Path, api: Api) {
-		buildApiDesc(api.services).save(dir.resolve("_api.txt"))
+		buildApiDesc(api.services).save(dir.resolve("csi/Objects/CsiApiIds.h"))
 	}
 	
 	private fun buildApiDesc(services: Collection<ApiService>): CodeFile {
 		val file = CodeFile()
 		
+		file.writeLines("#pragma once", "")
+			.writeLine()
+		
+		file.writeLine("// Services")
 		services.forEach {
-			file.writeLine("${it.name} : ${it.id} {")
-				.addTab()
-			
-			it.serverActions.forEach {
-				file.writeLine(" > ${it.name} : ${it.id}")
+			file.writeLine("#define CSI_SERVICE_${it.name.toUpperUnderscoreCase()} ${it.id}")
+		}
+		file.writeLine()
+		
+		file.writeLine("// > Server actions")
+		services.forEach { s ->
+			if (s.hasServerActions()) {
+				s.serverActions.forEach {
+					file.writeLine("#define CSI_SERVER_${s.name.toUpperUnderscoreCase()}_${it.name.toUpperUnderscoreCase()} ${it.id}")
+					if (it.hasResult()) {
+						file.writeLine("#define CSI_SERVER_${s.name.toUpperUnderscoreCase()}_${it.name.toUpperUnderscoreCase()}_CALLBACK ${100 * s.id + it.id}")
+					}
+				}
+				file.writeLine()
 			}
-			
-			file.writeLine()
-			
-			it.clientActions.forEach {
-				file.writeLine(" < ${it.name} : ${it.id}")
+		}
+		
+		
+		file.writeLine("// < Client actions")
+		services.forEach { s ->
+			if (s.hasClientActions()) {
+				s.clientActions.forEach {
+					file.writeLine("#define CSI_CLIENT_${s.name.toUpperUnderscoreCase()}_${it.name.toUpperUnderscoreCase()} ${it.id}")
+				}
+				file.writeLine()
 			}
-			
-			file.removeTab()
-				.writeLine("}")
-				.writeLine()
 		}
 		
 		return file
 	}
 	
 	private fun buildEntity(dir: Path, type: EntityType) {
-		buildEntityFileH(type).save(dir.resolve("${type.name}.h"))
-		buildEntityFileC(type).save(dir.resolve("${type.name}.cpp"))
+		buildEntityFileH(type).save(dir.resolve("csi/Objects/${type.name}.h"))
+		buildEntityFileC(type).save(dir.resolve("csi/Objects/${type.name}.cpp"))
 	}
 	
 	private fun buildEntityFileH(type: EntityType): CodeFile {
@@ -206,7 +277,11 @@ class CppModuleBuilder : ModuleBuilder {
 				
 				override fun representPrimitive(type: PrimitiveType) {}
 				
-				override fun representEntity(type: EntityType) {}
+				override fun representEntity(type: EntityType) {
+					if (added.add(type.name)) {
+						file.writeLine("#include \"${type.name}.h\"")
+					}
+				}
 				
 				override fun representArray(type: ArrayType) {
 					type.elementType.represent(this)
@@ -241,7 +316,8 @@ class CppModuleBuilder : ModuleBuilder {
 			)
 			.addTab()
 		// constructor safe fields
-		type.fields.filter { it.type.let { it is ArrayType && it.isEntity } }
+		type.fields
+			.filter { it.type.let { it is ArrayType && it.elementType.isEntity } }
 			.forEach {
 				file.writeLine("_${it.name} = __Array::create();")
 				file.writeLine("CC_SAFE_RETAIN(_${it.name});")
@@ -376,11 +452,11 @@ class CppModuleBuilder : ModuleBuilder {
 			} else if (t.isEntity) {
 				file.writeLines(
 					"CC_SAFE_RELEASE(_${it.name});",
-					"_${it.name} = reader->readEntity(${t.id});",
+					"_${it.name} = static_cast<${t.name}*>(reader->readEntity(${t.id}));",
 					"CC_SAFE_RETAIN(_${it.name});"
 				)
 			} else if (t.isEnum) {
-				file.writeLine("_${it.name} = (${it.type.name})reader->readEnum();")
+				file.writeLine("_${it.name} = (${t.name})reader->readEnum();")
 			} else {
 				file.writeLine("_${it.name} = reader->read${t.presentCodec()}();")
 			}
@@ -541,4 +617,47 @@ class CppModuleBuilder : ModuleBuilder {
 		}
 	}
 	
+}
+
+private fun String.toUpperUnderscoreCase(): String {
+	val v = this
+	
+	val result = StringBuffer()
+	var begin = true
+	var lastUppercase = false
+	for (i in 0 until v.length) {
+		val ch = v[i]
+		if (Character.isUpperCase(ch)) {
+			// is start?
+			if (begin) {
+				result.append(ch)
+			} else {
+				if (lastUppercase) {
+					// test if end of acronym
+					if (i + 1 < v.length) {
+						val next = v[i + 1]
+						if (Character.isUpperCase(next)) {
+							// acronym continues
+							result.append(ch)
+						} else {
+							// end of acronym
+							result.append('_').append(ch)
+						}
+					} else {
+						// acronym continues
+						result.append(ch)
+					}
+				} else {
+					// last was lowercase, insert _
+					result.append('_').append(ch)
+				}
+			}
+			lastUppercase = true
+		} else {
+			result.append(Character.toUpperCase(ch))
+			lastUppercase = false
+		}
+		begin = false
+	}
+	return result.toString()
 }

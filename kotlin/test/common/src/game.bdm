@@ -1,0 +1,22 @@
+^ game {
+
+	> selectGame(id: int): CsiGame
+
+	> selectBet(value: int)
+
+	> spin: CsiGameSpinResult
+
+}
+
+CsiGame {
+	bet: int
+
+	gemsBet: int
+
+	bonusGames: *int
+    bonusGameMaxIndex: int
+}
+
+CsiGameSpinResult {
+	matrix: *int
+}

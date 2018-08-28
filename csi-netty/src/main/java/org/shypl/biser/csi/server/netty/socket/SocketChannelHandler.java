@@ -1,19 +1,18 @@
-package org.shypl.biser.csi.server.netty.websocket;
+package org.shypl.biser.csi.server.netty.socket;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.shypl.biser.csi.server.Channel;
 import org.shypl.biser.csi.server.ChannelAcceptor;
 import org.shypl.biser.csi.server.ChannelHandler;
 
 import java.net.SocketAddress;
 
-@SuppressWarnings("Duplicates")
-public class CsiWebSocketFrameHandler extends SimpleChannelInboundHandler<BinaryWebSocketFrame> implements Channel, ChannelFutureListener {
+public class SocketChannelHandler extends ChannelInboundHandlerAdapter implements Channel, ChannelFutureListener {
+	
 	private final Object lock = new Object();
 	
 	private ChannelAcceptor          acceptor;
@@ -24,8 +23,7 @@ public class CsiWebSocketFrameHandler extends SimpleChannelInboundHandler<Binary
 	private int     writeCounter;
 	private boolean closeAfterWrites;
 	
-	
-	public CsiWebSocketFrameHandler(ChannelAcceptor acceptor) {
+	public SocketChannelHandler(ChannelAcceptor acceptor) {
 		this.acceptor = acceptor;
 	}
 	
@@ -46,7 +44,6 @@ public class CsiWebSocketFrameHandler extends SimpleChannelInboundHandler<Binary
 		}
 	}
 	
-	
 	@Override
 	public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
 		synchronized (lock) {
@@ -61,8 +58,23 @@ public class CsiWebSocketFrameHandler extends SimpleChannelInboundHandler<Binary
 	}
 	
 	@Override
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		synchronized (lock) {
+			if (opened) {
+				ByteBuf buf = (ByteBuf)msg;
+				byte[] bytes = new byte[buf.readableBytes()];
+				buf.readBytes(bytes);
+				buf.release();
+				handler.handleChannelData(bytes);
+			}
+			else {
+				ctx.close();
+			}
+		}
+	}
+	
+	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		cause.printStackTrace();
 		ctx.close();
 	}
 	
@@ -116,21 +128,6 @@ public class CsiWebSocketFrameHandler extends SimpleChannelInboundHandler<Binary
 		}
 	}
 	
-	@Override
-	protected void channelRead0(ChannelHandlerContext ctx, BinaryWebSocketFrame frame) throws Exception {
-		synchronized (lock) {
-			if (opened) {
-				ByteBuf buf = frame.content();
-				byte[] bytes = new byte[buf.readableBytes()];
-				buf.readBytes(bytes);
-				handler.handleChannelData(bytes);
-			}
-			else {
-				ctx.close();
-			}
-		}
-	}
-	
 	private void incrementWriteCounter() {
 		++writeCounter;
 	}
@@ -140,6 +137,6 @@ public class CsiWebSocketFrameHandler extends SimpleChannelInboundHandler<Binary
 	}
 	
 	private void writeBuf(ByteBuf buf) {
-		channel.writeAndFlush(new BinaryWebSocketFrame(buf)).addListener(this);
+		channel.writeAndFlush(buf).addListener(this);
 	}
 }

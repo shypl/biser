@@ -1,5 +1,29 @@
-Kaka {
-	id: U
+^ session {
+	> getUser: CsiSessionUser
+
+	< updateUserExperience(value: int)
+	< updateUserExperienceLimit(value: int)
+
+	< updateUserCoins(value: long)
+	< updateUserMaxBetIndex(value: int)
+
+	< updateUserGems(value: int)
+	< updateUserGemsAvailable(value: bool)
+	< updateUserGemsMaxBetIndex(value: bool)
 }
 
-U [A, B]
+CsiSessionUser {
+	experience: long
+	experienceLimit: long
+
+	coins: long
+	coinsBets: *int
+	coinsMaxBetIndex: int
+
+	gems: int
+	gemsBets: *int
+	gemsMaxBetIndex: int
+
+	currentRegionId: int
+	currentLocationId: int
+}

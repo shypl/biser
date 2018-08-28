@@ -5,34 +5,33 @@ import java.net.SocketAddress;
 
 @SuppressWarnings("WeakerAccess")
 public class Address {
-	@Deprecated
-	public static Address factorySocket(String address) {
+	public enum Type {
+		SOCKET, WEB_SOCKET, WEB_SOCKET_SECURE
+	}
+	
+	public static Address factory(String address) {
+		Type type;
+		if (address.startsWith("wss://")) {
+			type = Type.WEB_SOCKET_SECURE;
+			address = address.substring(6);
+		}
+		else if (address.startsWith("ws://")) {
+			type = Type.WEB_SOCKET;
+			address = address.substring(5);
+		}
+		else {
+			type = Type.SOCKET;
+		}
+		
 		int p = address.indexOf(":");
-		return factorySocket(new InetSocketAddress(address.substring(0, p), Integer.parseInt(address.substring(p + 1))));
+		return new Address(new InetSocketAddress(address.substring(0, p), Integer.parseInt(address.substring(p + 1))), type);
 	}
-
-	public static Address factorySocket(SocketAddress address) {
-		return new Address(address, false);
-	}
-
-	@SuppressWarnings("unused")
-	public static Address factoryWebSocket(SocketAddress address) {
-		return new Address(address, true);
-	}
-
-	private final SocketAddress socket;
-	private final boolean webSocket;
-
-	private Address(SocketAddress socket, boolean webSocket) {
+	
+	public final SocketAddress socket;
+	public final Type          type;
+	
+	private Address(SocketAddress socket, Type type) {
 		this.socket = socket;
-		this.webSocket = webSocket;
-	}
-
-	public boolean isWebSocket() {
-		return webSocket;
-	}
-
-	public SocketAddress getSocket() {
-		return socket;
+		this.type = type;
 	}
 }
