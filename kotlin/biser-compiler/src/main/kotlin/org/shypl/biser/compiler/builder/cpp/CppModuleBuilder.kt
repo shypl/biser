@@ -33,7 +33,7 @@ class CppModuleBuilder : ModuleBuilder {
 			"",
 			"NS_BISER_IO_BEGIN",
 			"",
-			"Entity::Entity() : _id(-1)",
+			"Entity::Entity() : _eId(-1)",
 			"{",
 			"}",
 			"",
@@ -67,14 +67,14 @@ class CppModuleBuilder : ModuleBuilder {
 			.writeLines(
 				"}",
 				"",
-				"void Entity::setId(int value)",
+				"void Entity::setEId(int value)",
 				"{",
-				"    _id = value;",
+				"    _eId = value;",
 				"}",
 				"",
-				"int Entity::getId()",
+				"int Entity::getEId()",
 				"{",
-				"    return _id;",
+				"    return _eId;",
 				"}",
 				"",
 				"NS_BISER_IO_END"
@@ -317,13 +317,13 @@ class CppModuleBuilder : ModuleBuilder {
 			.addTab()
 		// constructor safe fields
 		type.fields
-			.filter { it.type.let { it is ArrayType && it.elementType.isEntity } }
+			.filter { p -> p.type.let { it is ArrayType && it.elementType.isEntity } }
 			.forEach {
 				file.writeLine("_${it.name} = __Array::create();")
 				file.writeLine("CC_SAFE_RETAIN(_${it.name});")
 			}
 		file
-			.writeLine("setId(ID());")
+			.writeLine("setEId(ID());")
 			.removeTab()
 			.writeLine("}")
 			.writeLine()
@@ -335,7 +335,7 @@ class CppModuleBuilder : ModuleBuilder {
 			.writeLine("clear();")
 			.writeLine()
 		// clear safe fields
-		type.fields.filter { it.type.let { it is ArrayType && it.elementType.isEntity } }
+		type.fields.filter { p -> p.type.let { it is ArrayType && it.elementType.isEntity } }
 			.forEach {
 				file.writeLine("CC_SAFE_RELEASE(_${it.name});")
 			}

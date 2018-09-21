@@ -1,6 +1,6 @@
 import org.gradle.jvm.tasks.Jar
 
-version = "1.4.14"
+version = "1.4.15"
 
 plugins {
 	kotlin("jvm")
