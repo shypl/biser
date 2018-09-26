@@ -1,37 +1,31 @@
 package org.shypl.biser.csi;
 
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-
 @SuppressWarnings("WeakerAccess")
 public class Address {
-	public enum Type {
-		SOCKET, WEB_SOCKET, WEB_SOCKET_SECURE
+	
+	public final String host;
+	public final int    fsPort;
+	public final int    wsPort;
+	public final String wssCrtFile;
+	public final String wssKeyFile;
+	
+	public Address(String host, int fsPort, int wsPort, String wssCrtFile, String wssKeyFile) {
+		this.host = host;
+		this.fsPort = fsPort;
+		this.wsPort = wsPort;
+		this.wssCrtFile = wssCrtFile;
+		this.wssKeyFile = wssKeyFile;
 	}
 	
-	public static Address factory(String address) {
-		Type type;
-		if (address.startsWith("wss://")) {
-			type = Type.WEB_SOCKET_SECURE;
-			address = address.substring(6);
-		}
-		else if (address.startsWith("ws://")) {
-			type = Type.WEB_SOCKET;
-			address = address.substring(5);
-		}
-		else {
-			type = Type.SOCKET;
-		}
-		
-		int p = address.indexOf(":");
-		return new Address(new InetSocketAddress(address.substring(0, p), Integer.parseInt(address.substring(p + 1))), type);
+	public boolean isWss() {
+		return wsPort != 0 && wssCrtFile != null;
 	}
 	
-	public final SocketAddress socket;
-	public final Type          type;
+	public boolean isWs() {
+		return wsPort != 0 && wssCrtFile == null;
+	}
 	
-	private Address(SocketAddress socket, Type type) {
-		this.socket = socket;
-		this.type = type;
+	public boolean isFs() {
+		return fsPort != 0;
 	}
 }

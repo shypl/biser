@@ -11,7 +11,7 @@ import org.shypl.biser.csi.server.ChannelHandler;
 
 import java.net.SocketAddress;
 
-public class SocketChannelHandler extends ChannelInboundHandlerAdapter implements Channel, ChannelFutureListener {
+public class FlashSocketChannelHandler extends ChannelInboundHandlerAdapter implements Channel, ChannelFutureListener {
 	
 	private final Object lock = new Object();
 	
@@ -23,7 +23,7 @@ public class SocketChannelHandler extends ChannelInboundHandlerAdapter implement
 	private int     writeCounter;
 	private boolean closeAfterWrites;
 	
-	public SocketChannelHandler(ChannelAcceptor acceptor) {
+	public FlashSocketChannelHandler(ChannelAcceptor acceptor) {
 		this.acceptor = acceptor;
 	}
 	

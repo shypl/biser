@@ -40,13 +40,7 @@ package org.shypl.biser.io {
 		}
 		
 		public function writeUint(value:uint):void {
-			if (value >= 0 && value <= 254) {
-				_stream.writeByte(value);
-			}
-			else {
-				_stream.writeByte(0xFF);
-				_stream.writeUnsignedInt(value);
-			}
+			writeInt(value)
 		}
 		
 		public function writeLong(value:Long):void {
@@ -68,18 +62,7 @@ package org.shypl.biser.io {
 		}
 		
 		public function writeUlong(value:Long):void {
-			if (value === null) {
-				throw new NullPointerException();
-			}
-			
-			if (value.compareTo(0) >= 0 && value.compareTo(254) <= 0) {
-				_stream.writeByte(value.lowBits);
-			}
-			else {
-				_stream.writeByte(0xFF);
-				_stream.writeUnsignedInt(value.highBits);
-				_stream.writeUnsignedInt(value.lowBits);
-			}
+			writeLong(value)
 		}
 		
 		public function writeDouble(value:Number):void {

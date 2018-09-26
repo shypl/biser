@@ -19,10 +19,10 @@ public class WebSocketSecureChannelInitializer extends ChannelInitializer<Socket
 	private final File            sslCrtFile;
 	private final File            sslKeyFile;
 	
-	public WebSocketSecureChannelInitializer(ChannelAcceptor acceptor, File sslCrtFile, File sslKeyFile) {
+	public WebSocketSecureChannelInitializer(ChannelAcceptor acceptor, String sslCrtFile, String sslKeyFile) {
 		this.acceptor = acceptor;
-		this.sslCrtFile = sslCrtFile;
-		this.sslKeyFile = sslKeyFile;
+		this.sslCrtFile = new File(sslCrtFile);
+		this.sslKeyFile = new File(sslKeyFile);
 	}
 	
 	@Override
