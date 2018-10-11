@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 
-version = "1.0.2-SNAPSHOT"
+version = "1.1.0"
 
 plugins {
 	id("kotlin2js")
@@ -9,7 +9,7 @@ plugins {
 
 dependencies {
 	implementation(kotlin("stdlib-js"))
-	implementation("ru.capjack.ktjs:ktjs-common:0.3.0-SNAPSHOT")
+	implementation("ru.capjack.ktjs:ktjs-common:0.6.0")
 }
 
 tasks.withType<Kotlin2JsCompile> {
