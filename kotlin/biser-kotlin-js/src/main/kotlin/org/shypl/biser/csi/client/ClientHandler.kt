@@ -4,7 +4,10 @@ import org.shypl.biser.csi.ConnectionCloseReason
 
 interface ClientHandler {
 	fun handleClientConnected()
+	
 	fun handleClientDisconnected(reason: ConnectionCloseReason)
-	fun handleClientConnectFail(reason: Any)
+	
+	fun handleClientConnectFail(error: Throwable)
+	
 	fun handleClientDisconnectWarning(seconds: Int)
 }

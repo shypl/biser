@@ -2,6 +2,7 @@ package org.shypl.biser.csi.client
 
 import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Int8Array
+import org.shypl.biser.csi.CsiException
 import org.shypl.biser.io.ArrayBufferInputData
 import org.w3c.dom.ARRAYBUFFER
 import org.w3c.dom.BinaryType
@@ -12,28 +13,27 @@ import org.w3c.dom.WebSocket
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.EventListener
 import ru.capjack.ktjs.common.invokeDelayed
+import ru.capjack.ktjs.common.js.convertErrorEventToString
+import ru.capjack.ktjs.common.logging.Logging
 
 class WebSocketChannel(
 	address: String,
 	private val acceptor: ChannelAcceptor
 
 ) : Channel, EventListener {
+	private val logger = Logging.get<WebSocketChannel>()
+	
 	private val socket: WebSocket
 	private var opened = false
 	private lateinit var handler: ChannelHandler
 	
 	init {
-		try {
-			socket = WebSocket(address)
-			socket.binaryType = BinaryType.ARRAYBUFFER
-			socket.addEventListener("open", this)
-			socket.addEventListener("close", this)
-			socket.addEventListener("message", this)
-			socket.addEventListener("error", this)
-		} catch (e: Throwable) {
-			acceptor.failOpenChannel(e)
-			throw RuntimeException(e)
-		}
+		socket = WebSocket(address)
+		socket.binaryType = BinaryType.ARRAYBUFFER
+		socket.addEventListener("open", this)
+		socket.addEventListener("close", this)
+		socket.addEventListener("message", this)
+		socket.addEventListener("error", this)
 	}
 	
 	override fun handleEvent(event: Event) {
@@ -48,16 +48,18 @@ class WebSocketChannel(
 	override fun writeByte(byte: Byte) {
 		if (opened) {
 			socket.send(Int8Array(arrayOf(byte)))
-		} else {
-			throw IllegalStateException()
+		}
+		else {
+			logger.warn("Socket is closed, write unavailable")
 		}
 	}
 	
 	override fun writeBytes(bytes: ByteArray) {
 		if (opened) {
 			socket.send(Int8Array(bytes.toTypedArray()))
-		} else {
-			throw IllegalStateException()
+		}
+		else {
+			logger.warn("Socket is closed, write unavailable")
 		}
 	}
 	
@@ -74,13 +76,14 @@ class WebSocketChannel(
 		handler = acceptor.acceptChannel(this)
 	}
 	
-	private fun onError(event: ErrorEvent) {
+	private fun onError(event: Event) {
 		if (opened) {
 			opened = false
-			handler.handleChannelError(event)
+			logger.warn("Channel error: ", event)
 			close()
-		} else {
-			acceptor.failOpenChannel(event)
+		}
+		else {
+			acceptor.failOpenChannel(CsiException(convertErrorEventToString(event)))
 			free()
 		}
 	}
@@ -93,12 +96,12 @@ class WebSocketChannel(
 		
 		try {
 			socket.close()
-		} catch (e: Throwable) {
+		}
+		catch (e: Throwable) {
 		}
 	}
 	
 	private fun onClose(event: CloseEvent) {
-		console.warn("WebSocketChannel.onClose", event)
 		close()
 	}
 	

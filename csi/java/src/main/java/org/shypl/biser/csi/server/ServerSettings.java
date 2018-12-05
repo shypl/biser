@@ -83,7 +83,7 @@ public class ServerSettings {
 		return emulateDelayInConnectionDataProcessingMillis > 0;
 	}
 	
-	public void setEmulateDelayInConnectionDataProcessing(long millis) {
+	public void setEmulateDelayInConnectionDataProcessingMillis(long millis) {
 		this.emulateDelayInConnectionDataProcessingMillis = millis;
 	}
 	

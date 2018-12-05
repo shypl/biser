@@ -48,7 +48,7 @@ class Connection implements ChannelHandler {
 		
 		opened = true;
 		setProcessor(new ConnectionProcessorReception());
-		activityTimeout = worker.scheduleTaskPeriodic(this::checkActivity, server.getSettings().getConnectionActivityTimeout(), TimeUnit.SECONDS);
+		activityTimeout = worker.scheduleTaskPeriodic(this::checkActivity, server.getSettings().getConnectionActivityTimeout() * 2, TimeUnit.SECONDS);
 	}
 	
 	public void cancelCheckActivityTimeout() {
@@ -87,19 +87,11 @@ class Connection implements ChannelHandler {
 				logger.trace(">> {}", StringUtils.toString(bytes));
 			}
 			
-			if (server.getSettings().isEmulateDelayInConnectionDataProcessing()) {
-				try {
-					Thread.sleep(server.getSettings().getEmulateDelayInConnectionDataProcessingMillis());
-				}
-				catch (InterruptedException e) {
-					logger.error("EmulateDelayInConnectionDataProcessing interrupted", e);
-					syncClose(ConnectionCloseReason.SERVER_ERROR);
-				}
-			}
-			
 			activity = true;
 			readerData = bytes;
 			readerCursor = 0;
+			
+			tryEmulateDelayInConnectionDataProcessing();
 			
 			while (isReadable()) {
 				try {
@@ -227,6 +219,9 @@ class Connection implements ChannelHandler {
 		if (logger.isTraceEnabled()) {
 			logger.trace("<< {}", '[' + StringUtils.toString(b) + ']');
 		}
+		
+		tryEmulateDelayInConnectionDataProcessing();
+		
 		channel.write(b);
 	}
 	
@@ -234,6 +229,9 @@ class Connection implements ChannelHandler {
 		if (logger.isTraceEnabled()) {
 			logger.trace("<< {}", StringUtils.toString(bytes));
 		}
+		
+		tryEmulateDelayInConnectionDataProcessing();
+		
 		channel.write(bytes);
 	}
 	
@@ -246,5 +244,17 @@ class Connection implements ChannelHandler {
 				task.run();
 			}
 		};
+	}
+	
+	private void tryEmulateDelayInConnectionDataProcessing() {
+		if (server.getSettings().isEmulateDelayInConnectionDataProcessing()) {
+			try {
+				Thread.sleep(server.getSettings().getEmulateDelayInConnectionDataProcessingMillis());
+			}
+			catch (InterruptedException e) {
+				logger.error("EmulateDelayInConnectionDataProcessing interrupted", e);
+				syncClose(ConnectionCloseReason.SERVER_ERROR);
+			}
+		}
 	}
 }

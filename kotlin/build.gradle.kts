@@ -10,6 +10,7 @@ subprojects {
 	group = "org.shypl.biser"
 	
 	repositories {
+		mavenLocal()
 		maven("http://artifactory.capjack.ru/public")
 	}
 	

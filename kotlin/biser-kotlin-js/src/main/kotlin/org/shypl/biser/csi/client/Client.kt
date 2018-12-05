@@ -24,7 +24,7 @@ class Client(
 	
 	fun connect(address: String, authorizationKey: String) {
 		if (isConnecting() || isConnected()) {
-			throw IllegalStateException()
+			throw IllegalStateException("Client is already connected")
 		}
 		
 		logger.info("Connecting to {}", address)
@@ -35,7 +35,7 @@ class Client(
 	
 	public fun disconnect() {
 		if (!connecting && !connected) {
-			throw IllegalStateException()
+			throw IllegalStateException("Client is not connected")
 		}
 		connecting = false
 		
@@ -60,11 +60,11 @@ class Client(
 		handler.handleClientDisconnected(reason)
 	}
 	
-	internal fun processConnectFail(reason: Any) {
-		logger.info("Connect failed by reason {}", reason)
+	internal fun processConnectFail(error: Throwable) {
+		logger.info("Connect failed by reason {}", error)
 		connecting = false
 		connected = false
-		handler.handleClientConnectFail(reason)
+		handler.handleClientConnectFail(error)
 	}
 	
 	internal fun processConnectionInterrupted() {

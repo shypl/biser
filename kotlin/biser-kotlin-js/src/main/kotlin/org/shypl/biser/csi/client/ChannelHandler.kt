@@ -6,6 +6,4 @@ interface ChannelHandler {
 	fun handleChannelClose()
 	
 	fun handleChannelData(data: InputData)
-	
-	fun handleChannelError(error: Any)
 }

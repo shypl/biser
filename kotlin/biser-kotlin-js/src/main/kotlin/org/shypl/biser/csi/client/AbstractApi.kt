@@ -5,10 +5,10 @@ import org.shypl.biser.io.DataReader
 import org.shypl.biser.io.InputData
 import org.shypl.biser.io.OutputData
 import ru.capjack.ktjs.common.logging.Logger
+import ru.capjack.ktjs.common.logging.Logging
 
 abstract class AbstractApi {
-	val logger: Logger
-		get() = connection!!.logger
+	val logger: Logger = Logging.get("CSI")
 	
 	internal var connection: Connection? = null
 	

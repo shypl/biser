@@ -53,11 +53,13 @@ internal class Connection(
 			closeReason = reason
 			
 			if (alive) {
+				alive = false;
 				if (messaging) {
 					channel!!.writeByte(Protocol.CLOSE)
 				}
 				channel!!.close()
-			} else {
+			}
+			else {
 				invokeDelayed(::handleChannelClose)
 			}
 		}
@@ -73,13 +75,13 @@ internal class Connection(
 			return this
 		}
 		
-		logger.debug("Channel opened on closed connection")
+		logger.warn("Channel opened on closed connection")
 		channel.close()
 		
-		throw IllegalStateException()
+		throw IllegalStateException("Channel opened on closed connection")
 	}
 	
-	override fun failOpenChannel(error: Any) {
+	override fun failOpenChannel(error: Throwable) {
 		logger.debug("Open channel failed ({})", error)
 		invokeDelayed { client.processConnectFail(error) }
 	}
@@ -93,7 +95,8 @@ internal class Connection(
 		if (opened) {
 			invokeDelayed(client::processConnectionInterrupted)
 			processor.processClose()
-		} else {
+		}
+		else {
 			processor.destroy()
 			invokeDelayed { client.processDisconnected(closeReason) }
 			free()
@@ -110,10 +113,6 @@ internal class Connection(
 		}
 	}
 	
-	override fun handleChannelError(error: Any) {
-		logger.warn("Channel error {} ", error)
-	}
-	
 	internal fun setProcessor(processor: ConnectionProcessor) {
 		this.processor.destroy()
 		this.processor = processor
@@ -128,7 +127,8 @@ internal class Connection(
 	internal fun interrupt() {
 		if (alive) {
 			channel?.close()
-		} else {
+		}
+		else {
 			invokeDelayed(::handleChannelClose)
 		}
 	}
@@ -156,7 +156,8 @@ internal class Connection(
 	internal fun sendByte(byte: Byte) {
 		if (alive) {
 			writeByteToChannel(byte)
-		} else {
+		}
+		else {
 			logger.error("Can't send data on interrupted connection")
 		}
 	}
@@ -164,7 +165,8 @@ internal class Connection(
 	internal fun sendBytes(data: ByteArray) {
 		if (alive) {
 			writeBytesToChannel(data)
-		} else {
+		}
+		else {
 			logger.error("Can't send data on interrupted connection")
 		}
 	}
@@ -179,7 +181,8 @@ internal class Connection(
 			if (messaging) {
 				sendMessage0(message)
 			}
-		} else {
+		}
+		else {
 			logger.warn("Fail send message on closed connection")
 		}
 	}
