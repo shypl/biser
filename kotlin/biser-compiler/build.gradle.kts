@@ -1,6 +1,6 @@
 import org.gradle.jvm.tasks.Jar
 
-version = "1.4.15"
+version = "1.4.16"
 
 plugins {
 	kotlin("jvm")
@@ -10,7 +10,7 @@ plugins {
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 	implementation("org.apache.commons:commons-lang3:3.4")
-	implementation("org.shypl.common:common-java:1.0.5-SNAPSHOT")
+	implementation("org.shypl.common:common-java:1.0.6")
 }
 tasks.withType<Jar> {
 	manifest {
