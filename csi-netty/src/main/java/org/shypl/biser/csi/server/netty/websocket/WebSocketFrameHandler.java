@@ -61,7 +61,6 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<BinaryWeb
 	
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-		cause.printStackTrace();
 		ctx.close();
 	}
 	
