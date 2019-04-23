@@ -43,8 +43,8 @@ class DataReader(
 	fun readBytes(): ByteArray {
 		val size = readInt()
 		return when (size) {
-			0    -> ByteArray(0)
-			else -> ByteArray(size).also { stream.readBytes(it) }
+			-1, 0 -> ByteArray(0)
+			else  -> ByteArray(size).also { stream.readBytes(it) }
 		}
 	}
 	
