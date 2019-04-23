@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 
-version = "1.1.3"
+version = "1.1.4"
 
 plugins {
 	id("kotlin2js")
