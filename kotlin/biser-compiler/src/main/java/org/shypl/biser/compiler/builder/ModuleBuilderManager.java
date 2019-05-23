@@ -5,6 +5,7 @@ import org.shypl.biser.compiler.builder.cpp.CppModuleBuilder;
 import org.shypl.biser.compiler.builder.flash.FlashModuleBuilder;
 import org.shypl.biser.compiler.builder.java.JavaModuleBuilder;
 import org.shypl.biser.compiler.builder.kotlin.js.KotlinJsModuleBuilder;
+import org.shypl.biser.compiler.builder.ts.TsModuleBuilder;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,7 @@ public final class ModuleBuilderManager {
 		registerBuilder(new FlashModuleBuilder());
 		registerBuilder(new KotlinJsModuleBuilder());
 		registerBuilder(new CppModuleBuilder());
+		registerBuilder(new TsModuleBuilder());
 	}
 
 	private ModuleBuilderManager() {
