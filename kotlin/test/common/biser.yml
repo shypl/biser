@@ -6,6 +6,6 @@ server:
   target: ../server/src/main/java
 
 client:
-  lang: cpp
+  lang: ts
   pack: none
   target: ../client/src

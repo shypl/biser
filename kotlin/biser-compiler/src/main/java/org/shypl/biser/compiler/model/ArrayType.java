@@ -5,7 +5,7 @@ public class ArrayType extends CollectionType {
 	private final DataType elementType;
 
 	public ArrayType(DataType elementType) {
-		super('*' + elementType.getName());
+		super(elementType.getName());
 		this.elementType = elementType;
 	}
 
