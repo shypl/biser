@@ -239,6 +239,15 @@ class TsModuleBuilder : ModuleBuilder {
             file.writeLine("public ${it.name}: ${it.type.presentInput()} = ${it.type.presentDefault()};")
         }
 
+        // constructor
+        file
+                .writeLine()
+                .writeLines("constructor()", "{")
+                .addTab()
+                .writeLines("super();", "", "this.setEId($name.ID);")
+                .removeTab()
+                .writeLine("}")
+
         // write()
         file
                 .writeLine()
