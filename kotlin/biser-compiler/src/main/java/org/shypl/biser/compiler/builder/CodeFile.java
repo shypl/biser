@@ -11,9 +11,9 @@ import java.util.function.Consumer;
 
 public class CodeFile {
 	private final StringBuilder content = new StringBuilder();
-	private int tabs;
-	private int emptyLines;
-
+	private       int           tabs;
+	private       int           emptyLines;
+	
 	public void save(final Path path) throws CompilerException {
 		try {
 			Files.createDirectories(path.getParent());
@@ -23,7 +23,7 @@ public class CodeFile {
 			throw new CompilerException("Can not save file \"" + path + "\"", e);
 		}
 	}
-
+	
 	public CodeFile write(final String... strings) {
 		if (emptyLines != 0) {
 			for (int l = 0; l < emptyLines; ++l) {
@@ -39,7 +39,7 @@ public class CodeFile {
 		}
 		return this;
 	}
-
+	
 	public CodeFile writeLine(final String... strings) {
 		if (strings.length > 0) {
 			write(strings);
@@ -56,11 +56,11 @@ public class CodeFile {
 		}
 		return this;
 	}
-
+	
 	public <T> void writeSeparated(Collection<T> collection, Consumer<T> action) {
 		writeSeparated(collection, action, ", ");
 	}
-
+	
 	public <T> void writeSeparated(Collection<T> collection, Consumer<T> action, String separator) {
 		boolean nf = false;
 		for (T e : collection) {
@@ -71,7 +71,7 @@ public class CodeFile {
 			action.accept(e);
 		}
 	}
-
+	
 	public <T> void writeSeparated(Collection<T> collection, Consumer<T> action, Runnable separator) {
 		boolean nf = false;
 		for (T e : collection) {
@@ -82,12 +82,12 @@ public class CodeFile {
 			action.accept(e);
 		}
 	}
-
+	
 	public CodeFile addTab() {
 		++tabs;
 		return this;
 	}
-
+	
 	public CodeFile removeTab() {
 		if (emptyLines > 1) {
 			emptyLines = 1;
