@@ -14,29 +14,26 @@ class TsModuleBuilder : ModuleBuilder {
 
         val enumsFile = CodeFile()
         val entityFile = CodeFile()
+        val entityFabricFile = CodeFile()
 
-        entityFile
-                .writeLines(
-                        "",
-                        "import DataWriter from \"./DataWriter\";",
-                        "import DataReader from \"./DataReader\";",
-                        "")
+        entityFabricFile
+                .writeLine("import Entity from \"./Entity\";")
+                .writeLine()
 
         for (type in model.structures) {
             if (type is EntityType) {
-                entityFile
-                        .writeLine("import ${type.name} from \"../csi/Objects/${type.name}\"")
+                entityFabricFile
+                        .writeLine("import ${type.name} from \"../csi/Objects/${type.name};\"")
             }
         }
 
-        entityFile
+        entityFabricFile
                 .writeLines(
                         "",
-                        "export default class Entity",
+                        "export default class EntityFabric",
                         "{")
                 .addTab()
                 .writeLines(
-                        "protected _eId: number = -1;",
                         "",
                         "public static create(eId: number) : Entity",
                         "{")
@@ -45,7 +42,7 @@ class TsModuleBuilder : ModuleBuilder {
 
         for (type in model.structures) {
             if (type is EntityType) {
-                entityFile
+                entityFabricFile
                         .writeLine("if (eId == ${type.name}.ID)")
                         .addTab()
                         .writeLine("return new ${type.name}();")
@@ -57,12 +54,27 @@ class TsModuleBuilder : ModuleBuilder {
             }
         }
 
-        entityFile
+        entityFabricFile
                 .writeLines(
                         "",
                         "return null;")
                 .removeTab()
                 .writeLines("}", "")
+                .removeTab()
+                .writeLine("}")
+
+        entityFile
+                .writeLines(
+                        "",
+                        "import DataWriter from \"./DataWriter\";",
+                        "import DataReader from \"./DataReader\";",
+                        "",
+                        "export default class Entity",
+                        "{")
+                .addTab()
+                .writeLines(
+                        "protected _eId: number = -1;",
+                        "")
 
         entityFile
                 .writeLines(
@@ -88,6 +100,7 @@ class TsModuleBuilder : ModuleBuilder {
 
         enumsFile.save(module.target.resolve("csi/Objects/CsiEnums.ts"))
         entityFile.save(module.target.resolve("io/Entity.ts"))
+        entityFabricFile.save(module.target.resolve("io/EntityFabric.ts"))
 
         val api = model.api
         if (api.hasServices()) {
@@ -343,7 +356,7 @@ class TsModuleBuilder : ModuleBuilder {
             PrimitiveType.BYTE -> "0"
             PrimitiveType.BOOL -> "false"
             PrimitiveType.INT -> "0"
-            PrimitiveType.LONG -> "0"
+            PrimitiveType.LONG -> "bigInt(0)"
             PrimitiveType.DOUBLE -> "0.0"
             PrimitiveType.STRING -> "\"\""
             else -> throw UnsupportedOperationException()
