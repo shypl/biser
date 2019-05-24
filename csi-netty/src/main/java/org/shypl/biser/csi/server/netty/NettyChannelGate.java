@@ -3,12 +3,14 @@ package org.shypl.biser.csi.server.netty;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
@@ -84,11 +86,16 @@ public class NettyChannelGate implements ChannelGate {
 			.group(bossGroup, workerGroup)
 			.channel(channelClass);
 		
-		if (logLevel != null) {
-			bootstrap.childHandler(new LoggingHandler(logLevel));
-		}
-		
-		bootstrap.childHandler(channelHandler)
+		bootstrap
+			.childHandler(new ChannelInitializer<SocketChannel>() {
+				@Override
+				protected void initChannel(SocketChannel ch) {
+					if (logLevel != null) {
+						ch.pipeline().addLast(new LoggingHandler(logLevel));
+					}
+					ch.pipeline().addLast(channelHandler);
+				}
+			})
 			.option(ChannelOption.SO_BACKLOG, 128)
 			.childOption(ChannelOption.SO_KEEPALIVE, true)
 			.childOption(ChannelOption.TCP_NODELAY, true);
