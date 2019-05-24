@@ -23,7 +23,7 @@ class TsModuleBuilder : ModuleBuilder {
         for (type in model.structures) {
             if (type is EntityType) {
                 entityFabricFile
-                        .writeLine("import ${type.name} from \"../csi/Objects/${type.name};\"")
+                        .writeLine("import ${type.name} from \"../csi/Objects/${type.name}\";")
             }
         }
 
